@@ -19,6 +19,9 @@ import Map from './pages/map/Map';
 import Notifications from './pages/notifications/Notifications';
 import Users from './pages/users/Users';
 import Profile from './pages/profile/Profile';
+import Home from './pages/home/Home';
+import Pricing from './pages/home/Pricing';
+
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = localStorage.getItem('smartsite-auth');
@@ -28,8 +31,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Navigate to="/dashboard" replace />,
+    element: <Home />,
   },
+  {
+        path: 'pricing',
+        element: <Pricing />,
+      },
   {
     path: '/login',
     element: <Login />,
@@ -58,6 +65,7 @@ export const router = createBrowserRouter([
         path: 'projects',
         element: <Projects />,
       },
+      
       {
         path: 'planning',
         element: <Planning />,
