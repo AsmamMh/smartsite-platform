@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = process.env.PERMISSION_API_URL || "http://localhost:3000/permissions";
+const API_URL =  "http://localhost:3000/permissions";
 
 export const getAllPermissions = async () => {
   try {

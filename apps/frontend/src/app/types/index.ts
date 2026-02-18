@@ -25,6 +25,28 @@ export interface User {
   avatar?: string;
 }
 
+export interface Role {
+  _id: string;
+  name: string;
+  description?: string;
+  permissions?: Permission[];
+  userCount?: number;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface Permission {
+   _id: string,
+    name: string,
+    source: boolean,
+    access: boolean,
+    create: boolean,
+    delete: boolean,
+    update: boolean,
+    createdAt: Date,
+    updatedAt: Date,
+}
+
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;

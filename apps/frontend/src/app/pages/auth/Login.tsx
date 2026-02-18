@@ -20,21 +20,23 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-     const res = await axios.post(`http://localhost:3000/auth/login`, {
-      cin,
-      password,
-    });
-
-    console.log(`${process.env.LOGIN_API_URL}/login`,"ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp")
-    if (res.status === 200) {
-      const expires = new Date(Date.now() + 1000 * 1000 * 1000);
-
-      cookieStore.set("session", res.data.token);
-      return Promise.resolve({ status: res.status, data: res.data.message });
-    }
-
     try {
-      await LoginAction(cin, password);
+      const res = await axios.post(`http://localhost:3000/auth/login`, {
+        cin,
+        password,
+      });
+
+      console.log(
+        `${process.env.LOGIN_API_URL}/login`,
+        "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+      );
+      if (res.status === 200) {
+        const expires = new Date(Date.now() + 1000 * 1000 * 1000);
+
+        cookieStore.set("session", res.data.token);
+        return Promise.resolve({ status: res.status, data: res.data.message });
+      }
+
       toast.success("Login successful!");
       navigate("/dashboard");
     } catch (error: any) {

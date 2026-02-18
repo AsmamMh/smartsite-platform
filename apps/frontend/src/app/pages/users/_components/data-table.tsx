@@ -76,7 +76,7 @@ export function UserDataTable<TData, TValue>({
       },
     },
     {
-      accessorKey: "firstName",
+      accessorKey: "nom",
       header: ({ column }) => {
         return (
           <Button
@@ -90,7 +90,7 @@ export function UserDataTable<TData, TValue>({
       },
     },
     {
-      accessorKey: "lastName",
+      accessorKey: "prenom",
       header: ({ column }) => {
         return (
           <Button
@@ -104,7 +104,7 @@ export function UserDataTable<TData, TValue>({
       },
     },
     {
-      accessorKey: "email",
+      accessorKey: "cin",
       header: ({ column }) => {
         return (
           <Button
@@ -132,7 +132,7 @@ export function UserDataTable<TData, TValue>({
       },
     },
     {
-      accessorKey: "isActive",
+      accessorKey: "estActif",
       header: ({ column }) => {
         return (
           <Button
@@ -146,7 +146,7 @@ export function UserDataTable<TData, TValue>({
       },
     },
     {
-      accessorKey: "createdDate",
+      accessorKey: "createdAt",
       header: ({ column }) => {
         return (
           <Button
@@ -159,20 +159,7 @@ export function UserDataTable<TData, TValue>({
         );
       },
     },
-    {
-      accessorKey: "lastLoginDate",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            lastLoginDate
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
-    },
+    
   ];
 
   const table = useReactTable({
