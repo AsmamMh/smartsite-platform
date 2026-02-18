@@ -15,15 +15,13 @@ export class User extends Document {
   cin: string;
 
   @Prop({ required: true })
-  motDePasse: string; // hashed !
+  motDePasse: string; 
 
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Role' }], default: [] })
   roles: Types.ObjectId[] | Role[];
 
   @Prop({ default: true })
   estActif: boolean;
-
-  // Champs de ton diagramme que tu peux ajouter
   @Prop()
   telephone?: string;
 
