@@ -12,8 +12,16 @@ export class AuthService {
   ) {}
 
   async validateUser(cin: string, password: string): Promise<any> {
+    if (!cin || !password) {
+      return null;
+    }
+
     const user = await this.usersService.findByCin(cin);
-    if (user && (await bcrypt.compare(password, user.motDePasse))) {
+    if (!user || !user.motDePasse) {
+      return null;
+    }
+
+    if (await bcrypt.compare(password, user.motDePasse)) {
       const { motDePasse, ...result } = user.toObject ? user.toObject() : user;
       return result;
     }
