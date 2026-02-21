@@ -1,5 +1,6 @@
 import { Shield, Users as UsersIcon, Lock } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
@@ -11,7 +12,7 @@ import { useAuthStore } from "../../store/authStore";
 import { canEdit } from "../../utils/permissions";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
-import { Role } from "@/app/types";
+import { Role, User } from "@/app/types";
 
 import {
   getAllRoles,
@@ -20,18 +21,56 @@ import {
   deleteRole,
 } from "@/app/action/role.action";
 import { RolesDataTable } from "./_components/roles-data-table";
+import { UserDataTable } from "./_components/data-table";
+import { deleteUser, getAllUsers } from "@/app/action/user.action";
+import { mockTeamMembers } from "@/app/utils/mockData";
 
-export default function RolesPage() {
-  const user = useAuthStore((state) => state.user);
+export default function UserManagement() {
+   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const canManageRoles = user && canEdit(user.role.name, "users");
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [users, setUsers] = useState<User[]>([]);
 
+  
   useEffect(() => {
     loadRoles();
+    loadUsers();
   }, []);
 
+  const loadUsers = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getAllUsers();
+      if (response.status === 200 && Array.isArray(response.data)) {
+        setUsers(response.data);
+      } else {
+        // Use mock data for development
+        setUsers(mockTeamMembers);
+      }
+    } catch (error) {
+      console.error("Failed to load users:", error);
+      setUsers(mockTeamMembers);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const response = await deleteUser(userId);
+      if (response.status === 200) {
+        toast.success("User deleted successfully");
+        loadUsers();
+      } else {
+        toast.error(response.data || "Failed to delete user");
+      }
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      toast.error("Failed to delete user");
+    }
+  };
   const loadRoles = async () => {
     setIsLoading(true);
     try {
@@ -219,21 +258,38 @@ export default function RolesPage() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>All Roles</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-12">Loading roles...</div>
-          ) : (
-            <RolesDataTable
-              roles={roles}
-              onEdit={handleEditRole}
-              onDelete={handleDeleteRole}
-              onAddNew={handleAddNewRole}
-            />
-          )}
-        </CardContent>
+        <Tabs defaultValue="role">
+          <CardHeader>
+            <CardTitle>
+              <TabsList>
+                <TabsTrigger value="role">All Roles</TabsTrigger>
+                <TabsTrigger value="users">All users</TabsTrigger>
+              </TabsList>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TabsContent value="role">
+              {isLoading ? (
+                <div className="text-center py-12">Loading roles...</div>
+              ) : (
+                <RolesDataTable
+                  roles={roles}
+                  onEdit={handleEditRole}
+                  onDelete={handleDeleteRole}
+                  onAddNew={handleAddNewRole}
+                />
+              )}
+            </TabsContent>
+
+            <TabsContent value="users">
+              {isLoading ? (
+                <div className="text-center py-12">Loading users...</div>
+              ) : (
+                <UserDataTable users={users} />
+              )}
+            </TabsContent>
+          </CardContent>
+        </Tabs>
       </Card>
     </div>
   );
