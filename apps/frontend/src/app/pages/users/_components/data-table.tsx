@@ -158,6 +158,10 @@ export function UserDataTable<TData, TValue>({
           </Button>
         );
       },
+      cell: ({ row }) => {
+        const date = new Date(row.getValue("createdAt"));
+        return <>{date.toLocaleDateString()}</>;
+      }
     },
   ];
 
