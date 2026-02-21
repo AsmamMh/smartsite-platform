@@ -15,10 +15,20 @@ export class User extends Document {
   cin: string;
 
   @Prop({ required: true })
-  motDePasse: string;
+  password: string;
 
   @Prop({ type: Types.ObjectId, ref: 'Role', required: true })
   role: Types.ObjectId;
+
+  @Prop()
+  email:string;
+
+  @Prop()
+  connected:boolean;
+
+  @Prop()
+  address : string;
+
 
   @Prop({ default: true })
   estActif: boolean;

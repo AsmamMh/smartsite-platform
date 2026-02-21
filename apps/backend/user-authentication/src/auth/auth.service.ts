@@ -17,12 +17,12 @@ export class AuthService {
     }
 
     const user = await this.usersService.findByCin(cin);
-    if (!user || !user.motDePasse) {
+    if (!user || !user.password) {
       return null;
     }
 
-    if (await bcrypt.compare(password, user.motDePasse)) {
-      const { motDePasse, ...result } = user.toObject ? user.toObject() : user;
+    if (await bcrypt.compare(password, user.password)) {
+      const { password, ...result } = user.toObject ? user.toObject() : user;
       return result;
     }
     return null;
