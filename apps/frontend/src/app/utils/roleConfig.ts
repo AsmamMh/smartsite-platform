@@ -69,12 +69,6 @@ export const navigationItems: NavItem[] = [
     roles: ["super_admin"],
   },
   {
-    label: "Roles",
-    href: "/roles",
-    icon: Users,
-    roles: ["super_admin"],
-  },
-  {
     label: "User Management",
     href: "/users",
     icon: Settings,
