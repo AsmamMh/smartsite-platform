@@ -52,13 +52,12 @@ export const createRole = async (
 
 export const updateRole = async (
   id: string,
-  roleData: {
-    name?: string;
-    description?: string;
-  }
+    name?: string,
+    description?: string
+  
 ) => {
   try {
-    const res = await axios.put(`${API_URL}/${id}`, roleData);
+    const res = await axios.put(`${API_URL}/${id}`, {name,description});
     if (res.status === 200) {
       return Promise.resolve({ status: res.status, data: res.data });
     }

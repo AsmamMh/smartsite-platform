@@ -59,7 +59,7 @@ export function UserDataTable<TData, TValue>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-  const {setId,id,onOpen}=useAddUserModal();
+  const {setId,id,onOpen,setType}=useAddUserModal();
   console.log("users:", users);
   const columns: ColumnDef<User>[] = [
     //     {
@@ -74,7 +74,7 @@ export function UserDataTable<TData, TValue>({
     //     lastLoginDate: '2026-02-16',
     //   },
     {
-      accessorKey: "id",
+      accessorKey: "_id",
       header: ({ column }) => {
         return <></>;
       },
@@ -213,11 +213,15 @@ export function UserDataTable<TData, TValue>({
       //   );
       // },
       cell: ({ row }) => {
-        const id=row.getValue("id") as string;
-        setId(id);
+        const id=row.getValue("_id") as string;
+        
         return (
           <>
-            <Button variant="ghost" size="sm">
+            <Button onClick={()=>{
+              onOpen(),
+              setType("edit"),
+              setId(id)
+            }} variant="ghost" size="sm">
               <Edit className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="sm">

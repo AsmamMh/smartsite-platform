@@ -12,46 +12,75 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React from "react";
+import React, { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import * as z from "zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { createRole } from "@/app/action/role.action";
+import { createRole, getRoleById, updateRole } from "@/app/action/role.action";
+import useRoleModal from "@/app/hooks/use-role-Modal";
+import { ca } from "zod/v4/locales";
 
 const formSchema = z.object({
+  id: z.string().optional(),
   name: z
     .string()
     .min(5, "Role name must be at least 5 characters.")
     .max(32, "Role name must be at most 32 characters."),
-  description: z
-    .string()
-    .optional()
-    
+  description: z.string().optional(),
 });
 
-const RoleForms = () => {
+const RoleForms = ({ type }: { type: "edit" | "add" }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      id: undefined,
       name: "",
       description: "",
     },
   });
-
-  const onSubmit =async (data: z.infer<typeof formSchema>)=> {
-    try{
-        const res= await createRole(data.name,data.description);
-        if(res.status === 201){
-            toast.success("Role created successfully");
-            
-        }
-    }catch(error :any)
-    {
-        toast.error("Failed to create role. PLease try again.");
+  const { id } = useRoleModal();
+  const loadRoleData = async () => {
+    try {
+      console.log("Loading role data for ID:", id);
+      const res = await getRoleById(id as string);
+      if (res.status === 200) {
+        form.reset({
+          id: res.data._id,
+          name: res.data.name,
+          description: res.data.description,
+        });
+      }
+    } catch (error: any) {
+      toast.error("Failed to load role data. Please try again.");
     }
-  }
+  };
+
+  useEffect(() => {
+    if (type === "edit") {
+      loadRoleData();
+
+    }
+  }, [type]);
+
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    try {
+      if (type === "add") {
+        const res = await createRole(data.name, data.description);
+        if (res.status === 201) {
+          toast.success("Role created successfully");
+        }
+      } else {
+        const res = await updateRole(data.id!, data.name, data.description);
+        if (res.status === 200 || res.status === 204) {
+          toast.success("Role updated successfully");
+        }
+      }
+    } catch (error: any) {
+      toast.error("Failed to create role. PPlease try again.");
+    }
+  };
   return (
     <>
       <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)}>

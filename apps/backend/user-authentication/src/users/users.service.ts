@@ -1,21 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import * as bcrypt from "bcrypt";
 import { User } from './entities/user.entity';
-import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
   async create(createUserDto: any) {
+    createUserDto.password = await bcrypt.hash(createUserDto.password, 10);
     const createdUser = new this.userModel(createUserDto);
-    const hashedPassword = await bcrypt.hash(createdUser.password, 10);
-    createdUser.password = hashedPassword;
+    
     return createdUser.save();
   }
 
   async findByCin(cin: string) {
-    return this.userModel.findOne({ cin }).populate('role').exec();
+    console.log("from user service",cin)
+    return this.userModel.findOne({cin});
   }
 
   async findById(id: string) {

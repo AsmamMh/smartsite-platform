@@ -11,7 +11,7 @@ export class User extends Document {
   @Prop({ required: true, trim: true })
   lastname: string;
 
-  @Prop({ required: true, unique: true, lowercase: true, trim: true })
+  @Prop({ required: true, unique: true, trim: true })
   cin: string;
 
   @Prop({ required: true })

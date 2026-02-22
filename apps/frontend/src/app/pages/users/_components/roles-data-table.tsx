@@ -24,7 +24,14 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
-import { ArrowUpDown, ListPlusIcon, Edit, Trash2, Shield } from "lucide-react";
+import {
+  ArrowUpDown,
+  ListPlusIcon,
+  Edit,
+  Trash2,
+  Shield,
+  Trash,
+} from "lucide-react";
 import { Role, Permission } from "@/app/types";
 import useRoleModal from "@/app/hooks/use-role-Modal";
 
@@ -44,7 +51,7 @@ export function RolesDataTable({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
-
+  const { setId, id, onOpen, setType } = useRoleModal();
   const columns: ColumnDef<Role>[] = [
     {
       accessorKey: "_id",
@@ -154,35 +161,36 @@ export function RolesDataTable({
       },
     },
     {
-      id: "actions",
-      header: "Actions",
+      accessorKey: "Actions",
+      // header: ({ column }) => {
+      //   return (
+      //     <Button
+      //       variant="ghost"
+      //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      //     >
+      //       Actions
+      //       <ArrowUpDown className="ml-2 h-4 w-4" />
+      //     </Button>
+      //   );
+      // },
       cell: ({ row }) => {
-        const role = row.original;
+        const id = row.getValue("_id") as string;
+
         return (
-          <div className="flex gap-2">
-            {onEdit && (
-              <Button variant="ghost" size="sm" onClick={() => onEdit(role)}>
-                <Edit className="h-4 w-4" />
-              </Button>
-            )}
-            {onDelete && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  if (
-                    confirm(
-                      `Are you sure you want to delete role "${role.name}"?`,
-                    )
-                  ) {
-                    onDelete(role._id);
-                  }
-                }}
-              >
-                <Trash2 className="h-4 w-4 text-red-500" />
-              </Button>
-            )}
-          </div>
+          <>
+            <Button
+              onClick={() => {
+                (onOpen(), setType("edit"), setId(id));
+              }}
+              variant="ghost"
+              size="sm"
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm">
+              <Trash className="h-4 w-4 text-red-600" />
+            </Button>
+          </>
         );
       },
     },
@@ -204,7 +212,7 @@ export function RolesDataTable({
       globalFilter,
     },
   });
-  const {onOpen}= useRoleModal();
+
   return (
     <>
       <div className="flex justify-between items-center py-4 flex-wrap gap-4">
@@ -214,12 +222,11 @@ export function RolesDataTable({
           onChange={(event) => setGlobalFilter(event.target.value)}
           className="max-w-sm"
         />
-        
-          <Button onClick={onOpen} variant="default">
-            <ListPlusIcon className="mr-2 h-4 w-4" />
-            Add New Role
-          </Button>
-        
+
+        <Button onClick={onOpen} variant="default">
+          <ListPlusIcon className="mr-2 h-4 w-4" />
+          Add New Role
+        </Button>
       </div>
       <div className="rounded-md border">
         <Table>

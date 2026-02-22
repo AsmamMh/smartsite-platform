@@ -20,7 +20,7 @@ import * as z from "zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { createRole, getAllRoles } from "@/app/action/role.action";
-import { createUser } from "@/app/action/user.action";
+import { createUser, getUserById, updateUser } from "@/app/action/user.action";
 import {
   SelectTrigger,
   SelectValue,
@@ -32,37 +32,76 @@ import {
 } from "../ui/select";
 import { SelectLabel } from "../ui/select";
 import { Role } from "@/app/types";
+import useAddUserModal from "@/app/hooks/use-user-Modal";
 
-const formSchema = z
-  .object({
-    cin: z.string().min(8, "CIN must be at least 8 characters."),
-    firstname: z
-      .string()
-      .min(5, "Firstname must be at least 5 characters.")
-      .max(32, "Firstname must be at most 32 characters."),
-    lastname: z
-      .string()
-      .min(5, "Lastname must be at least 5 characters.")
-      .max(32, "Lastname must be at most 32 characters."),
-    email: z.string().email("Invalid email address"),
-    telephone: z.string(),
-    password: z
-      .string()
-      .max(32, "Password must be at most 32 characters.")
-      .min(8, "password must be at least 8 characters"),
-    confirmPassword: z
-      .string()
-      .max(32, "Password must be at most 32 characters.")
-      .min(8, "password must be at least 8 characters"),
+const UserForms = ({ type }: { type: "add" | "edit" }) => {
+  let formSchema;
+  if (type === "edit") {
+    formSchema = z
+      .object({
+        cin: z.string().min(8, "CIN must be at least 8 characters.").optional(),
+        firstname: z
+          .string()
+          .min(5, "Firstname must be at least 5 characters.")
+          .max(32, "Firstname must be at most 32 characters.")
+          .optional(),
+        lastname: z
+          .string()
+          .min(5, "Lastname must be at least 5 characters.")
+          .max(32, "Lastname must be at most 32 characters.")
+          .optional(),
+        email: z.string().email("Invalid email address").optional(),
+        telephone: z.string().optional(),
+        password: z
+          .string()
+          .max(32, "Password must be at most 32 characters.")
+          .min(8, "password must be at least 8 characters")
+          .optional(),
+        confirmPassword: z
+          .string()
+          .max(32, "Password must be at most 32 characters.")
+          .min(8, "password must be at least 8 characters")
+          .optional(),
 
-    address: z.string().optional(),
-    role: z.string().optional(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  });
-const UserForms = () => {
+        address: z.string().optional(),
+        role: z.string().optional(),
+      })
+      .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+      });
+  } else {
+    formSchema = z
+      .object({
+        cin: z.string().min(8, "CIN must be at least 8 characters."),
+        firstname: z
+          .string()
+          .min(5, "Firstname must be at least 5 characters.")
+          .max(32, "Firstname must be at most 32 characters."),
+        lastname: z
+          .string()
+          .min(5, "Lastname must be at least 5 characters.")
+          .max(32, "Lastname must be at most 32 characters."),
+        email: z.string().email("Invalid email address"),
+        telephone: z.string(),
+        password: z
+          .string()
+          .max(32, "Password must be at most 32 characters.")
+          .min(8, "password must be at least 8 characters"),
+        confirmPassword: z
+          .string()
+          .max(32, "Password must be at most 32 characters.")
+          .min(8, "password must be at least 8 characters"),
+
+        address: z.string().optional(),
+        role: z.string().optional(),
+      })
+      .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+      });
+  }
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -77,11 +116,33 @@ const UserForms = () => {
       role: "",
     },
   });
-  
 
-  useEffect(()=>{
+  useEffect(() => {
     loadRoles();
-  },[])
+    if (type === "edit") {
+      loadUserData();
+    }
+  }, []);
+  const loadUserData = async () => {
+    try {
+      const res = await getUserById(id as string);
+      if (res.status === 200) {
+        form.reset({
+          cin: res.data.cin,
+          firstname: res.data.firstname,
+          lastname: res.data.lastname,
+          email: res.data.email,
+          telephone: res.data.telephone,
+          address: res.data.address,
+          role: res.data.role?._id || "",
+        });
+      }
+    } catch (error: any) {
+      toast.error("Failed to load user data. Please try again.");
+    }
+  };
+  const { id } = useAddUserModal();
+
   const [roles, setRoles] = useState<Role[]>([]);
   const loadRoles = async () => {
     try {
@@ -111,12 +172,19 @@ const UserForms = () => {
       data,
     );
     try {
-      const response = await createUser(data);
-      if (response.status === 201) {
-        toast.success("User created successfully");
+      if (type === "add") {
+        const response = await createUser(data);
+        if (response.status === 201) {
+          toast.success("User created successfully");
+        }
+      }else{
+        const response =await updateUser(id as string,data);
+        if(response.status === 200 || response.status === 204){
+          toast.success("User updated successfully");
+        }
       }
     } catch (error) {
-      toast.error("Failed to create user. Please try again.");
+      toast.error("Failed to update user. Please try again.");
     }
   };
   return (
