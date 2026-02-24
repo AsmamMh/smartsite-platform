@@ -375,7 +375,13 @@ export function PermissionsDataTable({
       globalFilter,
     },
   });
-  const {onOpen} = useAddPermissionModal();
+  const { onOpen, setType } = useAddPermissionModal();
+  
+  const handleAddClick = () => {
+    setType("add");
+    onOpen();
+  };
+  
   return (
     <>
       <div className="flex justify-between items-center py-4 flex-wrap gap-4">
@@ -386,7 +392,7 @@ export function PermissionsDataTable({
           className="max-w-sm"
         />
 
-        <Button onClick={onOpen} variant="default">
+        <Button onClick={handleAddClick} variant="default">
           <ListPlusIcon className="mr-2 h-4 w-4" />
           Add New Permission
         </Button>

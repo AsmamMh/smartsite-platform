@@ -46,6 +46,7 @@ import { PermissionsDataTable } from "./_components/permissions-data-table";
 import { set } from "zod";
 import { getAllStatics } from "@/app/action/statiscs.action";
 import useAddUserModal from "@/app/hooks/use-user-Modal";
+import useAddPermissionModal from "@/app/hooks/use-permission-Modal";
 
 export default function UserManagement() {
   const user = useAuthStore((state) => state.user);
@@ -53,6 +54,7 @@ export default function UserManagement() {
   const canManageRoles = user && canEdit(user.role.name, "users");
   const [roles, setRoles] = useState<Role[]>([]);
   const { setOnUserChange } = useAddUserModal();
+  const { setOnPermissionChange } = useAddPermissionModal();
 
   const [statics, setStatics] = useState({
     totalRoles:0,
@@ -70,6 +72,7 @@ export default function UserManagement() {
     loadUsers();
     loadStatics();
     setOnUserChange(() => loadUsers);
+    setOnPermissionChange(() => loadPermissions);
   }, []);
 
   const loadStatics = async () =>{
@@ -133,8 +136,10 @@ export default function UserManagement() {
   };
 
   const handleEditPermission = (permission: Permission) => {
-    // toast.info(`Edit permission: ${permission.name}`);
-    // TODO: Implement edit dialog
+    const { setId, setType, onOpen } = useAddPermissionModal.getState();
+    setId(permission._id);
+    setType("edit");
+    onOpen();
   };
 
   const handleDeletePermission = async (permissionId: string) => {
@@ -329,7 +334,11 @@ export default function UserManagement() {
               {isLoading ? (
                 <div className="text-center py-12">Loading permissions...</div>
               ) : (
-                <PermissionsDataTable permissions={permissions} />
+                <PermissionsDataTable 
+                  permissions={permissions}
+                  onEdit={handleEditPermission}
+                  onDelete={handleDeletePermission}
+                />
               )}
             </TabsContent>
           </CardContent>
