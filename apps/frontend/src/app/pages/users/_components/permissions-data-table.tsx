@@ -130,14 +130,14 @@ export function PermissionsDataTable({
       cell: ({ row }) => {
         return (
           <span
-             className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[18px]  ${
-               row.getValue("access") === true
-                 ? "bg-green-100 text-green-800"
-                 : "bg-red-100 text-red-800"
-             } `}
-           >
-             {row.getValue("access") === true ? "Oui" : "Non"}
-           </span>
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[18px]  ${
+              row.getValue("access") === true
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            } `}
+          >
+            {row.getValue("access") === true ? "Oui" : "Non"}
+          </span>
           // <Select
           //   // disabled={access.modification === "N"}
 
@@ -180,14 +180,14 @@ export function PermissionsDataTable({
       cell: ({ row }) => {
         return (
           <span
-             className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[18px]  ${
-               row.getValue("create") === true
-                 ? "bg-green-100 text-green-800"
-                 : "bg-red-100 text-red-800"
-             } `}
-           >
-             {row.getValue("create") === true ? "Oui" : "Non"}
-           </span>
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[18px]  ${
+              row.getValue("create") === true
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            } `}
+          >
+            {row.getValue("create") === true ? "Oui" : "Non"}
+          </span>
           // <Select
           //   // disabled={access.modification === "N"}
 
@@ -229,15 +229,15 @@ export function PermissionsDataTable({
       },
       cell: ({ row }) => {
         return (
-           <span
-             className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[18px]  ${
-               row.getValue("update") === true
-                 ? "bg-green-100 text-green-800"
-                 : "bg-red-100 text-red-800"
-             } `}
-           >
-             {row.getValue("update") === true ? "Oui" : "Non"}
-           </span>
+          <span
+            className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[18px]  ${
+              row.getValue("update") === true
+                ? "bg-green-100 text-green-800"
+                : "bg-red-100 text-red-800"
+            } `}
+          >
+            {row.getValue("update") === true ? "Oui" : "Non"}
+          </span>
           // <Select
           //   // disabled={access.modification === "N"}
 
@@ -280,15 +280,15 @@ export function PermissionsDataTable({
       cell: ({ row }) => {
         return (
           <>
-             <span
-             className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[18px]  ${
-               row.getValue("delete") === true
-                 ? "bg-green-100 text-green-800"
-                 : "bg-red-100 text-red-800"
-             } `}
-           >
-             {row.getValue("update") === true ? "Oui" : "Non"}
-           </span>
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[18px]  ${
+                row.getValue("delete") === true
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
+              } `}
+            >
+              {row.getValue("update") === true ? "Oui" : "Non"}
+            </span>
             {/* <span
              className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-lg  ${
                row.getValue("acces") === "O"
@@ -325,7 +325,7 @@ export function PermissionsDataTable({
         );
       },
     },
-    
+
     {
       accessorKey: "createdAt",
       header: ({ column }) => {
@@ -342,56 +342,55 @@ export function PermissionsDataTable({
       cell: ({ row }) => {
         const date = new Date(row.getValue("createdAt"));
         return <div>{date.toLocaleDateString()}</div>;
+      },  
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const permission = row.original;
+        return (
+          <div className="flex gap-2">
+            {onEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(permission)}
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Permission</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete the permission "
+                      {permission.name}"? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => onDelete(permission._id)}
+                      className="bg-red-600 hover:bg-red-700"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        );
       },
     },
-     {
-       id: "actions",
-       header: "Actions",
-       cell: ({ row }) => {
-         const permission = row.original;
-         return (
-           <div className="flex gap-2">
-             {onEdit && (
-               <Button
-                 variant="ghost"
-                 size="sm"
-                 onClick={() => onEdit(permission)}
-               >
-                 <Edit className="h-4 w-4" />
-               </Button>
-             )}
-             {onDelete && (
-               <AlertDialog>
-                 <AlertDialogTrigger asChild>
-                   <Button variant="ghost" size="sm">
-                     <Trash2 className="h-4 w-4 text-red-500" />
-                   </Button>
-                 </AlertDialogTrigger>
-                 <AlertDialogContent>
-                   <AlertDialogHeader>
-                     <AlertDialogTitle>Delete Permission</AlertDialogTitle>
-                     <AlertDialogDescription>
-                       Are you sure you want to delete the permission "{permission.name}"?
-                       This action cannot be undone.
-                     </AlertDialogDescription>
-                   </AlertDialogHeader>
-                   <AlertDialogFooter>
-                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                     <AlertDialogAction
-                       onClick={() => onDelete(permission._id)}
-                       className="bg-red-600 hover:bg-red-700"
-                     >
-                       Delete
-                     </AlertDialogAction>
-                   </AlertDialogFooter>
-                 </AlertDialogContent>
-               </AlertDialog>
-             )}
-           </div>
-         );
-       },
-     },
-      
   ];
 
   const table = useReactTable({
@@ -411,12 +410,12 @@ export function PermissionsDataTable({
     },
   });
   const { onOpen, setType } = useAddPermissionModal();
-  
+
   const handleAddClick = () => {
     setType("add");
     onOpen();
   };
-  
+
   return (
     <>
       <div className="flex justify-between items-center py-4 flex-wrap gap-4">

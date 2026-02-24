@@ -12,13 +12,16 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group";
 import { zodResolver } from "@hookform/resolvers/zod";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "react-hot-toast";
 import * as z from "zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { Checkbox } from "../ui/checkbox";
 import { createRole, getRoleById, updateRole } from "@/app/action/role.action";
+import { getAllPermissions } from "@/app/action/permission.action";
+import { Permission } from "@/app/types";
 import useRoleModal from "@/app/hooks/use-role-Modal";
 
 const formSchema = z.object({
@@ -28,27 +31,52 @@ const formSchema = z.object({
     .min(5, "Role name must be at least 5 characters.")
     .max(32, "Role name must be at most 32 characters."),
   description: z.string().optional(),
+  permissions: z.array(z.string()).optional(),
 });
 
 const RoleForms = ({ type }: { type: "edit" | "add" }) => {
+  const [availablePermissions, setAvailablePermissions] = useState<Permission[]>([]);
+  const [isLoadingPermissions, setIsLoadingPermissions] = useState(false);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       id: undefined,
       name: "",
       description: "",
+      permissions: [],
     },
   });
   const { id, onClose, onRoleChange } = useRoleModal();
+  const loadPermissions = async () => {
+    setIsLoadingPermissions(true);
+    try {
+      const res = await getAllPermissions();
+      if (res.status === 200 && Array.isArray(res.data)) {
+        setAvailablePermissions(res.data);
+      }
+    } catch (error: any) {
+      toast.error("Failed to load permissions.");
+    } finally {
+      setIsLoadingPermissions(false);
+    }
+  };
+
   const loadRoleData = async () => {
     try {
-      console.log("Loading role data for ID:", id);
       const res = await getRoleById(id as string);
       if (res.status === 200) {
+        const permissionIds = Array.isArray(res.data.permissions)
+          ? res.data.permissions.map((p: any) => 
+              typeof p === 'string' ? p : p._id
+            )
+          : [];
+        
         form.reset({
           id: res.data._id,
           name: res.data.name,
           description: res.data.description,
+          permissions: permissionIds,
         });
       }
     } catch (error: any) {
@@ -57,16 +85,16 @@ const RoleForms = ({ type }: { type: "edit" | "add" }) => {
   };
 
   useEffect(() => {
+    loadPermissions();
     if (type === "edit") {
       loadRoleData();
-
     }
   }, [type]);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       if (type === "add") {
-        const res = await createRole(data.name, data.description);
+        const res = await createRole(data.name, data.description, data.permissions);
         if (res.status === 201) {
           toast.success("Role created successfully");
           form.reset();
@@ -76,7 +104,7 @@ const RoleForms = ({ type }: { type: "edit" | "add" }) => {
           toast.error(res.data || "Failed to create role");
         }
       } else {
-        const res = await updateRole(data.id!, data.name, data.description);
+        const res = await updateRole(data.id!, data.name, data.description, data.permissions);
         if (res.status === 200 || res.status === 204) {
           toast.success("Role updated successfully");
           form.reset();
@@ -139,6 +167,58 @@ const RoleForms = ({ type }: { type: "edit" | "add" }) => {
 
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+          
+          <Controller
+            name="permissions"
+            control={form.control}
+            render={({ field }) => (
+              <Field>
+                <FieldLabel>Permissions</FieldLabel>
+                <FieldDescription>
+                  Select the permissions for this role
+                </FieldDescription>
+                {isLoadingPermissions ? (
+                  <div className="text-sm text-gray-500">Loading permissions...</div>
+                ) : (
+                  <div className="space-y-2 mt-2 max-h-60 overflow-y-auto border rounded-md p-4">
+                    {availablePermissions.length === 0 ? (
+                      <div className="text-sm text-gray-500">No permissions available</div>
+                    ) : (
+                      availablePermissions.map((permission) => (
+                        <div key={permission._id} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`permission-${permission._id}`}
+                            checked={field.value?.includes(permission._id)}
+                            onCheckedChange={(checked) => {
+                              const currentPermissions = field.value || [];
+                              if (checked) {
+                                field.onChange([...currentPermissions, permission._id]);
+                              } else {
+                                field.onChange(
+                                  currentPermissions.filter((id) => id !== permission._id)
+                                );
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`permission-${permission._id}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {permission.name}
+                            {permission.description && (
+                              <span className="text-xs text-gray-500 ml-2">
+                                ({permission.description})
+                              </span>
+                            )}
+                          </label>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 )}
               </Field>
             )}
