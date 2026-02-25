@@ -37,6 +37,7 @@ export declare class GestionSiteService {
     softDelete(id: string): Promise<Site>;
     remove(id: string): Promise<{
         message: string;
+        deletedId: string;
     }>;
     restore(id: string): Promise<Site>;
     getStatistics(): Promise<{

@@ -11,14 +11,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var GestionSiteController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GestionSiteController = void 0;
 const common_1 = require("@nestjs/common");
 const gestion_site_service_1 = require("./gestion-site.service");
 const dto_1 = require("./dto");
-let GestionSiteController = class GestionSiteController {
+let GestionSiteController = GestionSiteController_1 = class GestionSiteController {
     constructor(gestionSiteService) {
         this.gestionSiteService = gestionSiteService;
+        this.logger = new common_1.Logger(GestionSiteController_1.name);
     }
     async create(createSiteDto) {
         return this.gestionSiteService.create(createSiteDto);
@@ -64,14 +66,18 @@ let GestionSiteController = class GestionSiteController {
     async update(id, updateSiteDto) {
         return this.gestionSiteService.update(id, updateSiteDto);
     }
+    async remove(id) {
+        this.logger.log(`Demande de suppression hard delete reçue pour l'ID: ${id}`);
+        const result = await this.gestionSiteService.remove(id);
+        this.logger.log(`Résultat de la suppression: ${JSON.stringify(result)}`);
+        return result;
+    }
     async softDelete(id) {
+        this.logger.log(`Demande de soft delete reçue pour l'ID: ${id}`);
         return this.gestionSiteService.softDelete(id);
     }
     async restore(id) {
         return this.gestionSiteService.restore(id);
-    }
-    async remove(id) {
-        return this.gestionSiteService.remove(id);
     }
 };
 exports.GestionSiteController = GestionSiteController;
@@ -145,6 +151,14 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], GestionSiteController.prototype, "update", null);
 __decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], GestionSiteController.prototype, "remove", null);
+__decorate([
     (0, common_1.Delete)(':id/soft'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     __param(0, (0, common_1.Param)('id')),
@@ -160,15 +174,7 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], GestionSiteController.prototype, "restore", null);
-__decorate([
-    (0, common_1.Delete)(':id'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], GestionSiteController.prototype, "remove", null);
-exports.GestionSiteController = GestionSiteController = __decorate([
+exports.GestionSiteController = GestionSiteController = GestionSiteController_1 = __decorate([
     (0, common_1.Controller)('gestion-sites'),
     __metadata("design:paramtypes", [gestion_site_service_1.GestionSiteService])
 ], GestionSiteController);

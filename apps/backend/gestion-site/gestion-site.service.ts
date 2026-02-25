@@ -300,17 +300,36 @@ export class GestionSiteService {
   /**
    * Hard delete a site (permanent)
    */
-  async remove(id: string): Promise<{ message: string }> {
+  async remove(id: string): Promise<{ message: string; deletedId: string }> {
     try {
-      const site = await this.siteModel.findByIdAndDelete(id).exec();
-      if (!site) {
+      this.logger.log(`Tentative de suppression du site avec l'ID: ${id}`);
+      
+      // First check if site exists
+      const existingSite = await this.siteModel.findById(id).exec();
+      if (!existingSite) {
+        this.logger.warn(`Site non trouvé avec l'ID: ${id}`);
         throw new NotFoundException(`Site avec l'ID "${id}" non trouvé`);
       }
 
-      this.logger.log(`Site supprimé définitivement: ${site.nom} (${id})`);
-      return { message: `Site "${site.nom}" supprimé définitivement` };
+      this.logger.log(`Site trouvé: ${existingSite.nom}, suppression en cours...`);
+
+      // Use deleteOne with the _id
+      const result = await this.siteModel.deleteOne({ _id: id }).exec();
+      
+      this.logger.log(`Résultat de la suppression: ${JSON.stringify(result)}`);
+
+      if (result.deletedCount === 0) {
+        this.logger.error(`Échec de la suppression - deletedCount: 0`);
+        throw new InternalServerErrorException('Échec de la suppression du site');
+      }
+
+      this.logger.log(`Site supprimé définitivement: ${existingSite.nom} (${id})`);
+      return { 
+        message: `Site "${existingSite.nom}" supprimé définitivement`,
+        deletedId: id 
+      };
     } catch (error) {
-      if (error instanceof NotFoundException) {
+      if (error instanceof NotFoundException || error instanceof InternalServerErrorException) {
         throw error;
       }
       this.logger.error(

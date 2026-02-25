@@ -210,15 +210,27 @@ let GestionSiteService = GestionSiteService_1 = class GestionSiteService {
     }
     async remove(id) {
         try {
-            const site = await this.siteModel.findByIdAndDelete(id).exec();
-            if (!site) {
+            this.logger.log(`Tentative de suppression du site avec l'ID: ${id}`);
+            const existingSite = await this.siteModel.findById(id).exec();
+            if (!existingSite) {
+                this.logger.warn(`Site non trouvé avec l'ID: ${id}`);
                 throw new common_1.NotFoundException(`Site avec l'ID "${id}" non trouvé`);
             }
-            this.logger.log(`Site supprimé définitivement: ${site.nom} (${id})`);
-            return { message: `Site "${site.nom}" supprimé définitivement` };
+            this.logger.log(`Site trouvé: ${existingSite.nom}, suppression en cours...`);
+            const result = await this.siteModel.deleteOne({ _id: id }).exec();
+            this.logger.log(`Résultat de la suppression: ${JSON.stringify(result)}`);
+            if (result.deletedCount === 0) {
+                this.logger.error(`Échec de la suppression - deletedCount: 0`);
+                throw new common_1.InternalServerErrorException('Échec de la suppression du site');
+            }
+            this.logger.log(`Site supprimé définitivement: ${existingSite.nom} (${id})`);
+            return {
+                message: `Site "${existingSite.nom}" supprimé définitivement`,
+                deletedId: id
+            };
         }
         catch (error) {
-            if (error instanceof common_1.NotFoundException) {
+            if (error instanceof common_1.NotFoundException || error instanceof common_1.InternalServerErrorException) {
                 throw error;
             }
             this.logger.error(`Erreur lors de la suppression définitive du site: ${error.message}`);

@@ -11,12 +11,15 @@ import {
   DefaultValuePipe,
   HttpCode,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { GestionSiteService, SiteFilters, PaginationOptions, PaginatedResult } from './gestion-site.service';
 import { CreateSiteDto, UpdateSiteDto } from './dto';
 
 @Controller('gestion-sites')
 export class GestionSiteController {
+  private readonly logger = new Logger(GestionSiteController.name);
+  
   constructor(private readonly gestionSiteService: GestionSiteService) {}
 
   /**
@@ -125,11 +128,24 @@ export class GestionSiteController {
   }
 
   /**
+   * Hard delete a site (permanent) - must be before :id/soft to avoid route conflicts
+   */
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  async remove(@Param('id') id: string) {
+    this.logger.log(`Demande de suppression hard delete reçue pour l'ID: ${id}`);
+    const result = await this.gestionSiteService.remove(id);
+    this.logger.log(`Résultat de la suppression: ${JSON.stringify(result)}`);
+    return result;
+  }
+
+  /**
    * Soft delete a site (set estActif to false)
    */
   @Delete(':id/soft')
   @HttpCode(HttpStatus.OK)
   async softDelete(@Param('id') id: string) {
+    this.logger.log(`Demande de soft delete reçue pour l'ID: ${id}`);
     return this.gestionSiteService.softDelete(id);
   }
 
@@ -140,14 +156,5 @@ export class GestionSiteController {
   @HttpCode(HttpStatus.OK)
   async restore(@Param('id') id: string) {
     return this.gestionSiteService.restore(id);
-  }
-
-  /**
-   * Hard delete a site (permanent)
-   */
-  @Delete(':id')
-  @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string) {
-    return this.gestionSiteService.remove(id);
   }
 }

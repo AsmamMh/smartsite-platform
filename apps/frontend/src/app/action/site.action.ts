@@ -138,10 +138,10 @@ export const updateSite = async (id: string, site: Partial<Site>): Promise<Site>
   }
 };
 
-// Delete a site (soft delete)
+// Delete a site (hard delete - permanent removal from database)
 export const deleteSite = async (id: string): Promise<void> => {
   try {
-    await api.delete(`/gestion-sites/${id}/soft`);
+    await api.delete(`/gestion-sites/${id}`);
   } catch (error) {
     console.error('Error deleting site:', error);
     throw error;

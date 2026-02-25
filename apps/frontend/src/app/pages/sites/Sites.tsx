@@ -103,6 +103,7 @@ export default function Sites() {
         limit: 100,
         status: selectedStatus === 'all' ? undefined : selectedStatus
       });
+      console.log('Sites loaded from API:', response.data);
       setSites(response.data);
       setUseMockData(false);
     } catch (err) {
