@@ -32,22 +32,23 @@ export class AuthService {
   }
 
   async login(user: any) {
-    console.log("user::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::",user)
+    console.log("Login user:", user);
     const payload = {
       cin: user.cin,
       sub: user._id,
       roles: user.roles || [],
     };
-    console.log(payload)
+    console.log("JWT Payload:", payload);
+    
+    const userData = user.toObject ? user.toObject() : user;
+    
     return {
       access_token: this.jwtService.sign(payload),
-      
-        id: user._id,
-        cin: user.cin,
-        lastname: user.lastname,
-        firstname: user.firstname,
-        role: user.role,
-
+      id: userData._id,
+      cin: userData.cin,
+      lastname: userData.lastname,
+      firstname: userData.firstname,
+      role: userData.role || null,
     };
   }
 

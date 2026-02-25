@@ -1,10 +1,25 @@
 import axios from "axios";
+import { useAuthStore } from "../store/authStore";
 
-export const getAccess = async () => {
+export const getPermissions = async () => {
   try {
-    const res = await axios.get(`${process.env.LOGIN_API_URL}/mypermission`, {
+    const token = useAuthStore.getState().user?.access_token;
+    console.log(
+      "Fetching permissions with token:",
+      token,
+    );
+    
+    if (!token) {
+      console.error("No token found in auth store");
+      return Promise.resolve({
+        status: 401,
+        data: "No authentication token found",
+      });
+    }
+    
+    const res = await axios.get(`http://localhost:3000/users/mypermissions`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem("smartsite-auth")}`,
+        Authorization: `Bearer ${token}`,
       },
     });
     if (res.status === 200) {
