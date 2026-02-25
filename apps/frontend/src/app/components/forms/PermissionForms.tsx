@@ -19,8 +19,32 @@ import {
 import { Textarea } from "../ui/textarea";
 import { Switch } from "../ui/switch";
 import useAddPermissionModal from "@/app/hooks/use-permission-Modal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+
+// Predefined permission categories with their hrefs
+const PERMISSION_CATEGORIES = [
+  { name: "User Management", href: "/users" },
+  { name: "Role Management", href: "/roles" },
+  { name: "Permission Management", href: "/permissions" },
+  { name: "Site Management", href: "/sites" },
+  { name: "Content Management", href: "/content" },
+  { name: "Dashboard", href: "/dashboard" },
+  { name: "Analytics", href: "/analytics" },
+  { name: "Settings", href: "/settings" },  
+  { name: "Projects", href: "/projects" },
+  { name: "Reports", href: "/reports" },
+  { name: "Custom", href: "" }, // For custom entries
+];
 
 const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
+  const [isCustomCategory, setIsCustomCategory] = React.useState(false);
+  
   let formSchema;
   if (type === "edit") {
     formSchema = z.object({
@@ -45,6 +69,7 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
         .string()
         .min(3, "Name must be at least 3 characters.")
         .max(50, "Name must be at most 50 characters."),
+      category: z.string().optional(),
       description: z
         .string()
         .max(200, "Description must be at most 200 characters.")
@@ -61,6 +86,7 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      category: "",
       description: "",
       href: "",
       access: false,
@@ -82,8 +108,14 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
     try {
       const res = await getPermissionById(id as string);
       if (res.status === 200) {
+        // Check if the permission name matches a predefined category
+        const matchedCategory = PERMISSION_CATEGORIES.find(
+          (cat) => cat.name === res.data.name
+        );
+        
         form.reset({
           name: res.data.name || "",
+          category: matchedCategory ? res.data.name : "Custom",
           description: res.data.description || "",
           href: res.data.href || "",
           access: res.data.access || false,
@@ -91,9 +123,29 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
           update: res.data.update || false,
           delete: res.data.delete || false,
         });
+        
+        setIsCustomCategory(!matchedCategory || matchedCategory.name === "Custom");
       }
     } catch (error: any) {
       toast.error("Failed to load permission data. Please try again.");
+    }
+  };
+
+  const handleCategoryChange = (categoryName: string) => {
+    const selectedCategory = PERMISSION_CATEGORIES.find(
+      (cat) => cat.name === categoryName
+    );
+    
+    if (selectedCategory) {
+      if (selectedCategory.name === "Custom") {
+        setIsCustomCategory(true);
+        form.setValue("name", "");
+        form.setValue("href", "");
+      } else {
+        setIsCustomCategory(false);
+        form.setValue("name", selectedCategory.name);
+        form.setValue("href", selectedCategory.href);
+      }
     }
   };
 
@@ -136,6 +188,41 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
         onSubmit={form.handleSubmit(onSubmit)}
       >
         <FieldGroup>
+          {type === "add" && (
+            <Controller
+              name="category"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="form-permission-category">
+                    Permission Category *
+                  </FieldLabel>
+                  <Select
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      handleCategoryChange(value);
+                    }}
+                  >
+                    <SelectTrigger id="form-permission-category">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PERMISSION_CATEGORIES.map((category) => (
+                        <SelectItem key={category.name} value={category.name}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+          )}
+
           <Controller
             name="name"
             control={form.control}
@@ -148,8 +235,9 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
                   {...field}
                   id="form-permission-name"
                   aria-invalid={fieldState.invalid}
-                  placeholder="e.g., users:read, roles:write"
+                  placeholder="e.g., User Management"
                   autoComplete="off"
+                  disabled={type === "add" && !isCustomCategory}
                 />
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
@@ -169,8 +257,9 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
                   {...field}
                   id="form-permission-href"
                   aria-invalid={fieldState.invalid}
-                  placeholder="e.g.,  users"
+                  placeholder="e.g., /users"
                   autoComplete="off"
+                  disabled={type === "add" && !isCustomCategory}
                 />
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />

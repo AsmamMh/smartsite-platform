@@ -172,57 +172,7 @@ const RoleForms = ({ type }: { type: "edit" | "add" }) => {
             )}
           />
           
-          <Controller
-            name="permissions"
-            control={form.control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>Permissions</FieldLabel>
-                <FieldDescription>
-                  Select the permissions for this role
-                </FieldDescription>
-                {isLoadingPermissions ? (
-                  <div className="text-sm text-gray-500">Loading permissions...</div>
-                ) : (
-                  <div className="space-y-2 mt-2 max-h-60 overflow-y-auto border rounded-md p-4">
-                    {availablePermissions.length === 0 ? (
-                      <div className="text-sm text-gray-500">No permissions available</div>
-                    ) : (
-                      availablePermissions.map((permission) => (
-                        <div key={permission._id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`permission-${permission._id}`}
-                            checked={field.value?.includes(permission._id)}
-                            onCheckedChange={(checked) => {
-                              const currentPermissions = field.value || [];
-                              if (checked) {
-                                field.onChange([...currentPermissions, permission._id]);
-                              } else {
-                                field.onChange(
-                                  currentPermissions.filter((id) => id !== permission._id)
-                                );
-                              }
-                            }}
-                          />
-                          <label
-                            htmlFor={`permission-${permission._id}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                          >
-                            {permission.name}
-                            {permission.description && (
-                              <span className="text-xs text-gray-500 ml-2">
-                                ({permission.description})
-                              </span>
-                            )}
-                          </label>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-              </Field>
-            )}
-          />
+          
         </FieldGroup>
       </form>
 

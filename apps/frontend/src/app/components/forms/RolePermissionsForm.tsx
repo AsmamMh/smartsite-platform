@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { toast } from "react-hot-toast";
 import { Button } from "@/app/components/ui/button";
 import { Checkbox } from "@/app/components/ui/checkbox";
@@ -7,6 +7,12 @@ import { getAllPermissions } from "@/app/action/permission.action";
 import { getRoleById, updateRole } from "@/app/action/role.action";
 import useRolePermissionsModal from "@/app/hooks/use-role-permissions-modal";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/app/components/ui/accordion";
 
 
 const RolePermissionsForm = () => {
@@ -56,6 +62,40 @@ const RolePermissionsForm = () => {
         return [...prev, permissionId];
       }
     });
+  };
+
+  // Group permissions by category (based on permission name)
+  const groupedPermissions = useMemo(() => {
+    const groups: Record<string, Permission[]> = {};
+    
+    availablePermissions.forEach((permission) => {
+      // Use the permission name as category (e.g., "User Management")
+      const category = permission.name || "Other";
+      
+      if (!groups[category]) {
+        groups[category] = [];
+      }
+      groups[category].push(permission);
+    });
+    
+    return groups;
+  }, [availablePermissions]);
+
+  const handleSelectAllInCategory = (categoryPermissions: Permission[]) => {
+    const categoryIds = categoryPermissions.map((p) => p._id);
+    const allSelected = categoryIds.every((id) => selectedPermissions.includes(id));
+    
+    if (allSelected) {
+      // Deselect all in this category
+      setSelectedPermissions((prev) => prev.filter((id) => !categoryIds.includes(id)));
+    } else {
+      // Select all in this category
+      setSelectedPermissions((prev) => [...new Set([...prev, ...categoryIds])]);
+    }
+  };
+
+  const getSelectedCountInCategory = (categoryPermissions: Permission[]) => {
+    return categoryPermissions.filter((p) => selectedPermissions.includes(p._id)).length;
   };
 
   const handleSelectAll = () => {
@@ -114,57 +154,91 @@ const RolePermissionsForm = () => {
           Selected: {selectedPermissions.length} of {availablePermissions.length}
         </FieldDescription>
 
-        <div className="space-y-2 mt-4 max-h-96 overflow-y-auto border rounded-md p-4">
+        <div className="mt-4 max-h-96 overflow-y-auto border rounded-md">
           {availablePermissions.length === 0 ? (
-            <div className="text-sm text-gray-500">No permissions available</div>
+            <div className="text-sm text-gray-500 p-4">No permissions available</div>
           ) : (
-            availablePermissions.map((permission) => (
-              <div
-                key={permission._id}
-                className="flex items-start space-x-3 p-2 hover:bg-gray-50 rounded-md transition-colors"
-              >
-                <Checkbox
-                  id={`permission-${permission._id}`}
-                  checked={selectedPermissions.includes(permission._id)}
-                  onCheckedChange={() => handleTogglePermission(permission._id)}
-                />
-                <div className="flex-1">
-                  <label
-                    htmlFor={`permission-${permission._id}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    {permission.name}
-                  </label>
-                  {permission.description && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {permission.description}
-                    </p>
-                  )}
-                  <div className="flex gap-2 mt-1">
-                    {permission.access && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                        Access
-                      </span>
-                    )}
-                    {permission.create && (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
-                        Create
-                      </span>
-                    )}
-                    {permission.update && (
-                      <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
-                        Update
-                      </span>
-                    )}
-                    {permission.delete && (
-                      <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">
-                        Delete
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
+            <Accordion type="multiple" className="w-full">
+              {Object.entries(groupedPermissions).map(([category, permissions]) => {
+                const selectedCount = getSelectedCountInCategory(permissions);
+                const allSelected = selectedCount === permissions.length;
+                
+                return (
+                  <AccordionItem key={category} value={category}>
+                    <AccordionTrigger className="px-4 hover:no-underline hover:bg-gray-50">
+                      <div className="flex items-center justify-between w-full pr-4">
+                        <span className="font-semibold text-base">{category}</span>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          {selectedCount}/{permissions.length}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4">
+                      <div className="space-y-1 pt-2">
+                        <div className="flex justify-end mb-2">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSelectAllInCategory(permissions)}
+                            className="text-xs h-7"
+                          >
+                            {allSelected ? "Deselect All" : "Select All"}
+                          </Button>
+                        </div>
+                        {permissions.map((permission) => (
+                          <div
+                            key={permission._id}
+                            className="flex items-start space-x-3 p-3 hover:bg-gray-50 rounded-md transition-colors"
+                          >
+                            <Checkbox
+                              id={`permission-${permission._id}`}
+                              checked={selectedPermissions.includes(permission._id)}
+                              onCheckedChange={() => handleTogglePermission(permission._id)}
+                            />
+                            <div className="flex-1">
+                              <label
+                                htmlFor={`permission-${permission._id}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {permission.name}
+                              </label>
+                              {permission.description && (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {permission.description}
+                                </p>
+                              )}
+                              <div className="flex gap-2 mt-2">
+                                {permission.access && (
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                                    Access
+                                  </span>
+                                )}
+                                {permission.create && (
+                                  <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded">
+                                    Create
+                                  </span>
+                                )}
+                                {permission.update && (
+                                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">
+                                    Update
+                                  </span>
+                                )}
+                                {permission.delete && (
+                                  <span className="text-xs bg-red-100 text-red-800 px-2 py-0.5 rounded">
+                                    Delete
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
           )}
         </div>
       </Field>
