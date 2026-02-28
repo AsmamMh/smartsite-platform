@@ -73,7 +73,7 @@ export class AuthService {
     lastname: string,
     role: string,
     email?: string,
-    telephone?: string,
+    phoneNumber?: string,
     departement?: string,
     address?: string,
   ) {
@@ -84,7 +84,7 @@ export class AuthService {
       lastname,
       role,
       email,
-      telephone,
+      phoneNumber,
       departement,
       address,
     });
@@ -103,7 +103,7 @@ export class AuthService {
       firstname,
       role,
       email: email || address,
-      telephone,
+      phoneNumber,
       departement,
       address: address,
       status: 'pending',

@@ -49,7 +49,7 @@ const formSchema = z.object({
     .string()
     .email("Veuillez entrer une adresse email valide.")
     .min(5, "L'email est requis."),
-  telephone: z
+  phoneNumber: z
     .string()
     .min(8, "Le téléphone est requis et doit contenir au moins 8 caractères.")
     .max(20, "Le téléphone ne doit pas dépasser 20 caractères."),
@@ -80,7 +80,7 @@ export default function Register() {
       firstname: "",
       lastname: "",
       email: "",
-      telephone: "",
+      phoneNumber: "",
       departement: "",
       adresse: "",
       role: "",
@@ -96,7 +96,7 @@ export default function Register() {
         data.firstname,
         data.lastname,
         data.email,
-        data.telephone,
+        data.phoneNumber,
         data.departement,
         data.adresse,
         data.role
@@ -241,14 +241,14 @@ export default function Register() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FieldGroup>
                       <Controller
-                        name="telephone"
+                        name="phoneNumber"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="telephone">Téléphone</FieldLabel>
+                            <FieldLabel htmlFor="phoneNumber">Téléphone</FieldLabel>
                             <Input
                               {...field}
-                              id="telephone"
+                              id="phoneNumber"
                               placeholder="Entrez votre téléphone"
                               aria-invalid={fieldState.invalid}
                             />

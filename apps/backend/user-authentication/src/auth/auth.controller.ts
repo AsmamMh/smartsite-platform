@@ -31,7 +31,7 @@ export class AuthController {
       lastname,
       role,
       email,
-      telephone,
+      phoneNumber,
       departement,
       adresse,
     } = registerDto;
@@ -43,7 +43,7 @@ export class AuthController {
       lastname,
       role,
       email,
-      telephone,
+      phoneNumber,
       departement,
       adresse,
     );
@@ -56,7 +56,7 @@ export class AuthController {
         firstname: user.firstname,
         lastname: user.lastname,
         email: user.email,
-        telephone: user.telephone,
+        phoneNumber: user.phoneNumber,
         departement: user.departement,
         address: user.address,
         role: user.role,

@@ -83,7 +83,7 @@ export interface AuthState {
   };
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (cin: string, password: string, firstname: string, lastname: string, email: string, telephone: string, departement: string, adresse: string, role: string) => Promise<void>;
+  register: (cin: string, password: string, firstname: string, lastname: string, email: string, phoneNumber: string, departement: string, adresse: string, role: string) => Promise<void>;
   getPendingUsers?: () => Promise<User[]>;
   approveUser?: (userId: string, password: string) => Promise<User>;
   rejectUser?: (userId: string) => Promise<void>;
