@@ -34,7 +34,7 @@ import { RolesDataTable } from "./_components/roles-data-table";
 
 import { UserDataTable } from "./_components/user-data-table";
 
-import { deleteUser, getAllUsers } from "@/app/action/user.action";
+import { banUser, deleteUser, getAllUsers } from "@/app/action/user.action";
 
 import { mockTeamMembers } from "@/app/utils/mockData";
 
@@ -188,7 +188,22 @@ export default function UserManagement() {
       setIsLoading(false);
     }
   };
-
+  const handleBanUser = async (userId: string, estActif: boolean) => {
+    try {
+      const response = await banUser(userId, estActif);
+      if (response.status === 200) {
+        toast.success(
+          estActif ? "User unbanned successfully" : "User banned successfully"
+        );
+        loadUsers();
+      } else {
+        toast.error(response.data || "Failed to update user status");
+      }
+    } catch (error) {
+      console.error("Failed to update user status:", error);
+      toast.error("Failed to update user status");
+    }
+  }
   const handleEditRole = (role: Role) => {
     const { setId, setType, onOpen } = useRoleModal.getState();
     setId(role._id);
@@ -344,7 +359,9 @@ export default function UserManagement() {
               {isLoading ? (
                 <div className="text-center py-12">Loading users...</div>
               ) : (
-                <UserDataTable users={users} onDelete={handleDeleteUser} />
+                <UserDataTable
+                onBan={handleBanUser}
+                users={users} onDelete={handleDeleteUser} />
               )}
             </TabsContent>
 

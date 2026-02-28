@@ -52,13 +52,13 @@ interface DataTableProps<TData, TValue> {
   //columns: ColumnDef<TData, TValue>[];
   users: User[];
   onDelete?: (userId: string) => Promise<void> | void;
-  onBan?: (userId: string) => Promise<void> | void;
+  onBan?: (userId: string, estActif: boolean) => Promise<void> | void;
 }
 
 export function UserDataTable<TData, TValue>({
   users,
   onDelete,
-  onBan
+  onBan,
 }: DataTableProps<TData, TValue>) {
   const [data, setData] = useState<User[]>([]);
   const [TotalPages, setTotalPages] = useState(0);
@@ -72,17 +72,17 @@ export function UserDataTable<TData, TValue>({
   const { setId, id, onOpen, setType } = useAddUserModal();
   console.log("users:", users);
 
-   const handleBan = async (userId:string)=>{
-       if(  !onBan){
-        return;
-       }
-       setBaningId(userId);
-       try {
-        await onBan(userId);
-       } finally {
-        setBaningId(null);
-       }
-   }
+  const handleBan = async (userId: string) => {
+    if (!onBan) {
+      return;
+    }
+    setBaningId(userId);
+    try {
+      await onBan(userId, false);
+    } finally {
+      setBaningId(null);
+    }
+  };
   const handleDelete = async (userId: string) => {
     if (!onDelete) {
       return;
@@ -317,8 +317,8 @@ export function UserDataTable<TData, TValue>({
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
-                   onClick={() => handleBan(id)}
-                   disabled={banningId === id}
+                    onClick={() => handleBan(id)}
+                    disabled={banningId === id}
                   >
                     {banningId === id ? "Banning..." : "Ban"}
                   </AlertDialogAction>

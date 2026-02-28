@@ -125,3 +125,18 @@ export const removeRoleFromUser = async (userId: string, roleId: string) => {
     });
   }
 };
+
+export const banUser = async (userId: string, data: boolean) => {
+  try {
+    const res = await axios.put(`${API_URL}/ban/${userId}`, { data });
+    if (res.status === 200) {
+      return Promise.resolve({ status: res.status, data: res.data });
+    }
+  } catch (error: any) {
+    console.error("Ban user eror,", error);
+    return Promise.resolve({
+      status: error?.response?.status,
+      data: error?.reponse?.data?.message,
+    });
+  }
+};

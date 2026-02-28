@@ -62,7 +62,7 @@ export class UsersController {
   }
 
   @Put('ban/:id')
-  async ban(@Param('id') id: string, @Body() body: { estActif: boolean }) {
-    return this.usersService.handleBan(id, body.estActif);
+  async ban(@Param('id') id: string) {
+    return this.usersService.handleBan(id);
   }
 }

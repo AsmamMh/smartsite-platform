@@ -27,7 +27,8 @@ export class UsersService {
           path: 'permissions',
           match: { access: true },
         },
-      }).sort({name:1})
+      })
+      .sort({ name: 1 })
       .exec();
 
     if (!user) {
@@ -65,13 +66,19 @@ export class UsersService {
     return await this.userModel.findByIdAndDelete(id).exec();
   }
 
-
-  async handleBan(id:string,data:boolean){
-    const bannedUser = await this.userModel.findByIdAndUpdate(id,{estActif:data},{new:true}).exec()
-    if(!bannedUser){
-      throw new NotFoundException(`Usser with id ${id} not exist`)
+  async handleBan(id: string) {
+    const bannedUser = await this.userModel.findById(id).exec();
+    if (!bannedUser) {
+      throw new NotFoundException(`Usser with id ${id} not exist`);
     }
-    return bannedUser;
-  }
+    if (bannedUser?.estActif) {
+      bannedUser.estActif = false;
+    } else {
+      bannedUser.estActif = true;
+    }
 
+    const user = await bannedUser.save();
+
+    return user;
+  }
 }
