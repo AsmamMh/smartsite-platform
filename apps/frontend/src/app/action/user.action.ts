@@ -140,3 +140,19 @@ export const banUser = async (userId: string, data: boolean) => {
     });
   }
 };
+
+
+export const getAllClients = async () =>{
+  try {
+    const res = await axios.get(`${API_URL}/clients`);
+    if(res.status === 200){
+
+      return Promise.resolve({status: res.status, data: res.data})
+    }
+  } catch (error) {
+    return Promise.resolve({
+      status: error?.response?.status,
+      data: error?.response?.data?.message,
+    })
+  }
+}

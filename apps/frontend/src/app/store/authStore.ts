@@ -32,8 +32,8 @@ export const useAuthStore = create<AuthState>()(
               access_token: res.data.access_token,
               id: res.data.id,
               cin: res.data.cin,
-              firstname: res.data.firstname,
-              lastname: res.data.lastname,
+              firstName: res.data.firstName,
+              lastName: res.data.lastName,
               role: res.data.role,
             },
             isAuthenticated: true,
@@ -54,8 +54,8 @@ export const useAuthStore = create<AuthState>()(
       register: async (
         cin: string,
         password: string,
-        firstname: string,
-        lastname: string,
+        firstName: string,
+        lastName: string,
         email: string,
         phoneNumber: string,
         departement: string,
@@ -65,8 +65,8 @@ export const useAuthStore = create<AuthState>()(
         const res = await api.post("/auth/register", {
           cin,
           password, // généralement vide, mot de passe généré à l'approbation
-          firstname,
-          lastname,
+          firstName,
+          lastName,
           email,
           phoneNumber,
           departement,

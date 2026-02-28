@@ -40,15 +40,15 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
     formSchema = z
       .object({
         cin: z.string().min(8, "CIN must be at least 8 characters.").optional(),
-        firstname: z
+        firstName: z
           .string()
-          .min(5, "Firstname must be at least 5 characters.")
-          .max(32, "Firstname must be at most 32 characters.")
+          .min(5, "firstName must be at least 5 characters.")
+          .max(32, "firstName must be at most 32 characters.")
           .optional(),
-        lastname: z
+        lastName: z
           .string()
-          .min(5, "Lastname must be at least 5 characters.")
-          .max(32, "Lastname must be at most 32 characters.")
+          .min(5, "lastName must be at least 5 characters.")
+          .max(32, "lastName must be at most 32 characters.")
           .optional(),
         email: z.string().email("Invalid email address").optional(),
         phoneNumber: z.string().optional(),
@@ -74,14 +74,14 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
     formSchema = z
       .object({
         cin: z.string().min(8, "CIN must be at least 8 characters."),
-        firstname: z
+        firstName: z
           .string()
-          .min(5, "Firstname must be at least 5 characters.")
-          .max(32, "Firstname must be at most 32 characters."),
-        lastname: z
+          .min(5, "firstName must be at least 5 characters.")
+          .max(32, "firstName must be at most 32 characters."),
+        lastName: z
           .string()
-          .min(5, "Lastname must be at least 5 characters.")
-          .max(32, "Lastname must be at most 32 characters."),
+          .min(5, "lastName must be at least 5 characters.")
+          .max(32, "lastName must be at most 32 characters."),
         email: z.string().email("Invalid email address"),
         phoneNumber: z.string(),
         password: z
@@ -106,8 +106,8 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       cin: "",
-      firstname: "",
-      lastname: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phoneNumber: "",
       password: "",
@@ -129,8 +129,8 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
       if (res.status === 200) {
         form.reset({
           cin: res.data.cin,
-          firstname: res.data.firstname,
-          lastname: res.data.lastname,
+          firstName: res.data.firstName,
+          lastName: res.data.lastName,
           email: res.data.email,
           phoneNumber: res.data.phoneNumber,
           address: res.data.address,
@@ -156,7 +156,7 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
   };
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     // try {
-    //   const res = await createUser(data.firstname, data.lastname, data.email, data.phoneNumber, data.password, data.address);
+    //   const res = await createUser(data.firstName, data.lastName, data.email, data.phoneNumber, data.password, data.address);
     //   if (res.status === 201) {
     //     toast.success("User created successfully");
     //   }
@@ -166,8 +166,8 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
     console.log(
       data.address,
       data.email,
-      data.firstname,
-      data.lastname,
+      data.firstName,
+      data.lastName,
       data.phoneNumber,
       data,
     );
@@ -203,18 +203,18 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
         <FieldGroup>
           <div className="flex justify-between gap-x-3">
             <Controller
-              name="firstname"
+              name="firstName"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-firstname">
-                    Firstname
+                  <FieldLabel htmlFor="form-rhf-demo-firstName">
+                    firstName
                   </FieldLabel>
                   <Input
                     {...field}
-                    id="form-rhf-demo-firstname"
+                    id="form-rhf-demo-firstName"
                     aria-invalid={fieldState.invalid}
-                    placeholder="Enter firstname"
+                    placeholder="Enter firstName"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -224,18 +224,18 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
               )}
             />
             <Controller
-              name="lastname"
+              name="lastName"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-lastname">
-                    Lastname
+                  <FieldLabel htmlFor="form-rhf-demo-lastName">
+                    lastName
                   </FieldLabel>
                   <Input
                     {...field}
-                    id="form-rhf-demo-lastname"
+                    id="form-rhf-demo-lastName"
                     aria-invalid={fieldState.invalid}
-                    placeholder="Enter Lastname"
+                    placeholder="Enter lastName"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (

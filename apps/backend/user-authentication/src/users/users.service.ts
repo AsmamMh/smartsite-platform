@@ -86,11 +86,19 @@ export class UsersService {
     if (!bannedUser) {
       throw new NotFoundException(`Usser with id ${id} not exist`);
     }
-    bannedUser.estActif = !bannedUser.estActif;
+    bannedUser.isActif = !bannedUser.isActif;
 
     const user = await bannedUser.save();
 
     return user;
+  }
+
+  async getAllclients(){
+
+    return await this.userModel.find().populate({
+      path:"role",
+      match: {name: 'client'}
+    })
   }
 }
 

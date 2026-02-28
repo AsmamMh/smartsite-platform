@@ -29,7 +29,7 @@ export class AuthService {
       return null;
     }
 
-    const storedHash = (user as any).motDePasse || (user as any).password;
+    const storedHash = (user as any).password || (user as any).password;
     if (!storedHash) {
       console.log('No stored password hash for user', cin);
       return null;
@@ -39,7 +39,7 @@ export class AuthService {
     console.log('find by cin');
     if (await bcrypt.compare(password, storedHash)) {
       const userObj = user.toObject ? user.toObject() : user;
-      const { password: _p, motDePasse: _m, ...result } = userObj as any;
+      const { password: _p, password: _m, ...result } = userObj as any;
       return result;
     }
     return null;
@@ -60,8 +60,8 @@ export class AuthService {
       access_token: this.jwtService.sign(payload),
       id: userData._id,
       cin: userData.cin,
-      lastname: userData.lastname,
-      firstname: userData.firstname,
+      lastName: userData.lastName,
+      firstName: userData.firstName,
       role: userData.role || null,
     };
   }
@@ -69,8 +69,8 @@ export class AuthService {
   async register(
     cin: string,
     password: string,
-    firstname: string,
-    lastname: string,
+    firstName: string,
+    lastName: string,
     role: string,
     email?: string,
     phoneNumber?: string,
@@ -80,8 +80,8 @@ export class AuthService {
     console.log('🔍 DEBUG register appelé avec:', {
       cin,
       password,
-      firstname,
-      lastname,
+      firstName,
+      lastName,
       role,
       email,
       phoneNumber,
@@ -99,8 +99,8 @@ export class AuthService {
     const userData = {
       cin,
       password: hashedPassword,
-      lastname,
-      firstname,
+      lastName,
+      firstName,
       role,
       email: email || address,
       phoneNumber,
@@ -128,7 +128,7 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const updatedUser = await this.usersService.update(userId, {
-      motDePasse: hashedPassword,
+      password: hashedPassword,
       status: 'approved',
       approvedBy: adminId,
       approvedAt: new Date(),
@@ -143,8 +143,8 @@ export class AuthService {
       try {
         await this.emailService.sendApprovalEmail(
           updatedUser.email,
-          updatedUser.firstname,
-          updatedUser.lastname,
+          updatedUser.firstName,
+          updatedUser.lastName,
           updatedUser.cin,
           password,
         );

@@ -27,8 +27,8 @@ export class AuthController {
     const {
       cin,
       password,
-      firstname,
-      lastname,
+      firstName,
+      lastName,
       role,
       email,
       phoneNumber,
@@ -39,8 +39,8 @@ export class AuthController {
     const user = await this.authService.register(
       cin,
       password,
-      firstname,
-      lastname,
+      firstName,
+      lastName,
       role,
       email,
       phoneNumber,
@@ -53,8 +53,8 @@ export class AuthController {
       user: {
         id: user._id,
         cin: user.cin,
-        firstname: user.firstname,
-        lastname: user.lastname,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
         phoneNumber: user.phoneNumber,
         departement: user.departement,

@@ -6,10 +6,10 @@ import { Role } from 'src/roles/entities/role.entity';
 @Schema({ timestamps: true })
 export class User extends Document {
   @Prop({ required: true, trim: true })
-  firstname: string;
+  firstName: string;
 
   @Prop({ required: true, trim: true })
-  lastname: string;
+  lastName: string;
 
   @Prop({ required: true, unique: true, trim: true })
   cin: string;
@@ -39,7 +39,7 @@ export class User extends Document {
   address: string;
 
   @Prop({ default: true })
-  estActif: boolean;
+  isActif: boolean;
 
   @Prop()
   phoneNumber?: string;
@@ -56,8 +56,7 @@ export class User extends Document {
   @Prop()
   approvedAt?: Date;
 
-  @Prop()
-  motDePasse?: string;
+  
 
   @Prop([String])
   certifications?: string[];

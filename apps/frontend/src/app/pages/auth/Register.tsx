@@ -37,11 +37,11 @@ const formSchema = z.object({
     .string()
     .min(5, "CIN est requis et doit contenir au moins 5 caractères.")
     .max(32, "CIN ne doit pas dépasser 32 caractères."),
-  firstname: z
+  firstName: z
     .string()
     .min(2, "Le prénom est requis et doit contenir au moins 2 caractères.")
     .max(50, "Le prénom ne doit pas dépasser 50 caractères."),
-  lastname: z
+  lastName: z
     .string()
     .min(2, "Le nom est requis et doit contenir au moins 2 caractères.")
     .max(50, "Le nom ne doit pas dépasser 50 caractères."),
@@ -77,8 +77,8 @@ export default function Register() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       cin: "",
-      firstname: "",
-      lastname: "",
+      firstName: "",
+      lastName: "",
       email: "",
       phoneNumber: "",
       departement: "",
@@ -93,8 +93,8 @@ export default function Register() {
       await register(
         data.cin,
         "", // PAS de mot de passe - sera généré lors de l'approbation
-        data.firstname,
-        data.lastname,
+        data.firstName,
+        data.lastName,
         data.email,
         data.phoneNumber,
         data.departement,
@@ -197,14 +197,14 @@ export default function Register() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FieldGroup>
                       <Controller
-                        name="firstname"
+                        name="firstName"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="firstname">Prénom *</FieldLabel>
+                            <FieldLabel htmlFor="firstName">Prénom *</FieldLabel>
                             <Input
                               {...field}
-                              id="firstname"
+                              id="firstName"
                               placeholder="Entrez votre prénom"
                               aria-invalid={fieldState.invalid}
                             />
@@ -218,14 +218,14 @@ export default function Register() {
 
                     <FieldGroup>
                       <Controller
-                        name="lastname"
+                        name="lastName"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="lastname">Nom *</FieldLabel>
+                            <FieldLabel htmlFor="lastName">Nom *</FieldLabel>
                             <Input
                               {...field}
-                              id="lastname"
+                              id="lastName"
                               placeholder="Entrez votre nom"
                               aria-invalid={fieldState.invalid}
                             />
