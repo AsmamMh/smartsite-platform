@@ -50,7 +50,7 @@ const profileSchema = z.object({
     .min(2, "Le nom doit contenir au moins 2 caractères")
     .max(50, "Le nom ne doit pas dépasser 50 caractères"),
   email: z.string().email("Email invalide"),
-  phoneNumber: z.string().optional(),
+  telephone: z.string().optional(),
   address: z.string().optional(),
   departement: z.string().optional(),
   companyName: z.string().optional(),
@@ -89,7 +89,7 @@ export default function Profile() {
       firstName: "",
       lastName: "",
       email: "",
-      phoneNumber: "",
+      telephone: "",
       address: "",
       departement: "",
       companyName: "",
@@ -280,12 +280,12 @@ export default function Profile() {
                       </p>
                     </div>
                   </div>
-                  {user.phoneNumber && (
+                  {user.telephone && (
                     <div className="flex items-center gap-3 text-gray-600">
                       <Phone className="h-5 w-5 text-indigo-600" />
                       <div>
                         <p className="text-xs text-gray-500">Téléphone</p>
-                        <p className="font-medium">{user.phoneNumber}</p>
+                        <p className="font-medium">{user.telephone}</p>
                       </div>
                     </div>
                   )}
@@ -400,14 +400,14 @@ export default function Profile() {
 
                   <FieldGroup>
                     <Controller
-                      name="phoneNumber"
+                      name="telephone"
                       control={profileForm.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="phoneNumber">
+                          <FieldLabel htmlFor="telephone">
                             Téléphone
                           </FieldLabel>
-                          <Input {...field} id="phoneNumber" />
+                          <Input {...field} id="telephone" />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />
                           )}

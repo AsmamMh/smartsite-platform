@@ -29,7 +29,7 @@ export interface User {
   email?: string;
   phone?: string;
   role: UserRole;
-  phoneNumber: string;
+  telephone: string;
   cin: string;
   profilePicture?: string;
   isActive: boolean;
@@ -96,14 +96,19 @@ export interface AuthState {
     firstName: string,
     lastName: string,
     email: string,
-    phoneNumber?: string,
+    telephone?: string,
+
     departement?: string,
+
+    preferredLanguage?: string,
+    certifications?: string[],
+
+  
     address?: string,
     role?: string,
     companyName?: string,
-    preferredLanguage?: string,
-    certifications?: string[],
-  ) => Promise<void>;
+   
+ ) => Promise<void>;
   getPendingUsers?: () => Promise<User[]>;
   approveUser?: (userId: string, password: string) => Promise<User>;
   rejectUser?: (userId: string) => Promise<void>;

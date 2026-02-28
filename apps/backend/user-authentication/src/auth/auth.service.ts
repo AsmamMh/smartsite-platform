@@ -75,7 +75,7 @@ export class AuthService {
     lastName: string,
     role: string,
     email?: string,
-    phoneNumber?: string,
+    telephone?: string,
 
     address?: string,
     companyName?: string,
@@ -87,7 +87,7 @@ export class AuthService {
       lastName,
       role,
       email,
-      phoneNumber,
+      telephone,
 
       address,
       companyName,
@@ -97,6 +97,7 @@ export class AuthService {
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
+
 
     // Find default "client" role if no role provided
     let roleId = role;
@@ -126,7 +127,7 @@ export class AuthService {
       firstName,
       role: roleId,
       email: email || address,
-      phoneNumber,
+      telephone,
 
       address: address,
       status: 'pending',

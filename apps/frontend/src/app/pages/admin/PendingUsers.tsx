@@ -111,7 +111,7 @@ export default function PendingUsers() {
                       </div>
                       <div>
                         <span className="font-medium">Téléphone:</span>{" "}
-                        {(u as any).phoneNumber || (u as any).phone || "N/A"}
+                        {(u as any).telephone || (u as any).phone || "N/A"}
                       </div>
                       <div>
                         <span className="font-medium">Département:</span>{" "}

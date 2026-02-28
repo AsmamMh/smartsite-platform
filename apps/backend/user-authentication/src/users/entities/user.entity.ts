@@ -42,7 +42,7 @@ export class User extends Document {
   isActif: boolean;
 
   @Prop()
-  phoneNumber?: string;
+  telephone?: string;
 
   @Prop()
   departement?: string;

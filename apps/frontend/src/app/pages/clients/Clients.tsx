@@ -29,7 +29,7 @@ export default function Clients() {
     firstName: '', 
     lastName: '', 
     email: '', 
-    phoneNumber: '', 
+    telephone: '', 
     address: '', 
     companyName: '' 
   }); 
@@ -38,7 +38,7 @@ export default function Clients() {
     firstName: '',
     lastName: '',
     email: '',
-    phoneNumber: '',
+    telephone: '',
     address: '',
     companyName: ''
   });
@@ -57,7 +57,7 @@ export default function Clients() {
       const filtered = clients.filter(client => 
         `${client.firstName} ${client.lastName}`.toLowerCase().includes(query) ||
         client.email?.toLowerCase().includes(query) ||
-        client.phoneNumber?.toLowerCase().includes(query) ||
+        client.telephone?.toLowerCase().includes(query) ||
         client.companyName?.toLowerCase().includes(query)
       );
       setFilteredClients(filtered);
@@ -94,7 +94,7 @@ export default function Clients() {
       firstName: client.firstName || '',
       lastName: client.lastName || '',
       email: client.email || '', 
-      phoneNumber: client.phoneNumber || '',
+      telephone: client.telephone || '',
       address: client.address || '',
       companyName: client.companyName || ''
     });
@@ -102,7 +102,7 @@ export default function Clients() {
   };
 
   const handleSaveEdit = async () => {
-    if (!editData.firstName || !editData.lastName || !editData.email || !editData.phoneNumber) {
+    if (!editData.firstName || !editData.lastName || !editData.email || !editData.telephone) {
       toast.error('First name, last name, email, and phone are required');
       return;
     }
@@ -130,7 +130,7 @@ export default function Clients() {
 
   const handleCreateClient = async () => {
     if (!newClientData.cin || !newClientData.firstName || !newClientData.lastName || 
-        !newClientData.email || !newClientData.phoneNumber) {
+        !newClientData.email || !newClientData.telephone) {
       toast.error('CIN, first name, last name, email, and phone are required');
       return;
     }
@@ -147,7 +147,7 @@ export default function Clients() {
           firstName: '',
           lastName: '',
           email: '',
-          phoneNumber: '',
+          telephone: '',
           address: '',
           companyName: ''
         });
@@ -210,7 +210,7 @@ export default function Clients() {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{client.firstName} {client.lastName}</h3>
-                    <p className="text-sm text-gray-500 mt-1">{client.email} • {client.phoneNumber}</p>
+                    <p className="text-sm text-gray-500 mt-1">{client.email} • {client.telephone}</p>
                        <div className="flex gap-4 mt-3 text-sm">
                         <span className="text-gray-600"><strong>Projects:</strong> {client.projectsCount}</span>
                         {/* <span className="text-gray-600"><strong>Total Value:</strong> ${(client.totalValue / 1000000).toFixed(1)}M</span> */}
@@ -240,7 +240,7 @@ export default function Clients() {
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Phone</p>
-                              <p className="font-semibold text-gray-900">{selectedClient.phoneNumber}</p>
+                              <p className="font-semibold text-gray-900">{selectedClient.telephone}</p>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                               <div>
@@ -302,8 +302,8 @@ export default function Clients() {
                             <Label htmlFor="edit-phone">Phone</Label>
                             <Input
                               id="edit-phone"
-                              value={editData.phoneNumber}
-                              onChange={(e) => setEditData({ ...editData, phoneNumber: e.target.value })}
+                              value={editData.telephone}
+                              onChange={(e) => setEditData({ ...editData, telephone: e.target.value })}
                             />
                           </div>
                           <Button 

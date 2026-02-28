@@ -178,7 +178,7 @@ export class UsersService {
       firstName: createUserDto.firstName,
       lastName: createUserDto.lastName,
       email: createUserDto.email,
-      phoneNumber: createUserDto.phoneNumber,
+      telephone: createUserDto.telephone,
       address: createUserDto.address,
       companyName: createUserDto.companyName,
       departement: createUserDto.departement,

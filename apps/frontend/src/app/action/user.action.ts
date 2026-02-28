@@ -37,7 +37,7 @@ export const createUser = async (userData: {
   firstName?: string;
   lastName?: string;
   email?: string;
-  phoneNumber?: string;
+  telephone?: string;
   address?: string;
   companyName?: string;
   departement?: string;
@@ -65,7 +65,7 @@ export const updateUser = async (
     firstName?: string;
     lastName?: string;
     email?: string;
-    phoneNumber?: string;
+    telephone?: string;
     address?: string;
   },
 ) => {
@@ -165,7 +165,7 @@ export const createClient = async (clientData: {
   firstName?: string;
   lastName?: string;
   email?: string;
-  phoneNumber?: string;
+  telephone?: string;
   address?: string;
   companyName?: string;
 }, token?: string) => {
@@ -193,7 +193,7 @@ export const updateClient = async (
     firstName?: string;
     lastName?: string;
     email?: string;
-    phoneNumber?: string;
+    telephone?: string;
     address?: string;
     companyName?: string;
   },

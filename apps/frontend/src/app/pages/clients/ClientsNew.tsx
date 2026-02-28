@@ -66,7 +66,7 @@ export default function ClientsNew() {
     firstName: "",
     lastName: "",
     email: "",
-    phoneNumber: "",
+    telephone: "",
     address: "",
     companyName: "",
   });
@@ -75,7 +75,7 @@ export default function ClientsNew() {
     firstName: "",
     lastName: "",
     email: "",
-    phoneNumber: "",
+    telephone: "",
     address: "",
     companyName: "",
   });
@@ -97,7 +97,7 @@ export default function ClientsNew() {
             .toLowerCase()
             .includes(query) ||
           client.email?.toLowerCase().includes(query) ||
-          client.phoneNumber?.toLowerCase().includes(query) ||
+          client.telephone?.toLowerCase().includes(query) ||
           client.companyName?.toLowerCase().includes(query),
       );
       setFilteredClients(filtered);
@@ -133,7 +133,7 @@ export default function ClientsNew() {
       firstName: client.firstName || "",
       lastName: client.lastName || "",
       email: client.email || "",
-      phoneNumber: client.phoneNumber || "",
+      telephone: client.telephone || "",
       address: client.address || "",
       companyName: client.companyName || "",
     });
@@ -145,7 +145,7 @@ export default function ClientsNew() {
       !editData.firstName ||
       !editData.lastName ||
       !editData.email ||
-      !editData.phoneNumber
+      !editData.telephone
     ) {
       toast.error("First name, last name, email, and phone are required");
       return;
@@ -178,7 +178,7 @@ export default function ClientsNew() {
       !newClientData.firstName ||
       !newClientData.lastName ||
       !newClientData.email ||
-      !newClientData.phoneNumber
+      !newClientData.telephone
     ) {
       toast.error("CIN, first name, last name, email, and phone are required");
       return;
@@ -196,7 +196,7 @@ export default function ClientsNew() {
           firstName: "",
           lastName: "",
           email: "",
-          phoneNumber: "",
+          telephone: "",
           address: "",
           companyName: "",
         });
@@ -361,11 +361,11 @@ export default function ClientsNew() {
                       <Input
                         id="new-phone"
                         placeholder="+216 12 345 678"
-                        value={newClientData.phoneNumber}
+                        value={newClientData.telephone}
                         onChange={(e) =>
                           setNewClientData({
                             ...newClientData,
-                            phoneNumber: e.target.value,
+                            telephone: e.target.value,
                           })
                         }
                       />
@@ -480,7 +480,7 @@ export default function ClientsNew() {
                         </p>
                       )}
                       <p className="text-sm text-gray-500 mt-1">
-                        {client.email} • {client.phoneNumber}
+                        {client.email} • {client.telephone}
                       </p>
                       {client.address && (
                         <p className="text-xs text-gray-400 mt-1">
@@ -543,7 +543,7 @@ export default function ClientsNew() {
                               <div>
                                 <p className="text-sm text-gray-600">Phone</p>
                                 <p className="font-semibold text-gray-900">
-                                  {selectedClient.phoneNumber}
+                                  {selectedClient.telephone}
                                 </p>
                               </div>
                               {selectedClient.address && (
@@ -685,11 +685,11 @@ export default function ClientsNew() {
                                     <Label htmlFor="edit-phone">Phone</Label>
                                     <Input
                                       id="edit-phone"
-                                      value={editData.phoneNumber}
+                                      value={editData.telephone}
                                       onChange={(e) =>
                                         setEditData({
                                           ...editData,
-                                          phoneNumber: e.target.value,
+                                          telephone: e.target.value,
                                         })
                                       }
                                     />
