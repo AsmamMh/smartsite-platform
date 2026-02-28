@@ -30,11 +30,6 @@ export class AuthService {
       return null;
     }
 
-    if ((user as any).status && (user as any).status !== 'approved') {
-      console.log('User not approved, status =', (user as any).status);
-      return null;
-    }
-
     const storedHash = (user as any).password || (user as any).password;
     if (!storedHash) {
       console.log('No stored password hash for user', cin);
@@ -107,7 +102,9 @@ export class AuthService {
     if (!roleId) {
       const clientRole = await this.rolesService.findByName('client');
       if (!clientRole) {
-        throw new BadRequestException('Default client role not found. Please create a "client" role first.');
+        throw new BadRequestException(
+          'Default client role not found. Please create a "client" role first.',
+        );
       }
       roleId = clientRole._id.toString();
       console.log('🔍 DEBUG: Using default client role:', roleId);
@@ -153,7 +150,7 @@ export class AuthService {
         );
         console.log('✅ OTP envoyé avec succès à', result.email);
       } catch (error) {
-        console.error('❌ Erreur lors de l\'envoi de l\'OTP:', error);
+        console.error("❌ Erreur lors de l'envoi de l'OTP:", error);
         // Don't fail registration if email sending fails
       }
     }
@@ -163,7 +160,7 @@ export class AuthService {
 
   async verifyOTP(cin: string, otp: string) {
     const user = await this.usersService.findByCin(cin);
-    
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -212,7 +209,7 @@ export class AuthService {
 
   async resendOTP(cin: string) {
     const user = await this.usersService.findByCin(cin);
-    
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -234,14 +231,10 @@ export class AuthService {
     // Send OTP email
     if (user.email) {
       try {
-        await this.emailService.sendOTPEmail(
-          user.email,
-          user.firstName,
-          otp,
-        );
+        await this.emailService.sendOTPEmail(user.email, user.firstName, otp);
         console.log('✅ OTP renvoyé avec succès à', user.email);
       } catch (error) {
-        console.error('❌ Erreur lors du renvoi de l\'OTP:', error);
+        console.error("❌ Erreur lors du renvoi de l'OTP:", error);
         throw new BadRequestException('Failed to send OTP email');
       }
     } else {

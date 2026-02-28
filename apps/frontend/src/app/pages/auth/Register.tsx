@@ -14,13 +14,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import {
   Card,
   CardContent,
@@ -32,42 +26,51 @@ import { useAuthStore } from "@/app/store/authStore";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 
-const formSchema = z.object({
-  cin: z
-    .string()
-    .min(5, "CIN est requis et doit contenir au moins 5 caractères.")
-    .max(32, "CIN ne doit pas dépasser 32 caractères."),
-  firstName: z
-    .string()
-    .min(2, "Le prénom est requis et doit contenir au moins 2 caractères.")
-    .max(50, "Le prénom ne doit pas dépasser 50 caractères."),
-  lastName: z
-    .string()
-    .min(2, "Le nom est requis et doit contenir au moins 2 caractères.")
-    .max(50, "Le nom ne doit pas dépasser 50 caractères."),
-  email: z
-    .string()
-    .email("Veuillez entrer une adresse email valide.")
-    .min(5, "L'email est requis."),
-  phoneNumber: z
-    .string()
-    .min(8, "Le téléphone doit contenir au moins 8 caractères.")
-    .max(20, "Le téléphone ne doit pas dépasser 20 caractères.")
-    .optional()
-    .or(z.literal("")),
-  address: z
-    .string()
-    .min(5, "L'adresse doit contenir au moins 5 caractères.")
-    .max(200, "L'adresse ne doit pas dépasser 200 caractères.")
-    .optional()
-    .or(z.literal("")),
+const formSchema = z
+  .object({
+    cin: z
+      .string()
+      .min(5, "CIN est requis et doit contenir au moins 5 caractères.")
+      .max(32, "CIN ne doit pas dépasser 32 caractères."),
+    firstName: z
+      .string()
+      .min(2, "Le prénom est requis et doit contenir au moins 2 caractères.")
+      .max(50, "Le prénom ne doit pas dépasser 50 caractères."),
+    lastName: z
+      .string()
+      .min(2, "Le nom est requis et doit contenir au moins 2 caractères.")
+      .max(50, "Le nom ne doit pas dépasser 50 caractères."),
+    email: z
+      .string()
+      .email("Veuillez entrer une adresse email valide.")
+      .min(5, "L'email est requis."),
+    phoneNumber: z
+      .string()
+      .min(8, "Le téléphone doit contenir au moins 8 caractères.")
+      .max(20, "Le téléphone ne doit pas dépasser 20 caractères.")
+      .optional()
+      .or(z.literal("")),
+    address: z
+      .string()
+      .min(5, "L'adresse doit contenir au moins 5 caractères.")
+      .max(200, "L'adresse ne doit pas dépasser 200 caractères.")
+      .optional()
+      .or(z.literal("")),
 
-  companyName: z
-    .string()
-    .max(200, "Le nom de l'entreprise ne doit pas dépasser 200 caractères.")
-    .optional()
-    .or(z.literal("")),
-});
+    companyName: z
+      .string()
+      .max(200, "Le nom de l'entreprise ne doit pas dépasser 200 caractères.")
+      .optional()
+      .or(z.literal("")),
+    password: z
+      .string()
+      .min(6, "Password must be at least 8 characters")
+      .max(100, "Password must be less than 100 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Les mots de passe ne correspondent pas.",
+  });
 
 type RegisterFormData = z.infer<typeof formSchema>;
 
@@ -83,9 +86,10 @@ export default function Register() {
       firstName: "",
       lastName: "",
       email: "",
+      password: "",
+      confirmPassword: "",
       phoneNumber: "",
       address: "",
-
       companyName: "",
     },
   });
@@ -95,14 +99,12 @@ export default function Register() {
     try {
       await register(
         data.cin,
-        "", // mot de passe vide à l'inscription, généré à l'approbation
+        data.password, // mot de passe vide à l'inscription, généré à l'approbation
         data.firstName,
         data.lastName,
         data.email,
         data.phoneNumber || "",
-        
         data.address || "",
-       
         data.companyName || "",
       );
       toast.success(
@@ -244,6 +246,56 @@ export default function Register() {
                               {...field}
                               id="lastName"
                               placeholder="Entrez votre nom"
+                              aria-invalid={fieldState.invalid}
+                            />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+                    </FieldGroup>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FieldGroup>
+                      <Controller
+                        name="password"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="password">
+                              Password *
+                            </FieldLabel>
+                            <Input
+                              {...field}
+                              id="password"
+                              type="password"
+                              placeholder="Entrez votre prénom"
+                              aria-invalid={fieldState.invalid}
+                            />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+                    </FieldGroup>
+
+                    <FieldGroup>
+                      <Controller
+                        name="confirmPassword"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="confirmPassword">
+                              Confirmez le mot de passe *
+                            </FieldLabel>
+                            <Input
+                              type="password"
+                              {...field}
+                              id="confirmPassword"
+                              placeholder="Confirmez votre mot de passe"
                               aria-invalid={fieldState.invalid}
                             />
                             {fieldState.invalid && (
