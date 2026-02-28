@@ -1,4 +1,12 @@
-import { Controller, Post, Body, UnauthorizedException, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UnauthorizedException,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -32,8 +40,9 @@ export class AuthController {
       role,
       email,
       phoneNumber,
-      departement,
+      
       adresse,
+      companyName,
     } = registerDto;
 
     const user = await this.authService.register(
@@ -44,8 +53,9 @@ export class AuthController {
       role,
       email,
       phoneNumber,
-      departement,
+      
       adresse,
+      companyName,
     );
 
     return {
@@ -57,9 +67,10 @@ export class AuthController {
         lastName: user.lastName,
         email: user.email,
         phoneNumber: user.phoneNumber,
-        departement: user.departement,
+       
         address: user.address,
         role: user.role,
+        companyName: user.companyName,
       },
     };
   }

@@ -95,10 +95,12 @@ export interface AuthState {
     firstName: string,
     lastName: string,
     email: string,
-    phoneNumber: string,
-    departement: string,
-    adresse: string,
-    role: string,
+    phoneNumber?: string,
+  
+    address?: string,
+    role?: string,
+    companyName?: string,
+   
   ) => Promise<void>;
   getPendingUsers?: () => Promise<User[]>;
   approveUser?: (userId: string, password: string) => Promise<User>;

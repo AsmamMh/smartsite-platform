@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
@@ -74,8 +78,9 @@ export class AuthService {
     role: string,
     email?: string,
     phoneNumber?: string,
-    departement?: string,
+
     address?: string,
+    companyName?: string,
   ) {
     console.log('🔍 DEBUG register appelé avec:', {
       cin,
@@ -85,8 +90,9 @@ export class AuthService {
       role,
       email,
       phoneNumber,
-      departement,
+
       address,
+      companyName,
     });
 
     const existingUser = await this.usersService.findByCin(cin);
@@ -94,7 +100,9 @@ export class AuthService {
       throw new BadRequestException('User already exists');
     }
 
-    const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
+    const hashedPassword = password
+      ? await bcrypt.hash(password, 10)
+      : undefined;
 
     const userData = {
       cin,
@@ -104,9 +112,10 @@ export class AuthService {
       role,
       email: email || address,
       phoneNumber,
-      departement,
+
       address: address,
       status: 'pending',
+      companyName,
     };
 
     console.log('🔍 DEBUG userData à créer:', userData);
@@ -159,4 +168,3 @@ export class AuthService {
     return updatedUser;
   }
 }
-

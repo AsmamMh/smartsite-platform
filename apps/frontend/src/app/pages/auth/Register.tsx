@@ -51,19 +51,22 @@ const formSchema = z.object({
     .min(5, "L'email est requis."),
   phoneNumber: z
     .string()
-    .min(8, "Le téléphone est requis et doit contenir au moins 8 caractères.")
-    .max(20, "Le téléphone ne doit pas dépasser 20 caractères."),
-  departement: z
+    .min(8, "Le téléphone doit contenir au moins 8 caractères.")
+    .max(20, "Le téléphone ne doit pas dépasser 20 caractères.")
+    .optional()
+    .or(z.literal("")),
+  address: z
     .string()
-    .min(2, "Le département est requis.")
-    .max(50, "Le département ne doit pas dépasser 50 caractères."),
-  adresse: z
+    .min(5, "L'adresse doit contenir au moins 5 caractères.")
+    .max(200, "L'adresse ne doit pas dépasser 200 caractères.")
+    .optional()
+    .or(z.literal("")),
+
+  companyName: z
     .string()
-    .min(5, "L'adresse est requise et doit contenir au moins 5 caractères.")
-    .max(200, "L'adresse ne doit pas dépasser 200 caractères."),
-  role: z
-    .string()
-    .min(1, "Le rôle est requis."),
+    .max(200, "Le nom de l'entreprise ne doit pas dépasser 200 caractères.")
+    .optional()
+    .or(z.literal("")),
 });
 
 type RegisterFormData = z.infer<typeof formSchema>;
@@ -81,9 +84,9 @@ export default function Register() {
       lastName: "",
       email: "",
       phoneNumber: "",
-      departement: "",
-      adresse: "",
-      role: "",
+      address: "",
+
+      companyName: "",
     },
   });
 
@@ -92,16 +95,19 @@ export default function Register() {
     try {
       await register(
         data.cin,
-        "", // PAS de mot de passe - sera généré lors de l'approbation
+
         data.firstName,
         data.lastName,
         data.email,
-        data.phoneNumber,
-        data.departement,
-        data.adresse,
-        data.role
+        data.phoneNumber || "",
+
+        data.address || "",
+
+        data.companyName || "",
       );
-      toast.success("Inscription réussie! Votre compte est en attente d'approbation. Vous recevrez un email avec vos identifiants.");
+      toast.success(
+        "Inscription réussie! Votre compte est en attente d'approbation. Vous recevrez un email avec vos identifiants.",
+      );
       navigate("/login");
     } catch (error: any) {
       console.error("Erreur inscription:", error);
@@ -148,7 +154,10 @@ export default function Register() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FieldGroup>
                       <Controller
@@ -201,7 +210,9 @@ export default function Register() {
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="firstName">Prénom *</FieldLabel>
+                            <FieldLabel htmlFor="firstName">
+                              Prénom *
+                            </FieldLabel>
                             <Input
                               {...field}
                               id="firstName"
@@ -245,7 +256,9 @@ export default function Register() {
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="phoneNumber">Téléphone</FieldLabel>
+                            <FieldLabel htmlFor="phoneNumber">
+                              Téléphone
+                            </FieldLabel>
                             <Input
                               {...field}
                               id="phoneNumber"
@@ -259,18 +272,19 @@ export default function Register() {
                         )}
                       />
                     </FieldGroup>
-
                     <FieldGroup>
                       <Controller
-                        name="departement"
+                        name="companyName"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="departement">Département</FieldLabel>
+                            <FieldLabel htmlFor="companyName">
+                              Entreprise
+                            </FieldLabel>
                             <Input
                               {...field}
-                              id="departement"
-                              placeholder="Entrez votre département"
+                              id="companyName"
+                              placeholder="Nom de votre entreprise"
                               aria-invalid={fieldState.invalid}
                             />
                             {fieldState.invalid && (
@@ -284,14 +298,14 @@ export default function Register() {
 
                   <FieldGroup>
                     <Controller
-                      name="adresse"
+                      name="address"
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="adresse">Adresse</FieldLabel>
+                          <FieldLabel htmlFor="address">Adresse</FieldLabel>
                           <Input
                             {...field}
-                            id="adresse"
+                            id="address"
                             placeholder="Entrez votre adresse"
                             aria-invalid={fieldState.invalid}
                           />
@@ -303,36 +317,10 @@ export default function Register() {
                     />
                   </FieldGroup>
 
-                  <FieldGroup>
-                    <Controller
-                      name="role"
-                      control={form.control}
-                      render={({ field, fieldState }) => (
-                        <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="role">Rôle *</FieldLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Sélectionnez un rôle" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="699e1c79ccc723bcf4a61cad">Utilisateur</SelectItem>
-                              <SelectItem value="699e1c79ccc723bcf4a61cb0">Manager</SelectItem>
-                              <SelectItem value="699e1c79ccc723bcf4a61cb4">Superviseur</SelectItem>
-                              <SelectItem value="699e18e14a81d6ab38948763">Super Admin</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {fieldState.invalid && (
-                            <FieldError errors={[fieldState.error]} />
-                          )}
-                        </Field>
-                      )}
-                    />
-                  </FieldGroup>
-
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                    className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
                     {isLoading ? (
                       <>

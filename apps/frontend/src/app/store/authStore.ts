@@ -57,10 +57,13 @@ export const useAuthStore = create<AuthState>()(
         firstName: string,
         lastName: string,
         email: string,
-        phoneNumber: string,
-        departement: string,
-        adresse: string,
-        role: string,
+        phoneNumber?: string,
+        departement?: string,
+        address?: string,
+        role?: string,
+        companyName?: string,
+        preferredLanguage?: string,
+        certifications?: string[],
       ) => {
         const res = await api.post("/auth/register", {
           cin,
@@ -70,8 +73,11 @@ export const useAuthStore = create<AuthState>()(
           email,
           phoneNumber,
           departement,
-          adresse,
+          adresse: address,
           role,
+          companyName,
+          preferredLanguage,
+          certifications,
         });
         return res.data;
       },
