@@ -48,6 +48,12 @@ export class User extends Document {
   approvedAt?: Date;
 
   @Prop()
+  rejectedAt?: Date;
+
+  @Prop()
+  rejectReason?: string;
+
+  @Prop()
   motDePasse?: string;
 
   @Prop([String])

@@ -11,7 +11,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   async validateUser(cin: string, password: string): Promise<any> {
     if (!cin || !password) {
@@ -96,12 +96,27 @@ export class AuthService {
 
     const hashedPassword = password ? await bcrypt.hash(password, 10) : undefined;
 
+    // Mapper les roles string vers ObjectIds
+    const roleMapping: { [key: string]: string } = {
+      'super_admin': '699e1c79ccc723bcf4a61cad',
+      'director': '699e1c79ccc723bcf4a61cae',
+      'project_manager': '699e1c79ccc723bcf4a61caf',
+      'site_manager': '699e1c79ccc723bcf4a61cb0',
+      'works_manager': '699e1c79ccc723bcf4a61cb1',
+      'accountant': '699e1c79ccc723bcf4a61cb2',
+      'procurement_manager': '699e1c79ccc723bcf4a61cb3',
+      'qhse_manager': '699e1c79ccc723bcf4a61cb4',
+      'client': '699e1c79ccc723bcf4a61cb5',
+      'subcontractor': '699e1c79ccc723bcf4a61cb6',
+      'user': '699e1c79ccc723bcf4a61cb7'
+    };
+
     const userData = {
       cin,
       password: hashedPassword,
       lastname,
       firstname,
-      role,
+      role: roleMapping[role] || '699e1c79ccc723bcf4a61cb7', // Default to 'user' role
       email: email || address,
       telephone,
       departement,
@@ -151,6 +166,49 @@ export class AuthService {
         console.log('✅ EMAIL ENVOYÉ avec succès à', updatedUser.email);
       } catch (error) {
         console.error('❌ Failed to send approval email:', error);
+      }
+    } else {
+      console.log("⚠️ PAS D'EMAIL: Utilisateur sans adresse email");
+    }
+
+    return updatedUser;
+  }
+
+  async rejectUser(userId: string, reason?: string) {
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.status !== 'pending') {
+      throw new BadRequestException('User is not in pending status');
+    }
+
+    // Marquer l'utilisateur comme rejeté
+    const updatedUser = await this.usersService.update(userId, {
+      status: 'rejected',
+      rejectedAt: new Date(),
+      rejectReason: reason || 'Aucun motif spécifié',
+    });
+
+    console.log('🔍 DEBUG: Vérification email pour utilisateur rejeté...');
+    console.log('🔍 DEBUG: updatedUser:', updatedUser);
+    console.log('🔍 DEBUG: updatedUser.email:', updatedUser?.email);
+
+    // Envoyer un email de rejet si l'utilisateur a un email
+    if (updatedUser && updatedUser.email) {
+      console.log('📧 ENVOI EMAIL REJET: Envoi en cours à', updatedUser.email);
+      try {
+        await this.emailService.sendRejectionEmail(
+          updatedUser.email,
+          updatedUser.firstname,
+          updatedUser.lastname,
+          updatedUser.cin,
+          reason || 'Aucun motif spécifié',
+        );
+        console.log('✅ EMAIL DE REJET ENVOYÉ avec succès à', updatedUser.email);
+      } catch (error) {
+        console.error('❌ Failed to send rejection email:', error);
       }
     } else {
       console.log("⚠️ PAS D'EMAIL: Utilisateur sans adresse email");

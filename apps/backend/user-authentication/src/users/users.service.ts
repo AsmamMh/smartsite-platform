@@ -5,7 +5,7 @@ import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+  constructor(@InjectModel(User.name) private userModel: Model<User>) { }
 
   async create(createUserDto: any) {
     console.log(' DEBUG: createUserDto:', createUserDto);
@@ -55,8 +55,23 @@ export class UsersService {
   }
 
   async findByCin(cin: string) {
-    console.log('from user service', cin);
-    return this.userModel.findOne({ cin }).populate('role').exec();
+    console.log('🔍 DEBUG: findByCin appelé pour:', cin);
+    try {
+      const result = await this.userModel.findOne({ cin }).populate('role').exec();
+      console.log('🔍 DEBUG: findByCin résultat:', result ? 'trouvé' : 'non trouvé');
+      if (result) {
+        console.log('🔍 DEBUG: Utilisateur trouvé:', {
+          cin: result.cin,
+          role: result.role,
+          roleType: typeof result.role,
+          roleName: (result.role as any)?.name
+        });
+      }
+      return result;
+    } catch (error) {
+      console.error('❌ Erreur dans findByCin:', error);
+      throw error;
+    }
   }
 
   async findById(id: string) {
@@ -64,11 +79,42 @@ export class UsersService {
   }
 
   async findAll() {
-    return this.userModel.find().populate('role').exec();
+    console.log('🔍 DEBUG: findAll appelé');
+    try {
+      const result = await this.userModel.find().populate('role').exec();
+      console.log('🔍 DEBUG: findAll résultat:', result.length, 'utilisateurs');
+      if (result.length > 0) {
+        console.log('🔍 DEBUG: Premier utilisateur:', {
+          cin: result[0].cin,
+          role: result[0].role,
+          roleType: typeof result[0].role,
+          roleName: (result[0].role as any)?.name
+        });
+      }
+      return result;
+    } catch (error) {
+      console.error('❌ Erreur dans findAll:', error);
+      throw error;
+    }
   }
 
   async findPending() {
-    return this.userModel.find({ status: 'pending' }).populate('role').exec();
+    console.log('🔍 DEBUG: findPending appelé');
+    const result = await this.userModel.find({ status: 'pending' }).populate({
+      path: 'role',
+      model: 'Role',
+      select: 'name description'
+    }).exec();
+    console.log('🔍 DEBUG: findPending résultat:', result.length, 'utilisateurs');
+    if (result.length > 0) {
+      console.log('🔍 DEBUG: Premier utilisateur:', {
+        cin: result[0].cin,
+        role: result[0].role,
+        roleType: typeof result[0].role,
+        roleName: (result[0].role as any)?.name
+      });
+    }
+    return result;
   }
 
   async update(id: string, updateUserDto: any) {

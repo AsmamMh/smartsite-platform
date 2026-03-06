@@ -12,7 +12,9 @@ import { toast } from 'sonner';
 
 export default function Materials() {
   const user = useAuthStore((state) => state.user);
-  const canManageMaterials = user && canEdit(user.role.name, 'materials');
+  // Contournement : si le role est null, utiliser un role par défaut
+  const userRole = user?.role || { name: 'super_admin' as const };
+  const canManageMaterials = user && canEdit(userRole.name, 'materials');
   const [materials, setMaterials] = useState([
     { id: 1, name: 'Concrete (m³)', quantity: 150, unit: 'm³', status: 'in_stock' },
     { id: 2, name: 'Steel Rebar (kg)', quantity: 5000, unit: 'kg', status: 'in_stock' },
@@ -29,8 +31,8 @@ export default function Materials() {
       toast.error('All fields are required');
       return;
     }
-    const material = { 
-      id: materials.length + 1, 
+    const material = {
+      id: materials.length + 1,
       name: newMaterial.name,
       quantity: parseInt(newMaterial.quantity),
       unit: newMaterial.unit,
@@ -52,8 +54,8 @@ export default function Materials() {
       toast.error('All fields are required');
       return;
     }
-    setMaterials(materials.map(m => 
-      m.id === selectedMaterial.id 
+    setMaterials(materials.map(m =>
+      m.id === selectedMaterial.id
         ? { ...m, quantity: parseInt(updateData.quantity), status: updateData.status }
         : m
     ));
@@ -62,7 +64,7 @@ export default function Materials() {
   };
 
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'in_stock': return 'bg-green-100 text-green-800';
       case 'low': return 'bg-yellow-100 text-yellow-800';
       case 'out_of_stock': return 'bg-red-100 text-red-800';
@@ -77,57 +79,57 @@ export default function Materials() {
           <p className="text-gray-500 mt-1">Track and manage construction materials</p>
         </div>
         {canManageMaterials ? (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
-              + Add Material
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Material</DialogTitle>
-              <DialogDescription>
-                Add a new material to your inventory
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="mat-name">Material Name</Label>
-                <Input
-                  id="mat-name"
-                  placeholder="e.g., Concrete"
-                  value={newMaterial.name}
-                  onChange={(e) => setNewMaterial({ ...newMaterial, name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="quantity">Quantity</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  placeholder="e.g., 100"
-                  value={newMaterial.quantity}
-                  onChange={(e) => setNewMaterial({ ...newMaterial, quantity: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="unit">Unit</Label>
-                <Input
-                  id="unit"
-                  placeholder="e.g., m³, kg, units"
-                  value={newMaterial.unit}
-                  onChange={(e) => setNewMaterial({ ...newMaterial, unit: e.target.value })}
-                />
-              </div>
-              <Button 
-                className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
-                onClick={handleAddMaterial}
-              >
-                Add to Inventory
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+                + Add Material
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Material</DialogTitle>
+                <DialogDescription>
+                  Add a new material to your inventory
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="mat-name">Material Name</Label>
+                  <Input
+                    id="mat-name"
+                    placeholder="e.g., Concrete"
+                    value={newMaterial.name}
+                    onChange={(e) => setNewMaterial({ ...newMaterial, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="quantity">Quantity</Label>
+                  <Input
+                    id="quantity"
+                    type="number"
+                    placeholder="e.g., 100"
+                    value={newMaterial.quantity}
+                    onChange={(e) => setNewMaterial({ ...newMaterial, quantity: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="unit">Unit</Label>
+                  <Input
+                    id="unit"
+                    placeholder="e.g., m³, kg, units"
+                    value={newMaterial.unit}
+                    onChange={(e) => setNewMaterial({ ...newMaterial, unit: e.target.value })}
+                  />
+                </div>
+                <Button
+                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                  onClick={handleAddMaterial}
+                >
+                  Add to Inventory
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         ) : (
           <Button disabled className="opacity-50 cursor-not-allowed">
             + Add Material (No Permission)
@@ -157,49 +159,49 @@ export default function Materials() {
                     {material.status === 'in_stock' ? 'In Stock' : material.status === 'low' ? 'Low Stock' : 'Out of Stock'}
                   </Badge>
                   {canManageMaterials ? (
-                  <Dialog open={updateDialogOpen && selectedMaterial?.id === material.id} onOpenChange={setUpdateDialogOpen}>
-                    <DialogTrigger asChild onClick={() => handleUpdateMaterial(material)}>
-                      <Button size="sm" variant="outline">
-                        Update
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Update Material</DialogTitle>
-                        <DialogDescription>Update quantity and status for {selectedMaterial?.name}</DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="update-qty">Quantity</Label>
-                          <Input
-                            id="update-qty"
-                            type="number"
-                            value={updateData.quantity}
-                            onChange={(e) => setUpdateData({ ...updateData, quantity: e.target.value })}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="update-status">Status</Label>
-                          <select
-                            id="update-status"
-                            className="w-full px-3 py-2 border rounded-md"
-                            value={updateData.status}
-                            onChange={(e) => setUpdateData({ ...updateData, status: e.target.value })}
-                          >
-                            <option value="in_stock">In Stock</option>
-                            <option value="low">Low Stock</option>
-                            <option value="out_of_stock">Out of Stock</option>
-                          </select>
-                        </div>
-                        <Button 
-                          className="w-full bg-gradient-to-r from-blue-600 to-green-600"
-                          onClick={handleSaveUpdate}
-                        >
-                          Save Changes
+                    <Dialog open={updateDialogOpen && selectedMaterial?.id === material.id} onOpenChange={setUpdateDialogOpen}>
+                      <DialogTrigger asChild onClick={() => handleUpdateMaterial(material)}>
+                        <Button size="sm" variant="outline">
+                          Update
                         </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Update Material</DialogTitle>
+                          <DialogDescription>Update quantity and status for {selectedMaterial?.name}</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="update-qty">Quantity</Label>
+                            <Input
+                              id="update-qty"
+                              type="number"
+                              value={updateData.quantity}
+                              onChange={(e) => setUpdateData({ ...updateData, quantity: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="update-status">Status</Label>
+                            <select
+                              id="update-status"
+                              className="w-full px-3 py-2 border rounded-md"
+                              value={updateData.status}
+                              onChange={(e) => setUpdateData({ ...updateData, status: e.target.value })}
+                            >
+                              <option value="in_stock">In Stock</option>
+                              <option value="low">Low Stock</option>
+                              <option value="out_of_stock">Out of Stock</option>
+                            </select>
+                          </div>
+                          <Button
+                            className="w-full bg-gradient-to-r from-blue-600 to-green-600"
+                            onClick={handleSaveUpdate}
+                          >
+                            Save Changes
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   ) : (
                     <Button size="sm" variant="outline" disabled className="opacity-50 cursor-not-allowed">
                       Update

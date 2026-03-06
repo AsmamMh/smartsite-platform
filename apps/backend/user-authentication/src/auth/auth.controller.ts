@@ -5,7 +5,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
@@ -79,6 +79,23 @@ export class AuthController {
     );
     return {
       message: 'User approved successfully',
+      user: updatedUser,
+    };
+  }
+
+  @Post('reject-user/:userId')
+  @UseGuards(JwtAuthGuard)
+  async rejectUser(
+    @Param('userId') userId: string,
+    @Body() body: { reason?: string },
+    @Request() req: any,
+  ) {
+    const updatedUser = await this.authService.rejectUser(
+      userId,
+      body.reason,
+    );
+    return {
+      message: 'User rejected successfully',
       user: updatedUser,
     };
   }

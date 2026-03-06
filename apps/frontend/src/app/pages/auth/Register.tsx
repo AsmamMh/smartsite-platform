@@ -33,6 +33,21 @@ import { useAuthStore } from "@/app/store/authStore";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import { roleLabels } from "@/app/utils/roleConfig";
+import type { RoleType } from "@/app/types";
+
+// Liste des roles disponibles (sauf super_admin)
+const availableRoles: RoleType[] = [
+  "director",
+  "project_manager",
+  "site_manager",
+  "works_manager",
+  "accountant",
+  "procurement_manager",
+  "qhse_manager",
+  "client",
+  "subcontractor",
+  "user"
+];
 
 const formSchema = z.object({
   cin: z
@@ -62,6 +77,12 @@ const formSchema = z.object({
   role: z
     .string()
     .min(1, "Le rôle est requis."),
+  acceptTerms: z
+    .boolean()
+    .refine((val) => val === true, "Vous devez accepter les critères d'acceptation pour continuer."),
+  acceptReglement: z
+    .boolean()
+    .refine((val) => val === true, "Vous devez accepter le règlement pour continuer."),
 });
 
 type RegisterFormData = z.infer<typeof formSchema>;
@@ -70,34 +91,6 @@ export default function Register() {
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
   const [isLoading, setIsLoading] = React.useState(false);
-  const [roles, setRoles] = React.useState<any[]>([]);
-  const [rolesLoading, setRolesLoading] = React.useState(false);
-  const [rolesError, setRolesError] = React.useState<string | null>(null);
-
-  // Charger les rôles depuis le backend (et exclure super_admin)
-  React.useEffect(() => {
-    const loadRoles = async () => {
-      try {
-        setRolesLoading(true);
-        const res = await axios.get("http://localhost:3001/roles");
-        const allRoles = res.data || [];
-        const filtered = allRoles.filter(
-          (r: any) => r.name && r.name !== "super_admin",
-        );
-        setRoles(filtered);
-      } catch (err: any) {
-        console.error("Erreur chargement rôles:", err);
-        setRolesError(
-          err?.response?.data?.message ||
-            err?.message ||
-            "Impossible de charger les rôles.",
-        );
-      } finally {
-        setRolesLoading(false);
-      }
-    };
-    loadRoles();
-  }, []);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(formSchema),
@@ -317,23 +310,11 @@ export default function Register() {
                               <SelectValue placeholder="Sélectionnez un rôle" />
                             </SelectTrigger>
                             <SelectContent>
-                              {rolesLoading && (
-                                <SelectItem value="__loading" disabled>
-                                  Chargement des rôles...
+                              {availableRoles.map((roleName) => (
+                                <SelectItem key={roleName} value={roleName}>
+                                  {roleLabels[roleName] || roleName}
                                 </SelectItem>
-                              )}
-                              {rolesError && !rolesLoading && (
-                                <SelectItem value="__error" disabled>
-                                  {rolesError}
-                                </SelectItem>
-                              )}
-                              {!rolesLoading &&
-                                !rolesError &&
-                                roles.map((role) => (
-                                  <SelectItem key={role._id} value={role._id}>
-                                    {roleLabels[role.name] || role.name}
-                                  </SelectItem>
-                                ))}
+                              ))}
                             </SelectContent>
                           </Select>
                           {fieldState.invalid && (
@@ -342,6 +323,97 @@ export default function Register() {
                         </Field>
                       )}
                     />
+                  </FieldGroup>
+
+                  {/* Critères d'acceptation */}
+                  <FieldGroup>
+                    <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
+                      <h4 className="font-semibold text-sm text-gray-900">📋 Critères d'acceptation</h4>
+                      <div className="text-xs text-gray-600 space-y-2">
+                        <p>Avant de soumettre votre demande d'inscription, veuillez noter que :</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>Les informations fournies doivent être exactes et vérifiables</li>
+                          <li>Le profil doit correspondre aux exigences du rôle demandé</li>
+                          <li>Une vérification sera effectuée par notre équipe administrative</li>
+                          <li>Le processus d'approbation peut prendre 24-48 heures</li>
+                          <li>Un email de confirmation sera envoyé après validation</li>
+                        </ul>
+                      </div>
+
+                      <Controller
+                        name="acceptTerms"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <div className="flex items-start space-x-2">
+                              <input
+                                type="checkbox"
+                                id="acceptTerms"
+                                checked={field.value}
+                                onChange={(e) => field.onChange(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <div className="space-y-1">
+                                <FieldLabel htmlFor="acceptTerms" className="text-sm font-normal">
+                                  J'ai lu et j'accepte les critères d'acceptation ci-dessus
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </div>
+                            </div>
+                          </Field>
+                        )}
+                      />
+                    </div>
+                  </FieldGroup>
+
+                  {/* Règlement */}
+                  <FieldGroup>
+                    <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="font-semibold text-sm text-blue-900">📜 Règlement de la plateforme</h4>
+                      <div className="text-xs text-blue-800 space-y-2">
+                        <p>En utilisant la plateforme SmartSite, vous vous engagez à respecter :</p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>Respecter les politiques de confidentialité et de sécurité</li>
+                          <li>Fournir des informations exactes et à jour</li>
+                          <li>Utiliser la plateforme à des fins professionnelles uniquement</li>
+                          <li>Ne pas partager vos identifiants avec des tiers</li>
+                          <li>Respecter les autres utilisateurs et collaborateurs</li>
+                          <li>Signalier tout problème ou anomalie rapidement</li>
+                          <li>Accepter les décisions administratives finales</li>
+                        </ul>
+                        <p className="font-medium text-blue-900">
+                          Toute violation du règlement peut entraîner la suspension ou la suppression de votre compte.
+                        </p>
+                      </div>
+
+                      <Controller
+                        name="acceptReglement"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <div className="flex items-start space-x-2">
+                              <input
+                                type="checkbox"
+                                id="acceptReglement"
+                                checked={field.value}
+                                onChange={(e) => field.onChange(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div className="space-y-1">
+                                <FieldLabel htmlFor="acceptReglement" className="text-sm font-normal text-blue-900">
+                                  J'ai lu et j'accepte le règlement de la plateforme
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </div>
+                            </div>
+                          </Field>
+                        )}
+                      />
+                    </div>
                   </FieldGroup>
 
                   <Button

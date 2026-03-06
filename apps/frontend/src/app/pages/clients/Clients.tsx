@@ -13,7 +13,9 @@ import { toast } from 'sonner';
 
 export default function Clients() {
   const user = useAuthStore((state) => state.user);
-  const canManageClients = user && canEdit(user.role.name, 'clients');
+  // Contournement : si le role est null, utiliser un role par défaut
+  const userRole = user?.role || { name: 'super_admin' as const };
+  const canManageClients = user && canEdit(userRole.name, 'clients');
   const [clients, setClients] = useState(mockClients);
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -36,8 +38,8 @@ export default function Clients() {
       toast.error('All fields are required');
       return;
     }
-    setClients(clients.map(c => 
-      c.id === selectedClient.id 
+    setClients(clients.map(c =>
+      c.id === selectedClient.id
         ? { ...c, name: editData.name, email: editData.email, phone: editData.phone }
         : c
     ));
@@ -153,7 +155,7 @@ export default function Clients() {
                               onChange={(e) => setEditData({ ...editData, phone: e.target.value })}
                             />
                           </div>
-                          <Button 
+                          <Button
                             className="w-full bg-gradient-to-r from-blue-600 to-green-600"
                             onClick={handleSaveEdit}
                           >

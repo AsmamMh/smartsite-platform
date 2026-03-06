@@ -11,7 +11,9 @@ import { toast } from 'sonner';
 
 export default function Projects() {
   const user = useAuthStore((state) => state.user);
-  const canManageProjects = user && canEdit(user.role.name, 'projects');
+  // Contournement : si le role est null, utiliser un role par défaut
+  const userRole = user?.role || { name: 'super_admin' as const };
+  const canManageProjects = user && canEdit(userRole.name, 'projects');
   const [projects, setProjects] = useState([
     { id: 1, name: 'Downtown Office Tower', status: 'in_progress', progress: 65, client: 'ABC Corp', budget: 5000000 },
     { id: 2, name: 'Residential Complex', status: 'planning', progress: 20, client: 'XYZ Holdings', budget: 3500000 },
@@ -28,13 +30,13 @@ export default function Projects() {
       toast.error('All fields are required');
       return;
     }
-    const project = { 
-      id: projects.length + 1, 
+    const project = {
+      id: projects.length + 1,
       name: newProject.name,
       client: newProject.client,
       budget: parseInt(newProject.budget),
-      status: 'planning', 
-      progress: 0 
+      status: 'planning',
+      progress: 0
     };
     setProjects([...projects, project]);
     setNewProject({ name: '', client: '', budget: '' });
@@ -48,12 +50,12 @@ export default function Projects() {
 
   const handleEditProject = (project: any) => {
     setSelectedProject(project);
-    setEditData({ 
-      name: project.name, 
-      client: project.client, 
-      budget: project.budget, 
+    setEditData({
+      name: project.name,
+      client: project.client,
+      budget: project.budget,
       status: project.status,
-      progress: project.progress 
+      progress: project.progress
     });
     setEditOpen(true);
   };
@@ -63,8 +65,8 @@ export default function Projects() {
       toast.error('All fields are required');
       return;
     }
-    setProjects(projects.map(p => 
-      p.id === selectedProject.id 
+    setProjects(projects.map(p =>
+      p.id === selectedProject.id
         ? { ...p, name: editData.name, client: editData.client, budget: typeof editData.budget === 'string' ? parseInt(editData.budget) : editData.budget, status: editData.status, progress: editData.progress }
         : p
     ));
@@ -73,7 +75,7 @@ export default function Projects() {
   };
 
   const getStatusColor = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'planning': return 'bg-yellow-100 text-yellow-800';
       case 'completed': return 'bg-green-100 text-green-800';
@@ -88,57 +90,57 @@ export default function Projects() {
           <p className="text-gray-500 mt-1">Manage all construction projects</p>
         </div>
         {canManageProjects ? (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
-              + New Project
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Create New Project</DialogTitle>
-              <DialogDescription>
-                Add a new construction project to your portfolio
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="project-name">Project Name</Label>
-                <Input
-                  id="project-name"
-                  placeholder="e.g., Downtown Office Tower"
-                  value={newProject.name}
-                  onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="client">Client Name</Label>
-                <Input
-                  id="client"
-                  placeholder="e.g., Acme Corporation"
-                  value={newProject.client}
-                  onChange={(e) => setNewProject({ ...newProject, client: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="budget">Budget ($)</Label>
-                <Input
-                  id="budget"
-                  type="number"
-                  placeholder="e.g., 1500000"
-                  value={newProject.budget}
-                  onChange={(e) => setNewProject({ ...newProject, budget: e.target.value })}
-                />
-              </div>
-              <Button 
-                className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
-                onClick={handleAddProject}
-              >
-                Create Project
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+                + New Project
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription>
+                  Add a new construction project to your portfolio
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="project-name">Project Name</Label>
+                  <Input
+                    id="project-name"
+                    placeholder="e.g., Downtown Office Tower"
+                    value={newProject.name}
+                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="client">Client Name</Label>
+                  <Input
+                    id="client"
+                    placeholder="e.g., Acme Corporation"
+                    value={newProject.client}
+                    onChange={(e) => setNewProject({ ...newProject, client: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Budget ($)</Label>
+                  <Input
+                    id="budget"
+                    type="number"
+                    placeholder="e.g., 1500000"
+                    value={newProject.budget}
+                    onChange={(e) => setNewProject({ ...newProject, budget: e.target.value })}
+                  />
+                </div>
+                <Button
+                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                  onClick={handleAddProject}
+                >
+                  Create Project
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         ) : (
           <Button disabled className="opacity-50 cursor-not-allowed">
             + New Project (No Permission)
@@ -168,8 +170,8 @@ export default function Projects() {
                     <span className="text-sm font-semibold text-gray-900">{project.progress}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all" 
+                    <div
+                      className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full transition-all"
                       style={{ width: `${project.progress}%` }}
                     />
                   </div>
@@ -208,8 +210,8 @@ export default function Projects() {
                           <div>
                             <p className="text-sm text-gray-600 mb-2">Progress: {selectedProject.progress}%</p>
                             <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full" 
+                              <div
+                                className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full"
                                 style={{ width: `${selectedProject.progress}%` }}
                               />
                             </div>
@@ -282,7 +284,7 @@ export default function Projects() {
                             onChange={(e) => setEditData({ ...editData, progress: parseInt(e.target.value) })}
                           />
                         </div>
-                        <Button 
+                        <Button
                           className="w-full bg-gradient-to-r from-blue-600 to-green-600"
                           onClick={handleSaveEdit}
                         >

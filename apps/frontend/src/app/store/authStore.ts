@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthState>()(
             },
             isAuthenticated: true,
           });
-          
+
           return res.data;
         } catch (error: any) {
           console.error('Login failed:', error.response?.data?.message || error.message);
@@ -90,9 +90,11 @@ export const useAuthStore = create<AuthState>()(
         return res.data;
       },
 
-      // Rejeter / supprimer un utilisateur (admin)
-      rejectUser: async (userId: string) => {
-        const res = await api.delete(`/users/${userId}`);
+      // Rejeter un utilisateur (admin)
+      rejectUser: async (userId: string, reason?: string) => {
+        const res = await api.post(`/auth/reject-user/${userId}`, {
+          reason,
+        });
         return res.data;
       },
 

@@ -19,7 +19,7 @@ export class UsersController {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   @Post()
   async create(@Body() createUserDto: any) {
@@ -28,7 +28,22 @@ export class UsersController {
 
   @Get()
   async findAll() {
-    return this.usersService.findAll();
+    try {
+      return await this.usersService.findAll();
+    } catch (error) {
+      console.error('Erreur dans findAll:', error);
+      throw error;
+    }
+  }
+
+  @Get('cin/:cin')
+  async findByCin(@Param('cin') cin: string) {
+    try {
+      return await this.usersService.findByCin(cin);
+    } catch (error) {
+      console.error('Erreur dans findByCin:', error);
+      throw error;
+    }
   }
 
   @Get('mypermissions')

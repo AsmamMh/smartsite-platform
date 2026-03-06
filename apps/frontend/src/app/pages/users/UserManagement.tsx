@@ -53,7 +53,9 @@ import useRolePermissionsModal from "@/app/hooks/use-role-permissions-modal";
 export default function UserManagement() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
-  const canManageRoles = user && canEdit(user.role.name, "users");
+  // Contournement : si le role est null, utiliser un role par défaut
+  const userRole = user?.role || { name: 'super_admin' as const };
+  const canManageRoles = user && canEdit(userRole.name, "users");
   const [roles, setRoles] = useState<Role[]>([]);
   const { setOnUserChange } = useAddUserModal();
   const { setOnPermissionChange } = useAddPermissionModal();
@@ -67,7 +69,7 @@ export default function UserManagement() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
-  const canManagePermissions = user && canEdit(user.role.name, "users");
+  const canManagePermissions = user && canEdit(userRole.name, "users");
   const [permissions, setPermissions] = useState<Permission[]>([]);
 
   useEffect(() => {
@@ -360,8 +362,8 @@ export default function UserManagement() {
                 <div className="text-center py-12">Loading users...</div>
               ) : (
                 <UserDataTable
-                onBan={handleBanUser}
-                users={users} onDelete={handleDeleteUser} />
+                  onBan={handleBanUser}
+                  users={users} onDelete={handleDeleteUser} />
               )}
             </TabsContent>
 

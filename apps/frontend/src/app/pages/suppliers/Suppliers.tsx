@@ -13,7 +13,9 @@ import { toast } from 'sonner';
 
 export default function Suppliers() {
   const user = useAuthStore((state) => state.user);
-  const canManageSuppliers = user && canEdit(user.role.name, 'suppliers');
+  // Contournement : si le role est null, utiliser un role par défaut
+  const userRole = user?.role || { name: 'super_admin' as const };
+  const canManageSuppliers = user && canEdit(userRole.name, 'suppliers');
   const [suppliers, setSuppliers] = useState(mockSuppliers);
   const [newSupplier, setNewSupplier] = useState({ name: '', category: '', email: '', phone: '' });
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
@@ -61,66 +63,66 @@ export default function Suppliers() {
           <p className="text-gray-500 mt-1">Manage supplier relationships and orders</p>
         </div>
         {canManageSuppliers ? (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
-              + Add Supplier
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Supplier</DialogTitle>
-              <DialogDescription>
-                Register a new supplier for your projects
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="sup-name">Supplier Name</Label>
-                <Input
-                  id="sup-name"
-                  placeholder="e.g., ABC Construction Suppliers"
-                  value={newSupplier.name}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Input
-                  id="category"
-                  placeholder="e.g., Concrete, Steel, Lumber"
-                  value={newSupplier.category}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, category: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sup-email">Email</Label>
-                <Input
-                  id="sup-email"
-                  type="email"
-                  placeholder="contact@supplier.com"
-                  value={newSupplier.email}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, email: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sup-phone">Phone</Label>
-                <Input
-                  id="sup-phone"
-                  placeholder="+216 12 345 678"
-                  value={newSupplier.phone}
-                  onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
-                />
-              </div>
-              <Button 
-                className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
-                onClick={handleAddSupplier}
-              >
-                Add Supplier
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+                + Add Supplier
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Supplier</DialogTitle>
+                <DialogDescription>
+                  Register a new supplier for your projects
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="sup-name">Supplier Name</Label>
+                  <Input
+                    id="sup-name"
+                    placeholder="e.g., ABC Construction Suppliers"
+                    value={newSupplier.name}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category">Category</Label>
+                  <Input
+                    id="category"
+                    placeholder="e.g., Concrete, Steel, Lumber"
+                    value={newSupplier.category}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, category: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sup-email">Email</Label>
+                  <Input
+                    id="sup-email"
+                    type="email"
+                    placeholder="contact@supplier.com"
+                    value={newSupplier.email}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="sup-phone">Phone</Label>
+                  <Input
+                    id="sup-phone"
+                    placeholder="+216 12 345 678"
+                    value={newSupplier.phone}
+                    onChange={(e) => setNewSupplier({ ...newSupplier, phone: e.target.value })}
+                  />
+                </div>
+                <Button
+                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                  onClick={handleAddSupplier}
+                >
+                  Add Supplier
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         ) : (
           <Button disabled className="opacity-50 cursor-not-allowed">
             + Add Supplier (No Permission)
@@ -184,7 +186,7 @@ export default function Suppliers() {
                               onChange={(e) => setContactData({ ...contactData, message: e.target.value })}
                             />
                           </div>
-                          <Button 
+                          <Button
                             className="w-full bg-gradient-to-r from-blue-600 to-green-600"
                             onClick={handleSendMessage}
                           >

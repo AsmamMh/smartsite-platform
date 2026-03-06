@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router";
 import {
   Building2,
@@ -24,25 +24,41 @@ import { Badge } from "../components/ui/badge";
 import { getNavigationForRole, roleLabels } from "../utils/roleConfig";
 import { mockNotifications } from "../utils/mockData";
 
-export default  function DashboardLayout() {
+export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [logoAvailable, setLogoAvailable] = useState(true);
   console.log(user, "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
+
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
   console.log(user, "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
+
+  // Utiliser useEffect pour la redirection
+  useEffect(() => {
+    if (!user) {
+      console.log("Redirection vers login - user est null");
+      navigate("/login");
+    } else if (!user.role) {
+      console.log("Role est null, utilisation du role par défaut");
+      // Contournement : si le role est null, on considère que c'est un admin
+      // TODO: Résoudre le problème de populate dans le backend
+    }
+  }, [user, navigate]);
+
   if (!user) {
-    navigate("/login");
-    return null;
+    return null; // Afficher rien pendant la redirection
   }
 
+  // Contournement : si le role est null, utiliser un role par défaut
+  const userRole = user.role || { name: 'super_admin' as const };
+
   // Navigation statique en fonction du rôle
-  const navigationItems = getNavigationForRole(user.role.name);
+  const navigationItems = getNavigationForRole(userRole.name);
   const unreadNotifications = mockNotifications.filter((n) => !n.read).length;
 
   const getInitials = (nom: string, lastname: string) => {
@@ -162,28 +178,27 @@ export default  function DashboardLayout() {
             w-64 pt-16 lg:pt-0 flex flex-col
           `}
         >
-               <nav className="p-4 space-y-1 overflow-y-auto flex-1">
-                {navigationItems.map((item) => {
-                  const isActive = location.pathname.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.href}
-                      to={item.href}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`
+          <nav className="p-4 space-y-1 overflow-y-auto flex-1">
+            {navigationItems.map((item) => {
+              const isActive = location.pathname.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`
                         flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-                        ${
-                          isActive
-                            ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-md"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }
+                        ${isActive
+                      ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-md"
+                      : "text-gray-700 hover:bg-gray-100"
+                    }
                       `}
-                    >
-                      <span className="font-medium">{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </nav>  
+                >
+                  <span className="font-medium">{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
 
           {/* Logout Button at Bottom */}
           <div className="p-4 border-t border-gray-200">

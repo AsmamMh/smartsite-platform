@@ -44,7 +44,7 @@ export class EmailService {
   ): Promise<void> {
     console.log('📧 EMAIL SERVICE: Début envoi email à', userEmail);
     console.log('📧 EMAIL SERVICE: Utilisateur', firstName, lastName);
-    
+
     const subject = 'Votre compte SmartSite a été approuvé';
     const htmlContent = `
       <h2>Bienvenue sur SmartSite</h2>
@@ -99,6 +99,80 @@ export class EmailService {
       }
     } catch (error) {
       console.error('❌ EMAIL SERVICE: Erreur envoi email:', error);
+      throw error;
+    }
+  }
+
+  async sendRejectionEmail(
+    userEmail: string,
+    firstName: string,
+    lastName: string,
+    cin: string,
+    reason: string,
+  ): Promise<void> {
+    console.log('📧 EMAIL SERVICE: Début envoi email de rejet à', userEmail);
+    console.log('📧 EMAIL SERVICE: Utilisateur', firstName, lastName);
+    console.log('📧 EMAIL SERVICE: Motif:', reason);
+
+    const subject = 'Votre demande de compte SmartSite a été refusée';
+    const htmlContent = `
+      <h2>Demande de compte SmartSite refusée</h2>
+      <p>Bonjour ${firstName} ${lastName},</p>
+      <p>Nous vous informons que votre demande de création de compte sur la plateforme SmartSite a été examinée et malheureusement refusée.</p>
+      
+      <h3>Raison du refus:</h3>
+      <div style="background-color: #f8f9fa; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0;">
+        <p style="margin: 0; color: #dc3545;">${reason}</p>
+      </div>
+      
+      <h3>Informations de votre demande:</h3>
+      <table style="border-collapse: collapse; border: 1px solid #ddd;">
+        <tr style="background-color: #f2f2f2;">
+          <td style="border: 1px solid #ddd; padding: 12px;"><strong>CIN:</strong></td>
+          <td style="border: 1px solid #ddd; padding: 12px;"><code>${cin}</code></td>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #ddd; padding: 12px;"><strong>Email:</strong></td>
+          <td style="border: 1px solid #ddd; padding: 12px;">${userEmail}</td>
+        </tr>
+        <tr style="background-color: #f2f2f2;">
+          <td style="border: 1px solid #ddd; padding: 12px;"><strong>Date de demande:</strong></td>
+          <td style="border: 1px solid #ddd; padding: 12px;">${new Date().toLocaleDateString()}</td>
+        </tr>
+      </table>
+
+      <h3>Que faire maintenant ?</h3>
+      <ul>
+        <li>Si vous pensez qu'il s'agit d'une erreur, vous pouvez contacter l'administration</li>
+        <li>Vous pouvez soumettre une nouvelle demande si vous avez corrigé les problèmes mentionnés</li>
+        <li>Pour toute question, veuillez contacter l'équipe d'administration</li>
+      </ul>
+
+      <p>Nous vous remercions de votre intérêt pour la plateforme SmartSite.</p>
+      <p>Cordialement,<br/>L'équipe SmartSite</p>
+    `;
+
+    try {
+      console.log('📧 EMAIL SERVICE: Préparation envoi email de rejet...');
+      const result = await this.transporter.sendMail({
+        from: process.env.EMAIL_USER || 'noreply@smartsite.com',
+        to: userEmail,
+        subject,
+        html: htmlContent,
+      });
+
+      console.log('✅ EMAIL SERVICE: Email de rejet envoyé avec succès !');
+      console.log('📧 EMAIL SERVICE: Message ID:', result.messageId);
+
+      // Log preview URL for development
+      if (!process.env.EMAIL_USER) {
+        console.log('\n📧 REJECTION EMAIL SENT - Preview URL:', nodemailer.getTestMessageUrl(result));
+        console.log('📧 You can view the rejection email at the URL above.\n');
+      } else {
+        console.log('📧 EMAIL SERVICE: Email de rejet envoyé via Gmail à', userEmail);
+      }
+    } catch (error) {
+      console.error('❌ EMAIL SERVICE: Erreur envoi email de rejet:', error);
       throw error;
     }
   }
