@@ -29,3 +29,6 @@ export class Milestone extends Document {
   @Prop()
   endDate: Date;
 }
+
+
+export const MilestoneSchema = SchemaFactory.createForClass(Milestone);
