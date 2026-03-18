@@ -16,7 +16,7 @@ export class Milestone extends Document {
   projectId: string;
 
   @Prop()
-  siteId: string;
+  siteId: string;   
 
   @Prop()
   createdBy: string;
