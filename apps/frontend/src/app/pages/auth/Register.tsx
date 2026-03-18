@@ -4,6 +4,7 @@ import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
+import axios from "axios";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,7 @@ import {
 import { useAuthStore } from "@/app/store/authStore";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
+import { roleLabels } from "@/app/utils/roleConfig";
 
 const formSchema = z
   .object({
@@ -77,6 +79,34 @@ export default function Register() {
   const navigate = useNavigate();
   const register = useAuthStore((state) => state.register);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [roles, setRoles] = React.useState<any[]>([]);
+  const [rolesLoading, setRolesLoading] = React.useState(false);
+  const [rolesError, setRolesError] = React.useState<string | null>(null);
+
+  // Charger les rôles depuis le backend (et exclure super_admin)
+  React.useEffect(() => {
+    const loadRoles = async () => {
+      try {
+        setRolesLoading(true);
+        const res = await axios.get("http://localhost:3001/roles");
+        const allRoles = res.data || [];
+        const filtered = allRoles.filter(
+          (r: any) => r.name && r.name !== "super_admin",
+        );
+        setRoles(filtered);
+      } catch (err: any) {
+        console.error("Erreur chargement rôles:", err);
+        setRolesError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Impossible de charger les rôles.",
+        );
+      } finally {
+        setRolesLoading(false);
+      }
+    };
+    loadRoles();
+  }, []);
 
   const form = useForm<RegisterFormData>({
     resolver: zodResolver(formSchema),
