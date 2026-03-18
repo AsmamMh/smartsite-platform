@@ -5,16 +5,15 @@ import {
   PenIcon,
   PlusIcon,
   Trash2Icon,
-} from 'lucide-react';
-import type { ChangeEvent, FormEvent, KeyboardEvent } from 'react';
-import { useEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
-
+} from "lucide-react";
+import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import type {
   KanbanBoardCircleColor,
   KanbanBoardDropDirection,
-} from '@/components/kanban';
+} from "@/components/kanban";
 import {
   KANBAN_BOARD_CIRCLE_COLORS,
   KanbanBoard,
@@ -38,8 +37,8 @@ import {
   KanbanBoardProvider,
   KanbanColorCircle,
   useDndEvents,
-} from '@/components/kanban';
-import { Button } from '@/components/ui/button';
+} from "@/components/kanban";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,16 +46,16 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { uuid } from 'zod';
-import { useJsLoaded } from '@/hooks/use-js-loaded';
+} from "@/components/ui/tooltip";
+import { uuid } from "zod";
+import { useJsLoaded } from "@/hooks/use-js-loaded";
 
 // Types
 type Card = {
@@ -74,7 +73,6 @@ type Column = {
 export default function KanbanBoardPage() {
   return (
     <div className="grid h-screen grid-rows-[var(--header-height)_1fr_6rem] overflow-x-hidden sm:grid-rows-[var(--header-height)_1fr_var(--header-height)]">
-      
       <main className="relative">
         <div className="absolute inset-0 h-full overflow-x-hidden px-4 py-4 md:px-6">
           <KanbanBoardProvider>
@@ -82,8 +80,6 @@ export default function KanbanBoardPage() {
           </KanbanBoardProvider>
         </div>
       </main>
-
- 
     </div>
   );
 }
@@ -91,113 +87,109 @@ export default function KanbanBoardPage() {
 export function MyKanbanBoard() {
   const [columns, setColumns] = useState<Column[]>([
     {
-      id: 'eowdjiak9f9jr27po347jr47',
-      title: 'Backlog',
-      color: 'primary',
+      id: "eowdjiak9f9jr27po347jr47",
+      title: "Backlog",
+      color: "primary",
       items: [
         {
-          id: '1',
-          title: 'Add a new column',
+          id: "1",
+          title: "Add a new column",
         },
         {
-          id: '2',
-          title: 'Add a new card',
+          id: "2",
+          title: "Add a new card",
         },
         {
-          id: '3',
-          title: 'Move a card to another column',
+          id: "3",
+          title: "Move a card to another column",
         },
         {
-          id: '4',
-          title: 'Delete a column',
+          id: "4",
+          title: "Delete a column",
         },
         {
-          id: '5',
-          title: 'Delete a card',
+          id: "5",
+          title: "Delete a card",
         },
         {
-          id: '6',
-          title: 'Update a card title',
+          id: "6",
+          title: "Update a card title",
         },
         {
-          id: '7',
-          title: 'Edit a column title',
+          id: "7",
+          title: "Edit a column title",
         },
         {
-          id: '8',
-          title: `Check out
-
-multi line
-
-card content`,
+          id: "8",
+          title: `Check out multi line card content`,
         },
         {
-          id: '9',
-          title: 'Move a card between two other cards',
+          id: "9",
+          title: "Move a card between two other cards",
         },
         {
-          id: '10',
-          title: 'Turn on screen reader and listen to the announcements',
+          id: "10",
+          title: "Turn on screen reader and listen to the announcements",
         },
         {
-          id: '11',
-          title: 'Notice how with enough cards, the colomns become scrollable',
+          id: "11",
+          title: "Notice how with enough cards, the colomns become scrollable",
         },
       ],
     },
     {
-      id: 'ad1wx5djclsilpu8sjmp9g70',
-      title: 'To Do',
-      color: 'blue',
+      id: "ad1wx5djclsilpu8sjmp9g70",
+      title: "To Do",
+      color: "blue",
       items: [
         {
-          id: '12',
-          title: 'Install the Shadcn Kanban board into your project',
+          id: "12",
+          title: "Install the Shadcn Kanban board into your project",
         },
         {
-          id: '13',
-          title: 'Build amazing apps',
+          id: "13",
+          title: "Build amazing apps",
         },
       ],
     },
     {
-      id: 'zm3vyxyo0x47tl60340w8jrl',
-      title: 'In Progress',
-      color: 'red',
+      id: "zm3vyxyo0x47tl60340w8jrl",
+      title: "In Progress",
+      color: "red",
       items: [
         {
-          id: '14',
-          title: 'Make some magic',
+          id: "14",
+          title: "Make some magic",
         },
         {
-          id: '15',
-          title: 'Stay healthy',
+          id: "15",
+          title: "Stay healthy",
         },
         {
-          id: '16',
-          title: 'Drink water 💧',
+          id: "16",
+          title: "Drink water 💧",
         },
       ],
     },
     {
-      id: 'rzaksqoyfvgjbw466puqu9uk',
-      title: 'In Review',
-      color: 'yellow',
+      id: "rzaksqoyfvgjbw466puqu9uk",
+      title: "In Review",
+      color: "yellow",
       items: [],
     },
     {
-      id: 'w27comaw16gy2jxphpmt9xxv',
-      title: 'Done',
-      color: 'green',
+      id: "w27comaw16gy2jxphpmt9xxv",
+      title: "Done",
+      color: "green",
       items: [
         {
-          id: '17',
-          title: 'Hey, the column to the left of me is empty!',
+          id: "17",
+          title: "Hey, the column to the left of me is empty!",
         },
         {
-          id: '18',
+          id: "18",
           title:
-            'And using the button to the right of me, you can add columns.',
+            "And using the button to the right of me, you can add columns.",
         },
       ],
     },
@@ -220,13 +212,13 @@ card content`,
   const handleAddColumn = (title?: string) => {
     if (title) {
       flushSync(() => {
-        setColumns(previousColumns => [
+        setColumns((previousColumns) => [
           ...previousColumns,
           {
             id: uuid.toString(),
             title,
             color:
-              KANBAN_BOARD_CIRCLE_COLORS[previousColumns.length] ?? 'primary',
+              KANBAN_BOARD_CIRCLE_COLORS[previousColumns.length] ?? "primary",
             items: [],
           },
         ]);
@@ -238,8 +230,8 @@ card content`,
 
   function handleDeleteColumn(columnId: string) {
     flushSync(() => {
-      setColumns(previousColumns =>
-        previousColumns.filter(column => column.id !== columnId),
+      setColumns((previousColumns) =>
+        previousColumns.filter((column) => column.id !== columnId),
       );
     });
 
@@ -247,8 +239,8 @@ card content`,
   }
 
   function handleUpdateColumnTitle(columnId: string, title: string) {
-    setColumns(previousColumns =>
-      previousColumns.map(column =>
+    setColumns((previousColumns) =>
+      previousColumns.map((column) =>
         column.id === columnId ? { ...column, title } : column,
       ),
     );
@@ -259,12 +251,15 @@ card content`,
   */
 
   function handleAddCard(columnId: string, cardContent: string) {
-    setColumns(previousColumns =>
-      previousColumns.map(column =>
+    setColumns((previousColumns) =>
+      previousColumns.map((column) =>
         column.id === columnId
           ? {
               ...column,
-              items: [...column.items, { id: uuid.toString(), title: cardContent }],
+              items: [
+                ...column.items,
+                { id: uuid.toString(), title: cardContent },
+              ],
             }
           : column,
       ),
@@ -272,9 +267,9 @@ card content`,
   }
 
   function handleDeleteCard(cardId: string) {
-    setColumns(previousColumns =>
-      previousColumns.map(column =>
-        column.items.some(card => card.id === cardId)
+    setColumns((previousColumns) =>
+      previousColumns.map((column) =>
+        column.items.some((card) => card.id === cardId)
           ? { ...column, items: column.items.filter(({ id }) => id !== cardId) }
           : column,
       ),
@@ -282,8 +277,8 @@ card content`,
   }
 
   function handleMoveCardToColumn(columnId: string, index: number, card: Card) {
-    setColumns(previousColumns =>
-      previousColumns.map(column => {
+    setColumns((previousColumns) =>
+      previousColumns.map((column) => {
         if (column.id === columnId) {
           // Remove the card from the column (if it exists) before reinserting it.
           const updatedItems = column.items.filter(({ id }) => id !== card.id);
@@ -310,12 +305,12 @@ card content`,
   }
 
   function handleUpdateCardTitle(cardId: string, cardTitle: string) {
-    setColumns(previousColumns =>
-      previousColumns.map(column =>
-        column.items.some(card => card.id === cardId)
+    setColumns((previousColumns) =>
+      previousColumns.map((column) =>
+        column.items.some((card) => card.id === cardId)
           ? {
               ...column,
-              items: column.items.map(card =>
+              items: column.items.map((card) =>
                 card.id === cardId ? { ...card, title: cardTitle } : card,
               ),
             }
@@ -327,7 +322,7 @@ card content`,
   /*
   Moving cards with the keyboard.
   */
-  const [activeCardId, setActiveCardId] = useState<string>('');
+  const [activeCardId, setActiveCardId] = useState<string>("");
   const originalCardPositionReference = useRef<{
     columnId: string;
     cardIndex: number;
@@ -350,7 +345,7 @@ card content`,
     cardIndex: number;
   } {
     for (const [columnIndex, column] of columns.entries()) {
-      const cardIndex = column.items.findIndex(c => c.id === cardId);
+      const cardIndex = column.items.findIndex((c) => c.id === cardId);
 
       if (cardIndex !== -1) {
         return { columnIndex, cardIndex };
@@ -362,7 +357,7 @@ card content`,
 
   function moveActiveCard(
     cardId: string,
-    direction: 'ArrowLeft' | 'ArrowRight' | 'ArrowUp' | 'ArrowDown',
+    direction: "ArrowLeft" | "ArrowRight" | "ArrowUp" | "ArrowDown",
   ) {
     const { columnIndex, cardIndex } = findCardPosition(cardId);
     if (columnIndex === -1 || cardIndex === -1) return;
@@ -373,12 +368,12 @@ card content`,
     let newCardIndex = cardIndex;
 
     switch (direction) {
-      case 'ArrowUp': {
+      case "ArrowUp": {
         newCardIndex = Math.max(cardIndex - 1, 0);
 
         break;
       }
-      case 'ArrowDown': {
+      case "ArrowDown": {
         newCardIndex = Math.min(
           cardIndex + 1,
           columns[columnIndex].items.length - 1,
@@ -386,7 +381,7 @@ card content`,
 
         break;
       }
-      case 'ArrowLeft': {
+      case "ArrowLeft": {
         newColumnIndex = Math.max(columnIndex - 1, 0);
         // Keep same cardIndex if possible, or if out of range, insert at end
         newCardIndex = Math.min(
@@ -396,7 +391,7 @@ card content`,
 
         break;
       }
-      case 'ArrowRight': {
+      case "ArrowRight": {
         newColumnIndex = Math.min(columnIndex + 1, columns.length - 1);
         newCardIndex = Math.min(
           newCardIndex,
@@ -426,7 +421,7 @@ card content`,
   ) {
     const { key } = event;
 
-    if (activeCardId === '' && key === ' ') {
+    if (activeCardId === "" && key === " ") {
       // Pick up the card.
       event.preventDefault();
       setActiveCardId(cardId);
@@ -440,11 +435,11 @@ card content`,
     } else if (activeCardId === cardId) {
       // Card is already active.
       // eslint-disable-next-line unicorn/prefer-switch
-      if (key === ' ' || key === 'Enter') {
+      if (key === " " || key === "Enter") {
         event.preventDefault();
         // Drop the card.
         flushSync(() => {
-          setActiveCardId('');
+          setActiveCardId("");
         });
 
         const { columnIndex, cardIndex } = findCardPosition(cardId);
@@ -457,7 +452,7 @@ card content`,
         }
 
         originalCardPositionReference.current = null;
-      } else if (key === 'Escape') {
+      } else if (key === "Escape") {
         event.preventDefault();
 
         // Cancel the drag.
@@ -484,12 +479,12 @@ card content`,
         onDragCancel(cardId);
         originalCardPositionReference.current = null;
 
-        setActiveCardId('');
+        setActiveCardId("");
       } else if (
-        key === 'ArrowLeft' ||
-        key === 'ArrowRight' ||
-        key === 'ArrowUp' ||
-        key === 'ArrowDown'
+        key === "ArrowLeft" ||
+        key === "ArrowRight" ||
+        key === "ArrowUp" ||
+        key === "ArrowDown"
       ) {
         event.preventDefault();
         moveActiveCard(cardId, key);
@@ -499,14 +494,14 @@ card content`,
   }
 
   function handleCardBlur() {
-    setActiveCardId('');
+    setActiveCardId("");
   }
 
   const jsLoaded = useJsLoaded();
 
   return (
     <KanbanBoard ref={scrollContainerReference}>
-      {columns.map(column =>
+      {columns.map((column) =>
         jsLoaded ? (
           <MyKanbanBoardColumn
             activeCardId={activeCardId}
@@ -517,7 +512,7 @@ card content`,
             onCardKeyDown={handleCardKeyDown}
             onDeleteCard={handleDeleteCard}
             onDeleteColumn={handleDeleteColumn}
-            onMoveCardToColumn={(e)=>{console.log(e)}}
+            onMoveCardToColumn={handleMoveCardToColumn}
             onUpdateCardTitle={handleUpdateCardTitle}
             onUpdateColumnTitle={handleUpdateColumnTitle}
           />
@@ -586,7 +581,7 @@ function MyKanbanBoardColumn({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const columnTitle = formData.get('columnTitle') as string;
+    const columnTitle = formData.get("columnTitle") as string;
     onUpdateColumnTitle(column.id, columnTitle);
     closeDropdownMenu();
   }
@@ -607,7 +602,7 @@ function MyKanbanBoardColumn({
         ({ id }) => id === card.id,
       );
 
-      const baseIndex = dropDirection === 'top' ? cardIndex : cardIndex + 1;
+      const baseIndex = dropDirection === "top" ? cardIndex : cardIndex + 1;
       const targetIndex =
         currentCardIndex !== -1 && currentCardIndex < baseIndex
           ? baseIndex - 1
@@ -640,7 +635,7 @@ function MyKanbanBoardColumn({
           <form
             className="w-full"
             onSubmit={handleSubmit}
-            onBlur={event => {
+            onBlur={(event) => {
               if (!event.currentTarget.contains(event.relatedTarget)) {
                 closeDropdownMenu();
               }
@@ -651,8 +646,8 @@ function MyKanbanBoardColumn({
               autoFocus
               defaultValue={column.title}
               name="columnTitle"
-              onKeyDown={event => {
-                if (event.key === 'Escape') {
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
                   closeDropdownMenu();
                 }
               }}
@@ -701,7 +696,7 @@ function MyKanbanBoardColumn({
       </KanbanBoardColumnHeader>
 
       <KanbanBoardColumnList ref={listReference}>
-        {column.items.map(card => (
+        {column.items.map((card) => (
           <KanbanBoardColumnListItem
             cardId={card.id}
             key={card.id}
@@ -784,7 +779,7 @@ function MyKanbanBoardCard({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const cardTitle = formData.get('cardTitle') as string;
+    const cardTitle = formData.get("cardTitle") as string;
     onUpdateCardTitle(card.id, cardTitle);
     handleBlur();
   }
@@ -796,25 +791,25 @@ function MyKanbanBoardCard({
         autoFocus
         defaultValue={card.title}
         name="cardTitle"
-        onFocus={event => event.target.select()}
-        onInput={event => {
+        onFocus={(event) => event.target.select()}
+        onInput={(event) => {
           const input = event.currentTarget as HTMLTextAreaElement;
           if (/\S/.test(input.value)) {
             // Clear the error message if input is valid
-            input.setCustomValidity('');
+            input.setCustomValidity("");
           } else {
             input.setCustomValidity(
-              'Card content cannot be empty or just whitespace.',
+              "Card content cannot be empty or just whitespace.",
             );
           }
         }}
-        onKeyDown={event => {
-          if (event.key === 'Enter' && !event.shiftKey) {
+        onKeyDown={(event) => {
+          if (event.key === "Enter" && !event.shiftKey) {
             event.preventDefault();
             event.currentTarget.form?.requestSubmit();
           }
 
-          if (event.key === 'Escape') {
+          if (event.key === "Escape") {
             handleBlur();
           }
         }}
@@ -828,14 +823,14 @@ function MyKanbanBoardCard({
       isActive={isActive}
       onBlur={onCardBlur}
       onClick={() => setIsEditingTitle(true)}
-      onKeyDown={event => {
-        if (event.key === ' ') {
+      onKeyDown={(event) => {
+        if (event.key === " ") {
           // Prevent the button "click" action on space because that should
           // be used to pick up and move the card using the keyboard.
           event.preventDefault();
         }
 
-        if (event.key === 'Escape') {
+        if (event.key === "Escape") {
           // Mark that this card was cancelled.
           wasCancelledReference.current = true;
         }
@@ -869,7 +864,7 @@ function MyNewKanbanBoardCard({
   onAddCard: (columnId: string, cardContent: string) => void;
   scrollList: () => void;
 }) {
-  const [cardContent, setCardContent] = useState('');
+  const [cardContent, setCardContent] = useState("");
   const newCardButtonReference = useRef<HTMLButtonElement>(null);
   const submitButtonReference = useRef<HTMLButtonElement>(null);
   const [showNewCardForm, setShowNewCardForm] = useState(false);
@@ -885,7 +880,7 @@ function MyNewKanbanBoardCard({
   function handleCancelClick() {
     flushSync(() => {
       setShowNewCardForm(false);
-      setCardContent('');
+      setCardContent("");
     });
 
     newCardButtonReference.current?.focus();
@@ -900,7 +895,7 @@ function MyNewKanbanBoardCard({
 
     flushSync(() => {
       onAddCard(column.id, cardContent.trim());
-      setCardContent('');
+      setCardContent("");
     });
 
     scrollList();
@@ -909,7 +904,7 @@ function MyNewKanbanBoardCard({
   return showNewCardForm ? (
     <>
       <form
-        onBlur={event => {
+        onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget)) {
             handleCancelClick();
           }
@@ -922,24 +917,24 @@ function MyNewKanbanBoardCard({
             autoFocus
             name="cardContent"
             onChange={handleInputChange}
-            onInput={event => {
+            onInput={(event) => {
               const input = event.currentTarget as HTMLTextAreaElement;
               if (/\S/.test(input.value)) {
                 // Clear the error message if input is valid
-                input.setCustomValidity('');
+                input.setCustomValidity("");
               } else {
                 input.setCustomValidity(
-                  'Card content cannot be empty or just whitespace.',
+                  "Card content cannot be empty or just whitespace.",
                 );
               }
             }}
-            onKeyDown={event => {
-              if (event.key === 'Enter' && !event.shiftKey) {
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && !event.shiftKey) {
                 event.preventDefault();
                 submitButtonReference.current?.click();
               }
 
-              if (event.key === 'Escape') {
+              if (event.key === "Escape") {
                 handleCancelClick();
               }
             }}
@@ -1009,17 +1004,17 @@ function MyNewKanbanBoardColumn({
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
-    const columnTitle = formData.get('columnTitle') as string;
+    const columnTitle = formData.get("columnTitle") as string;
     onAddColumn(columnTitle);
     if (inputReference.current) {
-      inputReference.current.value = '';
+      inputReference.current.value = "";
     }
   }
 
   return showEditor ? (
     <form
       className={kanbanBoardColumnClassNames}
-      onBlur={event => {
+      onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) {
           handleCancelClick();
         }
@@ -1031,8 +1026,8 @@ function MyNewKanbanBoardColumn({
           aria-label="Column title"
           autoFocus
           name="columnTitle"
-          onKeyDown={event => {
-            if (event.key === 'Escape') {
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
               handleCancelClick();
             }
           }}
