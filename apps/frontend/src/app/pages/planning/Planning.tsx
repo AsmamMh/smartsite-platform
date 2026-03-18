@@ -61,11 +61,13 @@ import { useJsLoaded } from "@/hooks/use-js-loaded";
 type Card = {
   id: string;
   title: string;
+  description?:string;
 };
 
 type Column = {
   id: string;
   title: string;
+  description?:string;
   color: KanbanBoardCircleColor;
   items: Card[];
 };
@@ -98,6 +100,7 @@ export function MyKanbanBoard() {
         {
           id: "2",
           title: "Add a new card",
+          description:"descirption"
         },
         {
           id: "3",
@@ -282,6 +285,7 @@ export function MyKanbanBoard() {
         if (column.id === columnId) {
           // Remove the card from the column (if it exists) before reinserting it.
           const updatedItems = column.items.filter(({ id }) => id !== card.id);
+          console.log(updatedItems)
           return {
             ...column,
             items: [
