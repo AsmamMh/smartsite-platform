@@ -60,6 +60,9 @@ export class Incident {
   @Prop({ type: Types.ObjectId, ref: "User", required: false })
   assignedTo?: Types.ObjectId;
 
+  @Prop({ trim: true })
+  assignedUserRole?: string;
+
   @Prop({ required: true, enum: IncidentStatus, default: IncidentStatus.OPEN })
   status: IncidentStatus;
 }
@@ -68,11 +71,41 @@ export const IncidentSchema = SchemaFactory.createForClass(Incident);
 
 IncidentSchema.set('toJSON', {
   virtuals: true,
-  transform: (_doc: unknown, ret: Record<string, unknown>) => {
-    ret.id = (ret._id as Types.ObjectId)?.toString?.() ?? ret._id;
+  transform: function (_doc: any, ret: any) {
+    console.log('🔍 Transform appelé pour incident:', ret._id || ret.id);
+    console.log('🔍 Type de ret:', typeof ret);
+    console.log('🔍 Est-ce un objet lean?:', ret.constructor.name === 'Object' && !ret._doc);
+
+    ret.id = (ret._id as any)?.toString?.() ?? ret._id ?? ret.id;
     if (ret.createdAt instanceof Date) ret.createdAt = ret.createdAt.toISOString();
     if (ret.updatedAt instanceof Date) ret.updatedAt = ret.updatedAt.toISOString();
     if (ret.resolvedAt instanceof Date) ret.resolvedAt = ret.resolvedAt.toISOString();
+
+    // Inclure les champs d'assignation dans la réponse
+    console.log('🔍 assignedToCin:', ret.assignedToCin);
+    console.log('🔍 assignedUserRole:', ret.assignedUserRole);
+    console.log('🔍 reportedBy (ObjectId):', ret.reportedBy);
+
+    if (ret.assignedToCin) {
+      ret.assignedTo = ret.assignedToCin;
+      console.log('✅ assignedTo défini à:', ret.assignedTo);
+    }
+
+    if (ret.assignedUserRole) {
+      console.log('✅ assignedUserRole déjà présent:', ret.assignedUserRole);
+    }
+
+    // Gérer le champ reportedBy - convertir ObjectId en chaîne si possible
+    if (ret.reportedBy) {
+      if (typeof ret.reportedBy === 'object' && ret.reportedBy.cin) {
+        ret.reportedBy = ret.reportedBy.cin;
+        console.log('✅ reportedBy converti en CIN:', ret.reportedBy);
+      } else if (typeof ret.reportedBy === 'string') {
+        console.log('✅ reportedBy déjà une chaîne:', ret.reportedBy);
+      }
+    }
+
+    console.log('🔍 Résultat final:', JSON.stringify(ret, null, 2));
     return ret;
   },
 });

@@ -36,6 +36,10 @@ export default function PendingUsers() {
   const [isGeneratingReason, setIsGeneratingReason] = useState(false);
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
+  // États de pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [usersPerPage] = useState(6); // 6 utilisateurs par page
+
   const load = async () => {
     if (!getPendingUsers) return;
     setLoading(true);
@@ -57,7 +61,15 @@ export default function PendingUsers() {
     } else {
       setFilteredUsers(users.filter(u => u.role?.name === roleFilter));
     }
+    // Réinitialiser à la page 1 lors du filtrage
+    setCurrentPage(1);
   }, [users, roleFilter]);
+
+  // Calculer les utilisateurs pour la page actuelle
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
 
   useEffect(() => {
     load();
@@ -100,6 +112,19 @@ export default function PendingUsers() {
     } finally {
       setActionLoading(null);
     }
+  };
+
+  // Fonctions de pagination
+  const goToPreviousPage = () => {
+    setCurrentPage(prev => Math.max(prev - 1, 1));
+  };
+
+  const goToNextPage = () => {
+    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+  };
+
+  const goToPage = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
   };
 
   const openRejectDialog = (user: User) => {
@@ -186,7 +211,7 @@ Le motif doit être:
             </div>
           ) : (
             <div className="space-y-3">
-              {filteredUsers.map((u) => (
+              {currentUsers.map((u) => (
                 <div
                   key={u._id}
                   className="flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-gray-50"
@@ -364,6 +389,43 @@ Le motif doit être:
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToPreviousPage}
+            disabled={currentPage === 1}
+          >
+            Précédent
+          </Button>
+
+          <div className="flex gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+              <Button
+                key={pageNum}
+                variant={currentPage === pageNum ? "default" : "outline"}
+                size="sm"
+                onClick={() => goToPage(pageNum)}
+                className="w-8 h-8 p-0"
+              >
+                {pageNum}
+              </Button>
+            ))}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={goToNextPage}
+            disabled={currentPage === totalPages}
+          >
+            Suivant
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

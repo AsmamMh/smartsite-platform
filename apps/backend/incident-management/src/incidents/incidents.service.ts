@@ -15,7 +15,7 @@ export class IncidentsService {
   constructor(
     @InjectModel(Incident.name)
     private readonly incidentModel: Model<IncidentDocument>,
-  ) {}
+  ) { }
 
   async findAll(): Promise<Incident[]> {
     return this.incidentModel.find().exec();
@@ -39,15 +39,20 @@ export class IncidentsService {
       reporterPhone: dto.reporterPhone,
       imageUrl: (dto as any).imageUrl,
       assignedToCin: (dto as any).assignedToCin,
+      assignedUserRole: (dto as any).assignedUserRole,
       status: dto.status as IncidentStatus || IncidentStatus.OPEN,
     };
 
     if (dto.siteId && Types.ObjectId.isValid(dto.siteId)) {
       (payload as any).site = new Types.ObjectId(dto.siteId);
     }
-    if (dto.reportedBy && Types.ObjectId.isValid(dto.reportedBy)) {
-      (payload as any).reportedBy = new Types.ObjectId(dto.reportedBy);
+
+    // Gérer reportedBy - utiliser la chaîne directement si fournie
+    if (dto.reportedBy && typeof dto.reportedBy === 'string') {
+      (payload as any).reportedBy = dto.reportedBy;
+      console.log('✅ reportedBy défini comme chaîne:', dto.reportedBy);
     }
+
     if (dto.assignedTo && Types.ObjectId.isValid(dto.assignedTo)) {
       (payload as any).assignedTo = new Types.ObjectId(dto.assignedTo);
     }

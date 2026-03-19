@@ -60,6 +60,10 @@ export class CreateIncidentDto {
 
   @IsString()
   @IsOptional()
+  assignedUserRole?: string;
+
+  @IsString()
+  @IsOptional()
   affectedPersons?: string;
 
   @IsString()

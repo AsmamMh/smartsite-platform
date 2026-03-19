@@ -61,17 +61,17 @@ export const router = createBrowserRouter([
         path: "sites",
         element: <Sites />,
       },
-      
-    
+
+
       {
         path: "projects",
         element: <Projects />,
       },
-       {
+      {
         path: "projects",
         element: <Projects />,
       },
-       {
+      {
         path: "projects",
         element: <Projects />,
       },
