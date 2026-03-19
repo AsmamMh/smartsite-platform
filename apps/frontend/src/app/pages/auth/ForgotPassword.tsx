@@ -36,7 +36,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3000/auth/forgot-password",
+        "https://smartsite-platform-auth.vercel.app/auth/forgot-password",
         {
           email: data.email,
 

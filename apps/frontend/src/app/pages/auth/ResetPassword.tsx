@@ -67,7 +67,7 @@ export default function ResetPassword() {
     setIsLoading(true);
     try {
       const response = await axios.post(
-        "http://localhost:3000/auth/reset-password",
+        "https://smartsite-platform-auth.vercel.app/auth/reset-password",
         {
           email: data.email,
           resetCode: data.resetCode,
@@ -89,7 +89,7 @@ export default function ResetPassword() {
 
   const handleResendCode = async () => {
     try {
-      await axios.post("http://localhost:3000/auth/resend-reset-code", {
+      await axios.post("https://smartsite-platform-auth.vercel.app/auth/resend-reset-code", {
         email: form.getValues("email"),
       });
       toast.success("Code de réinitialisation renvoyé!");

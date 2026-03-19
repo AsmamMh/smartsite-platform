@@ -72,7 +72,7 @@ type Column = {
   items: Card[];
 };
 
-export default function Planning() {
+export default function MyTask() {
   return (
     <div className="grid h-screen grid-rows-[var(--header-height)_1fr_6rem] overflow-x-hidden sm:grid-rows-[var(--header-height)_1fr_var(--header-height)]">
       <main className="relative">

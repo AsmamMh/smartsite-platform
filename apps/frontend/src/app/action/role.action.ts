@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:3000/roles";
+const API_URL = "https://smartsite-platform-auth.vercel.app/roles";
 
 export const getAllRoles = async () => {
   try {

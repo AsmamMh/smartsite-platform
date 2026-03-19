@@ -22,7 +22,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'https://smartsite-platform-auth.vercel.app',
         changeOrigin: true,
         secure: false,
       },
