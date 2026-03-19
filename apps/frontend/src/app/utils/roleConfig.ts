@@ -16,6 +16,7 @@ import {
   Warehouse,
   AlertTriangle,
   MapPin,
+  Target as TargetIcon,
   type LucideIcon,
   Clock,
 } from "lucide-react";
@@ -48,21 +49,34 @@ export const navigationItems: NavItem[] = [
     label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-     roles: [
-       "super_admin",
-       "director",
-       "project_manager",
-       "site_manager",
-       "works_manager",
-       "accountant",
-       "procurement_manager",
-       "qhse_manager",
-       "client",
-       "subcontractor",
-       "user",
-     ],
+    roles: [
+      "super_admin",
+      "director",
+      "site_manager",
+      "works_manager",
+      "accountant",
+      "procurement_manager",
+      "qhse_manager",
+      "client",
+      "subcontractor",
+      "user",
+    ],
   },
-  
+
+  {
+    label: "My Projects",
+    href: "/project-manager-dashboard",
+    icon: Briefcase,
+    roles: ["project_manager"],
+  },
+
+  {
+    label: "All Projects",
+    href: "/super-admin-projects",
+    icon: TargetIcon,
+    roles: ["super_admin"],
+  },
+
   {
     label: "User Management",
     href: "/users",

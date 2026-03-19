@@ -3,6 +3,8 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Dashboard from "./pages/dashboards/Dashboard";
+import ProjectManagerDashboard from "./pages/dashboard/ProjectManagerDashboard";
+import SuperAdminProjectsDashboard from "./pages/dashboard/SuperAdminProjectsDashboard";
 import Sites from "./pages/sites/Sites";
 import Projects from "./pages/projects/Projects";
 import Planning from "./pages/planning/Planning";
@@ -56,6 +58,14 @@ export const router = createBrowserRouter([
       {
         path: "dashboard",
         element: <Dashboard />,
+      },
+      {
+        path: "project-manager-dashboard",
+        element: <ProjectManagerDashboard />,
+      },
+      {
+        path: "super-admin-projects",
+        element: <SuperAdminProjectsDashboard />,
       },
       {
         path: "sites",
