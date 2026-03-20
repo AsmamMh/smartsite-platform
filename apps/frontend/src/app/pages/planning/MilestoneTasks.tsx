@@ -980,6 +980,8 @@ function MyKanbanBoardCard({
     handleBlur();
   }
 
+  const {isOpen,onOpen,onClose,setType}=useTaskModal();
+
   return isEditingTitle ? (
     <form onBlur={handleBlur} onSubmit={handleSubmit}>
       <KanbanBoardCardTextarea
@@ -1018,7 +1020,13 @@ function MyKanbanBoardCard({
       data={card}
       isActive={isActive}
       onBlur={onCardBlur}
-      onClick={() => setIsEditingTitle(true)}
+      //onClick={() => setIsEditingTitle(true)}
+      onClick={
+        ()=>{
+          setType("edit"),
+          onOpen()
+        }
+      }
       onKeyDown={(event) => {
         if (event.key === " ") {
           // Prevent the button "click" action on space because that should
