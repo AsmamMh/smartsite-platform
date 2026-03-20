@@ -68,7 +68,7 @@ export default function VerifyOTP() {
   const onSubmit = async (data: OTPFormData) => {
     setIsLoading(true);
     try {
-      const res = await axios.post("http://localhost:3000/auth/verify-otp", {
+      const res = await axios.post("https://smartsite-platform-auth.vercel.app/auth/verify-otp", {
         cin: cin,
         otp: data.otp,
       });
@@ -92,7 +92,7 @@ export default function VerifyOTP() {
   const handleResendOTP = async () => {
     setIsResending(true);
     try {
-      const res = await axios.post("http://localhost:3000/auth/resend-otp", {
+      const res = await axios.post("https://smartsite-platform-auth.vercel.app/auth/resend-otp", {
         cin: cin,
       });
 

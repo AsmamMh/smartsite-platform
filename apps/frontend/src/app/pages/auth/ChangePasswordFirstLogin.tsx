@@ -69,7 +69,7 @@ export default function ChangePasswordFirstLogin() {
     setIsLoading(true);
     try {
       const res = await axios.put(
-        "http://localhost:3000/users/me/password",
+        "https://smartsite-platform-auth.vercel.app/users/me/password",
         {
           currentPassword: data.currentPassword,
           newPassword: data.newPassword,

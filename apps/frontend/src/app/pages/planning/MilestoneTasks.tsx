@@ -1,10 +1,12 @@
 /* eslint-disable unicorn/no-null */
 
 import {
+  Link,
   MoreHorizontalIcon,
   PenIcon,
   PlusIcon,
   Trash2Icon,
+  Warehouse,
 } from "lucide-react";
 import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -38,6 +40,19 @@ import {
   KanbanColorCircle,
   useDndEvents,
 } from "@/components/kanban";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -56,147 +71,88 @@ import {
 } from "@/components/ui/tooltip";
 import { uuid } from "zod";
 import { useJsLoaded } from "@/hooks/use-js-loaded";
-
-// Types
-type Card = {
-  id: string;
-  title: string;
-  description?: string;
-};
+import { CardHeader, CardTitle, CardContent, Card } from "@/components/ui/card";
+import { Task, TaskStatusEnum } from "@/app/types";
+import { useQuery } from "@tanstack/react-query";
+import {
+  deleteTask,
+  getTasksBYMilestoneId,
+  updateTask,
+} from "@/app/action/planing.action";
+import { useParams } from "react-router";
+import useTaskModal from "@/app/hooks/use-task-modal";
+import { de } from "zod/v4/locales";
 
 type Column = {
   id: string;
-  title: string;
+  title: TaskStatusEnum;
   description?: string;
   color: KanbanBoardCircleColor;
-  items: Card[];
+  tasks: Task[];
 };
 
-export default function Planning() {
+export default function MilestoneTasks() {
+  const { isOpen, setType, onOpen } = useTaskModal();
   return (
-    <div className="grid h-screen grid-rows-[var(--header-height)_1fr_6rem] overflow-x-hidden sm:grid-rows-[var(--header-height)_1fr_var(--header-height)]">
-      <main className="relative">
-        <div className="absolute inset-0 h-full overflow-x-hidden px-4 py-4 md:px-6">
-          <KanbanBoardProvider>
-            <MyKanbanBoard />
-          </KanbanBoardProvider>
+    <div className="space-y-6">
+      <div className="flex taskssetType-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Milestone</h1>
+          <p className="text-gray-500 mt-1">
+            Manage site relationships and orders
+          </p>
         </div>
-      </main>
+      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex tasks-center gap-2">
+              <Warehouse className="h-5 w-5" />
+              Milestone Management
+            </CardTitle>
+
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                (setType("add"), onOpen());
+              }}
+            >
+              <PlusIcon className="h-4 w-4" />
+              <span className="ml-2">Add Task</span>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid h-screen grid-rows-[var(--header-height)_1fr_6rem] overflow-x-hidden sm:grid-rows-[var(--header-height)_1fr_var(--header-height)]">
+            <main className="relative">
+              <div className="absolute inset-0 h-full overflow-x-hidden px-4 py-4 md:px-6">
+                <KanbanBoardProvider>
+                  <MyKanbanBoard />
+                </KanbanBoardProvider>
+              </div>
+            </main>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 export function MyKanbanBoard() {
-  const [columns, setColumns] = useState<Column[]>([
-    {
-      id: "eowdjiak9f9jr27po347jr47",
-      title: "Backlog",
-      color: "primary",
-      items: [
-        {
-          id: "1",
-          title: "Add a new column",
-        },
-        {
-          id: "2",
-          title: "Add a new card",
-          description: "descirption",
-        },
-        {
-          id: "3",
-          title: "Move a card to another column",
-        },
-        {
-          id: "4",
-          title: "Delete a column",
-        },
-        {
-          id: "5",
-          title: "Delete a card",
-        },
-        {
-          id: "6",
-          title: "Update a card title",
-        },
-        {
-          id: "7",
-          title: "Edit a column title",
-        },
-        {
-          id: "8",
-          title: `Check out multi line card content`,
-        },
-        {
-          id: "9",
-          title: "Move a card between two other cards",
-        },
-        {
-          id: "10",
-          title: "Turn on screen reader and listen to the announcements",
-        },
-        {
-          id: "11",
-          title: "Notice how with enough cards, the colomns become scrollable",
-        },
-      ],
+  const [columns, setColumns] = useState<Column[]>([]);
+
+  const { milestoneId } = useParams();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["milestoneTasksData"],
+    queryFn: async () => {
+      const response = await getTasksBYMilestoneId("69bc78a30912805125e58f72");
+      console.log(response);
+      setColumns(response);
     },
-    {
-      id: "ad1wx5djclsilpu8sjmp9g70",
-      title: "To Do",
-      color: "blue",
-      items: [
-        {
-          id: "12",
-          title: "Install the Shadcn Kanban board into your project",
-        },
-        {
-          id: "13",
-          title: "Build amazing apps",
-        },
-      ],
-    },
-    {
-      id: "zm3vyxyo0x47tl60340w8jrl",
-      title: "In Progress",
-      color: "red",
-      items: [
-        {
-          id: "14",
-          title: "Make some magic",
-        },
-        {
-          id: "15",
-          title: "Stay healthy",
-        },
-        {
-          id: "16",
-          title: "Drink water 💧",
-        },
-      ],
-    },
-    {
-      id: "rzaksqoyfvgjbw466puqu9uk",
-      title: "In Review",
-      color: "yellow",
-      items: [],
-    },
-    {
-      id: "w27comaw16gy2jxphpmt9xxv",
-      title: "Done",
-      color: "green",
-      items: [
-        {
-          id: "17",
-          title: "Hey, the column to the left of me is empty!",
-        },
-        {
-          id: "18",
-          title:
-            "And using the button to the right of me, you can add columns.",
-        },
-      ],
-    },
-  ]);
+  });
+  console.log(data);
 
   // Scroll to the right when a new column is added.
   const scrollContainerReference = useRef<HTMLDivElement>(null);
@@ -212,7 +168,7 @@ export function MyKanbanBoard() {
   Column logic
   */
 
-  const handleAddColumn = (title?: string) => {
+  const handleAddColumn = (title?: TaskStatusEnum) => {
     if (title) {
       flushSync(() => {
         setColumns((previousColumns) => [
@@ -222,7 +178,7 @@ export function MyKanbanBoard() {
             title,
             color:
               KANBAN_BOARD_CIRCLE_COLORS[previousColumns.length] ?? "primary",
-            items: [],
+            tasks: [],
           },
         ]);
       });
@@ -241,7 +197,7 @@ export function MyKanbanBoard() {
     scrollRight();
   }
 
-  function handleUpdateColumnTitle(columnId: string, title: string) {
+  function handleUpdateColumnTitle(columnId: string, title: TaskStatusEnum) {
     setColumns((previousColumns) =>
       previousColumns.map((column) =>
         column.id === columnId ? { ...column, title } : column,
@@ -250,72 +206,111 @@ export function MyKanbanBoard() {
   }
 
   /*
-  Card logic
+  Task logic
   */
 
-  function handleAddCard(columnId: string, cardContent: string) {
-    setColumns((previousColumns) =>
-      previousColumns.map((column) =>
-        column.id === columnId
-          ? {
+  //   function handleAddCard(columnId: string, cardContent: string) {
+  //     setColumns((previousColumns) =>
+  //       previousColumns.map((column) =>
+  //         column.id === columnId
+  //           ? {
+  //               ...column,
+  //               tasks: [
+  //                 ...column.tasks,
+  //                 { id: uuid.toString(), title: cardContent },
+  //               ],
+  //             }
+  //           : column,
+  //       ),
+  //     );
+  //   }
+
+  async function handleDeleteCard(cardId: string) {
+    // setColumns((previousColumns) =>
+    //   previousColumns.map((column) =>
+    //     column.tasks.some((card) => card._id === cardId)
+    //       ? { ...column, tasks: column.tasks.filter(({ _id }) => _id !== cardId) }
+    //       : column,
+    //   ),
+    // );
+    const response = await deleteTask(cardId);
+    console.log(response);
+    if (response.status === 200) {
+      setColumns((previousColumns) =>
+        previousColumns.map((column) =>
+          column.tasks.some((card) => card._id === cardId)
+            ? {
+                ...column,
+                tasks: column.tasks.filter(({ _id }) => _id !== cardId),
+              }
+            : column,
+        ),
+      );
+    }
+  }
+
+  async function handleMoveCardToColumn(
+    columnId: string,
+    index: number,
+    card: Task,
+  ) {
+    // const { data, isSuccess } = useQuery({
+    //   queryKey: ["moveTask", card._id],
+    //   queryFn: async () => {
+    //     card.status = columnId as TaskStatusEnum;
+    //     const response = await updateTask(card._id, card);
+    //     return response.data;
+    //   },
+    // });
+    card.status = columnId as TaskStatusEnum;
+    const response = await updateTask(card._id, card);
+
+    console.log(response);
+
+    if (response.status === 200) {
+      setColumns((previousColumns) =>
+        previousColumns.map((column) => {
+          if (column.id === columnId) {
+            console.log(column.tasks);
+            // Remove the card from the column (if it exists) before reinserting it.
+            const updatedItems = column.tasks.filter(
+              ({ _id }) => _id !== card._id,
+            );
+
+            console.log(card);
+            card.status = column.title;
+
+            return {
               ...column,
-              items: [
-                ...column.items,
-                { id: uuid.toString(), title: cardContent },
+              tasks: [
+                //   Items before the insertion index.
+                ...updatedItems.slice(0, index),
+                //    Insert the card.
+                card,
+                //    Items after the insertion index.
+                ...updatedItems.slice(index),
               ],
-            }
-          : column,
-      ),
-    );
-  }
-
-  function handleDeleteCard(cardId: string) {
-    setColumns((previousColumns) =>
-      previousColumns.map((column) =>
-        column.items.some((card) => card.id === cardId)
-          ? { ...column, items: column.items.filter(({ id }) => id !== cardId) }
-          : column,
-      ),
-    );
-  }
-
-  function handleMoveCardToColumn(columnId: string, index: number, card: Card) {
-    setColumns((previousColumns) =>
-      previousColumns.map((column) => {
-        if (column.id === columnId) {
-          // Remove the card from the column (if it exists) before reinserting it.
-          const updatedItems = column.items.filter(({ id }) => id !== card.id);
-          console.log(updatedItems);
-          return {
-            ...column,
-            items: [
-              // Items before the insertion index.
-              ...updatedItems.slice(0, index),
-              // Insert the card.
-              card,
-              // Items after the insertion index.
-              ...updatedItems.slice(index),
-            ],
-          };
-        } else {
-          // Remove the card from other columns.
-          return {
-            ...column,
-            items: column.items.filter(({ id }) => id !== card.id),
-          };
-        }
-      }),
-    );
+            };
+          } else {
+            //    Remove the card from other columns.
+            return {
+              ...column,
+              tasks: column.tasks.filter(({ _id }) => _id !== card._id),
+            };
+          }
+        }),
+      );
+    }
   }
 
   function handleUpdateCardTitle(cardId: string, cardTitle: string) {
     setColumns((previousColumns) =>
       previousColumns.map((column) =>
-        column.items.some((card) => card.id === cardId)
+        column.tasks.some((card: Task) => card._id === cardId)
           ? {
               ...column,
-              items: column.items.map((card) =>
-                card.id === cardId ? { ...card, title: cardTitle } : card,
+              tasks: column.tasks.map((card) =>
+                card._id === cardId ? { ...card, title: cardTitle } : card,
               ),
             }
           : column,
@@ -336,8 +331,8 @@ export function MyKanbanBoard() {
   // This helper returns the appropriate overId after a card is placed.
   // If there's another card below, return that card's id, otherwise return the column's id.
   function getOverId(column: Column, cardIndex: number): string {
-    if (cardIndex < column.items.length - 1) {
-      return column.items[cardIndex + 1].id;
+    if (cardIndex < column.tasks.length - 1) {
+      return column.tasks[cardIndex + 1]._id;
     }
 
     return column.id;
@@ -349,7 +344,7 @@ export function MyKanbanBoard() {
     cardIndex: number;
   } {
     for (const [columnIndex, column] of columns.entries()) {
-      const cardIndex = column.items.findIndex((c) => c.id === cardId);
+      const cardIndex = column.tasks.findIndex((c) => c._id === cardId);
 
       if (cardIndex !== -1) {
         return { columnIndex, cardIndex };
@@ -366,7 +361,7 @@ export function MyKanbanBoard() {
     const { columnIndex, cardIndex } = findCardPosition(cardId);
     if (columnIndex === -1 || cardIndex === -1) return;
 
-    const card = columns[columnIndex].items[cardIndex];
+    const card = columns[columnIndex].tasks[cardIndex];
 
     let newColumnIndex = columnIndex;
     let newCardIndex = cardIndex;
@@ -380,7 +375,7 @@ export function MyKanbanBoard() {
       case "ArrowDown": {
         newCardIndex = Math.min(
           cardIndex + 1,
-          columns[columnIndex].items.length - 1,
+          columns[columnIndex].tasks.length - 1,
         );
 
         break;
@@ -390,7 +385,7 @@ export function MyKanbanBoard() {
         // Keep same cardIndex if possible, or if out of range, insert at end
         newCardIndex = Math.min(
           newCardIndex,
-          columns[newColumnIndex].items.length,
+          columns[newColumnIndex].tasks.length,
         );
 
         break;
@@ -399,7 +394,7 @@ export function MyKanbanBoard() {
         newColumnIndex = Math.min(columnIndex + 1, columns.length - 1);
         newCardIndex = Math.min(
           newCardIndex,
-          columns[newColumnIndex].items.length,
+          columns[newColumnIndex].tasks.length,
         );
 
         break;
@@ -437,7 +432,7 @@ export function MyKanbanBoard() {
           ? { columnId: columns[columnIndex].id, cardIndex }
           : null;
     } else if (activeCardId === cardId) {
-      // Card is already active.
+      // Task is already active.
       // eslint-disable-next-line unicorn/prefer-switch
       if (key === " " || key === "Enter") {
         event.preventDefault();
@@ -473,7 +468,7 @@ export function MyKanbanBoard() {
             (columnId !== columns[currentColumnIndex].id ||
               cardIndex !== currentCardIndex)
           ) {
-            const card = columns[currentColumnIndex].items[currentCardIndex];
+            const card = columns[currentColumnIndex].tasks[currentCardIndex];
             flushSync(() => {
               handleMoveCardToColumn(columnId, cardIndex, card);
             });
@@ -511,7 +506,6 @@ export function MyKanbanBoard() {
             activeCardId={activeCardId}
             column={column}
             key={column.id}
-            onAddCard={handleAddCard}
             onCardBlur={handleCardBlur}
             onCardKeyDown={handleCardKeyDown}
             onDeleteCard={handleDeleteCard}
@@ -551,7 +545,7 @@ function MyKanbanBoardColumn({
 }: {
   activeCardId: string;
   column: Column;
-  onAddCard: (columnId: string, cardContent: string) => void;
+  onAddCard?: (columnId: string, cardContent: string) => void;
   onCardBlur: () => void;
   onCardKeyDown: (
     event: KeyboardEvent<HTMLButtonElement>,
@@ -559,7 +553,7 @@ function MyKanbanBoardColumn({
   ) => void;
   onDeleteCard: (cardId: string) => void;
   onDeleteColumn: (columnId: string) => void;
-  onMoveCardToColumn: (columnId: string, index: number, card: Card) => void;
+  onMoveCardToColumn: (columnId: string, index: number, card: Task) => void;
   onUpdateCardTitle: (cardId: string, cardTitle: string) => void;
   onUpdateColumnTitle: (columnId: string, columnTitle: string) => void;
 }) {
@@ -591,7 +585,7 @@ function MyKanbanBoardColumn({
   }
 
   function handleDropOverColumn(dataTransferData: string) {
-    const card = JSON.parse(dataTransferData) as Card;
+    const card = JSON.parse(dataTransferData) as Task;
     onMoveCardToColumn(column.id, 0, card);
   }
 
@@ -600,10 +594,10 @@ function MyKanbanBoardColumn({
       dataTransferData: string,
       dropDirection: KanbanBoardDropDirection,
     ) => {
-      const card = JSON.parse(dataTransferData) as Card;
-      const cardIndex = column.items.findIndex(({ id }) => id === cardId);
-      const currentCardIndex = column.items.findIndex(
-        ({ id }) => id === card.id,
+      const card = JSON.parse(dataTransferData) as Task;
+      const cardIndex = column.tasks.findIndex(({ _id }) => _id === cardId);
+      const currentCardIndex = column.tasks.findIndex(
+        ({ _id }) => _id === card._id,
       );
 
       const baseIndex = dropDirection === "top" ? cardIndex : cardIndex + 1;
@@ -615,15 +609,15 @@ function MyKanbanBoardColumn({
       // Safety check to ensure targetIndex is within bounds
       const safeTargetIndex = Math.max(
         0,
-        Math.min(targetIndex, column.items.length),
+        Math.min(targetIndex, column.tasks.length),
       );
-      const overCard = column.items[safeTargetIndex];
+      const overCard = column.tasks[safeTargetIndex];
 
-      if (card.id === overCard?.id) {
-        onDragCancel(card.id);
+      if (card._id === overCard?._id) {
+        onDragCancel(card._id);
       } else {
         onMoveCardToColumn(column.id, safeTargetIndex, card);
-        onDragEnd(card.id, overCard?.id || column.id);
+        onDragEnd(card._id, overCard?._id || column.id);
       }
     };
   }
@@ -668,8 +662,7 @@ function MyKanbanBoardColumn({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <KanbanBoardColumnIconButton ref={moreOptionsButtonReference}>
-                  <MoreHorizontalIcon />
-
+                  {/* <MoreHorizontalIcon /> */}
                   <span className="sr-only">
                     More options for {column.title}
                   </span>
@@ -700,15 +693,15 @@ function MyKanbanBoardColumn({
       </KanbanBoardColumnHeader>
 
       <KanbanBoardColumnList ref={listReference}>
-        {column.items.map((card) => (
+        {column.tasks.map((card) => (
           <KanbanBoardColumnListItem
-            cardId={card.id}
-            key={card.id}
-            onDropOverListItem={handleDropOverListItem(card.id)}
+            cardId={card._id}
+            key={card._id}
+            onDropOverListItem={handleDropOverListItem(card._id)}
           >
             <MyKanbanBoardCard
               card={card}
-              isActive={activeCardId === card.id}
+              isActive={activeCardId === card._id}
               onCardBlur={onCardBlur}
               onCardKeyDown={onCardKeyDown}
               onDeleteCard={onDeleteCard}
@@ -735,7 +728,7 @@ function MyKanbanBoardCard({
   onDeleteCard,
   onUpdateCardTitle,
 }: {
-  card: Card;
+  card: Task;
   isActive: boolean;
   onCardBlur: () => void;
   onCardKeyDown: (
@@ -784,10 +777,12 @@ function MyKanbanBoardCard({
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const cardTitle = formData.get("cardTitle") as string;
-    onUpdateCardTitle(card.id, cardTitle);
+    onUpdateCardTitle(card._id, cardTitle);
     handleBlur();
   }
 
+  const { isOpen, onOpen, onClose, setType, setId, id } = useTaskModal();
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
   return isEditingTitle ? (
     <form onBlur={handleBlur} onSubmit={handleSubmit}>
       <KanbanBoardCardTextarea
@@ -803,7 +798,7 @@ function MyKanbanBoardCard({
             input.setCustomValidity("");
           } else {
             input.setCustomValidity(
-              "Card content cannot be empty or just whitespace.",
+              "Task content cannot be empty or just whitespace.",
             );
           }
         }}
@@ -826,7 +821,8 @@ function MyKanbanBoardCard({
       data={card}
       isActive={isActive}
       onBlur={onCardBlur}
-      onClick={() => setIsEditingTitle(true)}
+      //onClick={() => setIsEditingTitle(true)}
+
       onKeyDown={(event) => {
         if (event.key === " ") {
           // Prevent the button "click" action on space because that should
@@ -839,18 +835,72 @@ function MyKanbanBoardCard({
           wasCancelledReference.current = true;
         }
 
-        onCardKeyDown(event, card.id);
+        onCardKeyDown(event, card._id);
       }}
       ref={kanbanBoardCardReference}
     >
-      <KanbanBoardCardDescription>{card.title}</KanbanBoardCardDescription>
+      <KanbanBoardCardDescription
+        className="cursor-pointer hover:underline  w-fit"
+        onClick={() => {
+          setId(card._id);
+          (setType("edit"), onOpen());
+        }}
+      >
+        {card.title}
+      </KanbanBoardCardDescription>
+      {card.status}
+
+      {/* and start and end date */}
+      {card.startDate && card.endDate && (
+        <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
+          <span>
+            {new Date(card.startDate).toLocaleDateString()} -{" "}
+            {new Date(card.endDate).toLocaleDateString()}
+          </span>
+        </div>
+      )}
       <KanbanBoardCardButtonGroup disabled={isActive}>
         <KanbanBoardCardButton
-          className="text-destructive"
-          onClick={() => onDeleteCard(card.id)}
+          className="text-destructive cursor-pointer w-full size-5"
+          // onClick={() => {
+          //   ( setOpenDeleteModal(true));
+          // }}
           tooltip="Delete card"
         >
-          <Trash2Icon />
+          <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2Icon />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent size="sm">
+              <AlertDialogHeader>
+                <AlertDialogMedia className="bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive">
+                  <Trash2Icon />
+                </AlertDialogMedia>
+                <AlertDialogTitle>Delete Task?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this task? This action cannot
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel
+                  onClick={() => {
+                    setOpenDeleteModal(false);
+                  }}
+                  variant="outline"
+                >
+                  Cancel
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => onDeleteCard(card._id)}
+                  variant="destructive"
+                >
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           <span className="sr-only">Delete card</span>
         </KanbanBoardCardButton>
@@ -905,6 +955,8 @@ function MyNewKanbanBoardCard({
     scrollList();
   }
 
+  const { isOpen, onOpen, onClose, setType } = useTaskModal();
+
   return showNewCardForm ? (
     <>
       <form
@@ -928,7 +980,7 @@ function MyNewKanbanBoardCard({
                 input.setCustomValidity("");
               } else {
                 input.setCustomValidity(
-                  "Card content cannot be empty or just whitespace.",
+                  "Task content cannot be empty or just whitespace.",
                 );
               }
             }}
@@ -965,18 +1017,7 @@ function MyNewKanbanBoardCard({
       </form>
     </>
   ) : (
-    <KanbanBoardColumnFooter>
-      <KanbanBoardColumnButton
-        onClick={handleAddCardClick}
-        ref={newCardButtonReference}
-      >
-        <PlusIcon />
-
-        <span aria-hidden>New card</span>
-
-        <span className="sr-only">Add new card to {column.title}</span>
-      </KanbanBoardColumnButton>
-    </KanbanBoardColumnFooter>
+    <KanbanBoardColumnFooter></KanbanBoardColumnFooter>
   );
 }
 

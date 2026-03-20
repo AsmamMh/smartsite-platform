@@ -1,3 +1,4 @@
+import { check } from "zod";
 import type { RoleType, UserRole } from "../types";
 import {
   LayoutDashboard,
@@ -18,6 +19,7 @@ import {
   MapPin,
   type LucideIcon,
   Clock,
+  Check,
 } from "lucide-react";
 
 export interface NavItem {
@@ -196,6 +198,24 @@ export const navigationItems: NavItem[] = [
     label: "Notifications",
     href: "/notifications",
     icon: Bell,
+    roles: [
+      "super_admin",
+      "director",
+      "project_manager",
+      "site_manager",
+      "works_manager",
+      "accountant",
+      "procurement_manager",
+      "qhse_manager",
+      "client",
+      "subcontractor",
+      "user",
+    ],
+  },
+  {
+    label: "My Tasks",
+    href: "/my-task",
+    icon: Check,
     roles: [
       "super_admin",
       "director",

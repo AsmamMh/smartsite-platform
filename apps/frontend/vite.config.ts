@@ -17,12 +17,14 @@ export default defineConfig({
       
     },
   },
-
+  define: {
+    "process.env": {},
+  },
   // API Proxy configuration for backend communication
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'https://smartsite-platform-auth.vercel.app',
         changeOrigin: true,
         secure: false,
       },

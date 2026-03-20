@@ -1,3 +1,4 @@
+
 import { Body, Injectable } from '@nestjs/common';
 import { CreateMilestoneDto } from './dto/create-milestone.dto';
 import { UpdateMilestoneDto } from './dto/update-milestone.dto';
@@ -38,6 +39,11 @@ export class MilestoneService {
 
     return updatedMilestone;
   }
+
+   async getMilestonesByProjectId(projectId:string){
+     const response = await this.milestoneModel.find({projectId:projectId}).populate("tasks").exec();
+     return response; 
+   }
 
   async remove(id: number) {
     const milestone = await this.milestoneModel.findByIdAndDelete(id).exec();

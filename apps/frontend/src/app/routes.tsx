@@ -9,7 +9,7 @@ import ChangePasswordFirstLogin from "./pages/auth/ChangePasswordFirstLogin";
 import Dashboard from "./pages/dashboards/Dashboard";
 import Sites from "./pages/sites/Sites";
 import Projects from "./pages/projects/Projects";
-import Planning from "./pages/planning/Planning";
+import Planning from "./pages/planning/MyTask";
 import Team from "./pages/team/Team";
 import Clients from "./pages/clients/Clients";
 import Suppliers from "./pages/suppliers/Suppliers";
@@ -27,7 +27,12 @@ import Profile from "./pages/profile/Profile";
 import Home2 from "./pages/Home/Home2";
 import Pricing from "./pages/pricing/Pricing";
 import ClientsNew from "./pages/clients/ClientsNew";
-import KanbanBoardPage from "./pages/planning/Planning";
+import KanbanBoardPage from "./pages/planning/MyTask";
+import MyTasks from "./pages/planning/Planning";
+import PLaningProjects from "./pages/planning/PLaningProjects";
+import ProjectMilestone from "./pages/planning/ProjectMilestone";
+import MilestoneTasks from "./pages/planning/MilestoneTasks";
+import MyTask from "./pages/planning/MyTask";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = true;
@@ -87,7 +92,10 @@ export const router = createBrowserRouter([
         path: "sites",
         element: <Sites />,
       },
-      
+      {
+        path:"my-task",
+        element:<MyTask/>
+      },
     
       {
         path: "projects",
@@ -103,7 +111,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "planning",
-        element: <KanbanBoardPage />,
+        element: <PLaningProjects />,
+      },
+      {
+        path: "milestone-tasks/:milestoneId",
+        element: <MilestoneTasks />,
+      },
+      {
+        path: "project-milestone/:projectId",
+        element: <ProjectMilestone />,
       },
       {
         path: "team",
