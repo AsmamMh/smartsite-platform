@@ -63,6 +63,7 @@ import {  Task, TaskStatusEnum } from "@/app/types";
 import { useQuery } from "@tanstack/react-query";
 import { getTasksBYMilestoneId } from "@/app/action/planing.action";
 import { useParams } from "react-router";
+import useTaskModal from "@/app/hooks/use-task-modal";
 
 
 type Column = {
@@ -1097,6 +1098,8 @@ function MyNewKanbanBoardCard({
     scrollList();
   }
 
+  const {isOpen,onOpen,onClose,setType}=useTaskModal();
+
   return showNewCardForm ? (
     <>
       <form
@@ -1129,6 +1132,8 @@ function MyNewKanbanBoardCard({
                 event.preventDefault();
                 submitButtonReference.current?.click();
               }
+              
+
 
               if (event.key === "Escape") {
                 handleCancelClick();
@@ -1159,7 +1164,10 @@ function MyNewKanbanBoardCard({
   ) : (
     <KanbanBoardColumnFooter>
       <KanbanBoardColumnButton
-        onClick={handleAddCardClick}
+        onClick={()=>{
+          onOpen()
+          ,setType("add")
+        }}
         ref={newCardButtonReference}
       >
         <PlusIcon />

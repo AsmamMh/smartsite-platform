@@ -26,6 +26,61 @@ export const getTasksBYMilestoneId= async (milestoneId:string) =>{
     }
 }
 
+export interface CreateTaskPayload {
+    title: string;
+    description?: string;
+    milestoneId: string;
+    status?: string;
+    priority?: string;
+    projectId?: string;
+    siteId?: string;
+    assignedUsers?: string[];
+}
+
+export interface UpdateTaskPayload {
+    title?: string;
+    description?: string;
+    status?: string;
+    priority?: string;
+    projectId?: string;
+    siteId?: string;
+    assignedUsers?: string[];
+    progress?: number;
+}
+
+export const createTask = async (task: CreateTaskPayload) => {
+    try {
+        console.log('Creating task with data');
+        console.log(task);
+        //http://localhost:3002/task/milestone/69bc78a30912805125e58f72
+        const response = await axios.post(`${baseUrl}/task`,task);
+        return Promise.resolve({ status: response.status, data: response.data });
+    } catch (error) {
+        console.log("Error creating task:", error);
+        return Promise.reject(error);
+    }
+};
+
+export const getTaskById = async (taskId: string) => {
+    try {
+        const response = await axios.get(`${baseUrl}/task/${taskId}`);
+        return Promise.resolve({ status: response.status, data: response.data });
+    } catch (error) {
+        console.log("Error fetching task details:", error);
+        return Promise.reject(error);
+    }
+};
+
+export const updateTask = async (taskId: string, task: UpdateTaskPayload) => {
+    try {
+        const response = await axios.put(`${baseUrl}/task/${taskId}`, task);
+        return Promise.resolve({ status: response.status, data: response.data });
+    } catch (error) {
+        console.log("Error updating task:", error);
+        return Promise.reject(error);
+    }
+};
+
 export const createMilestone=async (milestone : Milestone) =>{
     try {
         const response = await axios.post(`${baseUrl}/milestone`,milestone);
