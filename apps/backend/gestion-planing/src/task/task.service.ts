@@ -12,16 +12,16 @@ export class TaskService {
     @InjectModel(Milestone.name) private milestoneModel: Model<Milestone>,
     @InjectModel(Task.name) private taskModel: Model<Task>,
   ) {}
-  async create(createTaskDto: CreateTaskDto) {
+  async create(createTaskDto: CreateTaskDto,milestoneId:string) {
     const response = await this.milestoneModel
-      .findById(createTaskDto.milestoneId)
+      .findById(milestoneId)
       .exec();
     if (!response) {
       throw new Error(
-        `Milestone with id ${createTaskDto.milestoneId} not found`,
+        `Milestone with id ${milestoneId} not found`,
       );
     }
-    const newTask = await this.taskModel.create(createTaskDto);
+    const newTask = await this.taskModel.create({...createTaskDto,milestoneId});
     response.tasks.push(newTask._id);
     await response.save();
     return newTask;

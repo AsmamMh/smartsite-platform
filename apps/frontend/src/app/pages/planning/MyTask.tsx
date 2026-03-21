@@ -126,7 +126,7 @@ export function MyKanbanBoard() {
   const [columns, setColumns] = useState<Column[]>([]);
 
   const { milestoneId } = useParams();
-
+  console.log("milestone id from kanban board", milestoneId);
   const { data, isLoading } = useQuery({
     queryKey: ["milestoneTasksData"],
     queryFn: async () => {

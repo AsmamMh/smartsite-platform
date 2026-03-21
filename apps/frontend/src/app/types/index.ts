@@ -33,31 +33,30 @@ export interface Milestone {
   endDate?: Date;
 }
 
-
 export interface CreateTaskPayload {
-    title: string;
-    description?: string;
-    milestoneId: string;
-    status?: string;
-    priority?: string;
-    projectId?: string;
-    siteId?: string;
-    assignedUsers?: string[];
-    startDate?: Date;
-    endDate?: Date;
+  title?: string;
+  description?: string;
+  milestoneId?: string;
+  status?: string;
+  priority?: string;
+  projectId?: string;
+  siteId?: string;
+  assignedUsers?: string[];
+  startDate?: Date;
+  endDate?: Date;
 }
 
 export interface UpdateTaskPayload {
-    title?: string;
-    description?: string;
-    status?: string;
-    priority?: string;
-    projectId?: string;
-    siteId?: string;
-    assignedUsers?: string[];
-    progress?: number;
-    startDate?: Date;
-    endDate?: Date;
+  title?: string;
+  description?: string;
+  status?: string;
+  priority?: string;
+  projectId?: string;
+  siteId?: string;
+  assignedUsers?: string[];
+  progress?: number;
+  startDate?: Date;
+  endDate?: Date;
 }
 
 export interface User {
@@ -216,31 +215,31 @@ export interface Site {
 // }
 
 export interface Task {
-  _id:string;
-  title: string;
+  _id : string;
+  title?: string;
 
-  description: string;
+  description?: string;
 
-  milestoneId: string;
+  milestoneId?: string;
 
-  assignedUsers: string[];
+  assignedUsers?: string[];
 
-  priority: string;
+  priority?: string;
 
-  projectId: string;
+  projectId?: string;
 
-  siteId: string;
+  siteId?: string;
 
-  createdBy: string;
+  createdBy?: string;
 
-  updatedBy: string;
+  updatedBy?: string;
 
-  status: TaskStatusEnum;
-  progress: number;
+  status?: TaskStatusEnum;
+  progress?: number;
 
-  startDate: Date;
+  startDate?: Date;
 
-  endDate: Date;
+  endDate?: Date;
 }
 export enum TaskStatusEnum {
   BACKLOG = "BACKLOG",

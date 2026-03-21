@@ -27,12 +27,13 @@ export const getTasksBYMilestoneId= async (milestoneId:string) =>{
 }
 
 
-export const createTask = async (task: CreateTaskPayload) => {
+export const createTask = async (task: CreateTaskPayload,milestoneId:string) => {
     try {
         console.log('Creating task with data');
         console.log(task);
         //http://localhost:3002/task/milestone/69bc78a30912805125e58f72
-        const response = await axios.post(`${baseUrl}/task`,task);
+        console.log(`${baseUrl}/task/milestone/${milestoneId}`,task);
+        const response = await axios.post(`${baseUrl}/task/milestone/${milestoneId}`,task);
         return Promise.resolve({ status: response.status, data: response.data });
     } catch (error) {
         console.log("Error creating task:", error);

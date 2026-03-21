@@ -93,6 +93,8 @@ type Column = {
 
 export default function MilestoneTasks() {
   const {milestoneId}=useParams();
+  console.log("milestone idhhhhhhhhhhhhhhhhhhhhhhhh")
+  console.log(milestoneId)
   const { isOpen, setType, onOpen,setMilestoneid } = useTaskModal();
   return (
     <div className="space-y-6">
@@ -146,11 +148,11 @@ export function MyKanbanBoard() {
   const [columns, setColumns] = useState<Column[]>([]);
 
   const { milestoneId } = useParams();
-
+  console.log("miles id 2",milestoneId)
   const { data, isLoading } = useQuery({
-    queryKey: ["milestoneTasksData"],
+    queryKey: ["milestoneTasksData",milestoneId],
     queryFn: async () => {
-      const response = await getTasksBYMilestoneId("69bc78a30912805125e58f72");
+      const response = await getTasksBYMilestoneId(milestoneId);
       console.log(response);
       setColumns(response);
     },

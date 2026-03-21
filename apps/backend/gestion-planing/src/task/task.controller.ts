@@ -7,10 +7,10 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 @Controller('task')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
-
-  @Post()
-  create(@Body() createTaskDto: CreateTaskDto) {
-    return this.taskService.create(createTaskDto);
+ // localhost:3002/task/milestone/69bc78a30912805125e58f72
+  @Post("/milestone/:milestoneId")
+  create(@Body() createTaskDto: CreateTaskDto,@Param('milestoneId') milestoneId:string) {
+    return this.taskService.create(createTaskDto,milestoneId);
   }
 
   @Get()
