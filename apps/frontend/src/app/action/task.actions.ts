@@ -24,3 +24,8 @@ export const updateTask = async (
 export const deleteTask = async (taskId: string) => {
   await planingApi.delete(`/task/${taskId}`);
 };
+
+export const getCurrentUserTask = async () =>{
+    const {data} = await planingApi.get(`/task/my-tasks`);
+    return data;
+}
