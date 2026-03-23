@@ -25,8 +25,8 @@ export class TaskStageService {
     return await this.taskStageModel
       .find({ milestoneId }).sort({order:1})
       .select('_id name order color')
-      .populate('tasks').select('_id title status')
-      .exec();
+      .populate('tasks')
+      .exec()
   }
   
 

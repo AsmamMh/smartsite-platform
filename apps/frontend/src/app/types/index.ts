@@ -120,7 +120,8 @@ export interface Role {
 export interface Permission {
   _id: string;
   name: string;
-  source: boolean;
+
+  href: string;
   access: boolean;
   create: boolean;
   delete: boolean;
