@@ -24,6 +24,7 @@ export class TaskStageService {
   async findByMilestoneId(milestoneId: string) {
     return await this.taskStageModel
       .find({ milestoneId }).sort({order:1})
+      .select('_id name order color')
       .populate('tasks')
       .exec();
   }
