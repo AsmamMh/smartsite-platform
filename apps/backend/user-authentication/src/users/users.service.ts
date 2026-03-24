@@ -21,32 +21,32 @@ export class UsersService {
   ) {}
 
   async accestOthisSite(userId: string, url: string) {
-    const response = await this.userModel
-      .findById(userId)
-      .populate({
-        path: 'role',
-        populate: {
-          path: 'permissions',
-          match: { href: url },
-        },
-      })
-      .exec();
+  const user = await this.userModel
+    .findById(userId)
+    .select('role') // fetch only role
+    .populate({
+      path: 'role',
+      select: 'permissions',
+      populate: {
+        path: 'permissions',
+        match: { href: url },
+        select: 'name access href create update delete',
+      },
+    })
+    .lean() // ⚡ performance boost
+    .exec();
 
-    if (!response) {
-      return { error: 'User not found' };
-    }
-
-    if (!response.role) {
-      return { error: 'Role not found' };
-    }
-
-    const role = response.role as any;
-    console.log(
-      '************************************************',
-      role.permissions,
-    );
-    return role.permissions || [];
+  if (!user) {
+    throw new NotFoundException('User not found');
   }
+
+  if (!user.role) {
+    throw new NotFoundException('Role not found');
+  }
+  const role = user.role as any;
+
+  return role.permissions ?? [];
+}
 
   async create(createUserDto: any) {
     console.log(' DEBUG: createUserDto:', createUserDto);

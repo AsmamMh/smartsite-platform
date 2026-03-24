@@ -39,6 +39,7 @@ import { banUser, deleteUser, getAllUsers } from "@/app/action/user.action";
 import { mockTeamMembers } from "@/app/utils/mockData";
 
 import {
+  accessPermissionByurl,
   deletePermission,
   getAllPermissions,
 } from "@/app/action/permission.action";
@@ -49,8 +50,9 @@ import useAddUserModal from "@/app/hooks/use-user-Modal";
 import useAddPermissionModal from "@/app/hooks/use-permission-Modal";
 import useRoleModal from "@/app/hooks/use-role-Modal";
 import useRolePermissionsModal from "@/app/hooks/use-role-permissions-modal";
+import { useQuery } from "@tanstack/react-query";
 
-export default function UserManagement() {
+export default  function UserManagement() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const canManageRoles = user && canEdit(user.role.name, "users");
@@ -69,7 +71,8 @@ export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const canManagePermissions = user && canEdit(user.role.name, "users");
   const [permissions, setPermissions] = useState<Permission[]>([]);
-
+  // const access = await accessPermissionByurl("users");
+  // console.log("Access permissions for /dashboard/users:", access);
   useEffect(() => {
     loadRoles();
     loadPermissions();
@@ -231,6 +234,12 @@ export default function UserManagement() {
     // TODO: Implement create dialog
   };
 
+
+  const {data:accessDAta} = useQuery({
+    queryKey: ['access', 'users'],
+    queryFn: () => accessPermissionByurl("users"),
+  })
+  console.log("Access permissions for /dashboard/users:", accessDAta);
   if (!canManageRoles) {
     return (
       <div className="space-y-6">
