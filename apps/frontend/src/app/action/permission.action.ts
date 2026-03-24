@@ -96,24 +96,18 @@ export const deletePermission = async (id: string) => {
   }
 };
 
-export const accessPermissionByurl = async (url:string) => {
+export const accessPermissionByurl = async (url: string) => {
   const token = useAuthStore.getState().user.access_token;
-  try {
-    const res = await axios.get(`http://localhost:3000/users/acessurl/${url}`, {
+
+  const { data } = await axios.get(
+    `http://localhost:3000/users/acessurl/${url}`,
+    {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
-    if (res.status === 200) {
-      return Promise.resolve({ status: res.status, data: res.data });
-    }
-  } catch (error: any) {
-    console.error("Get my permissions error:", error?.response?.data?.message);
-    return Promise.resolve({
-      status: error?.response?.status,
-      data: error?.response?.data?.message,
-    });
-  }
+    },
+  );
+  return data;
 };
 
 export const getMynavigationAccess = async () => {

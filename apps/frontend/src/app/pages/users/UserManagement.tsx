@@ -51,8 +51,9 @@ import useAddPermissionModal from "@/app/hooks/use-permission-Modal";
 import useRoleModal from "@/app/hooks/use-role-Modal";
 import useRolePermissionsModal from "@/app/hooks/use-role-permissions-modal";
 import { useQuery } from "@tanstack/react-query";
+import Forbidden from "../Error/Forbidden";
 
-export default  function UserManagement() {
+export default function UserManagement() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   const canManageRoles = user && canEdit(user.role.name, "users");
@@ -196,7 +197,7 @@ export default  function UserManagement() {
       const response = await banUser(userId, isActif);
       if (response.status === 200) {
         toast.success(
-          isActif ? "User unbanned successfully" : "User banned successfully"
+          isActif ? "User unbanned successfully" : "User banned successfully",
         );
         loadUsers();
       } else {
@@ -206,7 +207,7 @@ export default  function UserManagement() {
       console.error("Failed to update user status:", error);
       toast.error("Failed to update user status");
     }
-  }
+  };
   const handleEditRole = (role: Role) => {
     const { setId, setType, onOpen } = useRoleModal.getState();
     setId(role._id);
@@ -234,12 +235,19 @@ export default  function UserManagement() {
     // TODO: Implement create dialog
   };
 
-
-  const {data:accessDAta} = useQuery({
-    queryKey: ['access', 'users'],
+  const { data: accessData } = useQuery({
+    queryKey: ["access", "users"],
     queryFn: () => accessPermissionByurl("users"),
-  })
-  console.log("Access permissions for /dashboard/users:", accessDAta);
+  });
+
+  if (accessData) {
+    if (!accessData.access) {
+      return (
+        <Forbidden/>
+      );
+    }
+  }
+
   if (!canManageRoles) {
     return (
       <div className="space-y-6">
@@ -369,8 +377,10 @@ export default  function UserManagement() {
                 <div className="text-center py-12">Loading users...</div>
               ) : (
                 <UserDataTable
-                onBan={handleBanUser}
-                users={users} onDelete={handleDeleteUser} />
+                  onBan={handleBanUser}
+                  users={users}
+                  onDelete={handleDeleteUser}
+                />
               )}
             </TabsContent>
 
