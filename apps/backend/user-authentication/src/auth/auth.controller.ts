@@ -2,13 +2,17 @@ import { Controller, Post, Body, UnauthorizedException, Param, UseGuards, Reques
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(
+    private authService: AuthService,
+    private auditLogsService: AuditLogsService,
+  ) { }
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body() loginDto: LoginDto, @Request() req: any) {
     console.log('user:', loginDto);
     const user = await this.authService.validateUser(
       loginDto.cin,
@@ -16,14 +20,61 @@ export class AuthController {
     );
     console.log('valdiate user:', user);
     if (!user) {
+      await this.auditLogsService.createLog({
+        userCin: loginDto.cin,
+        actionType: 'login',
+        actionLabel: 'Login failed',
+        resourceType: 'auth',
+        status: 'failed',
+        severity: 'critical',
+        ipAddress: req?.ip,
+        details: 'Invalid credentials or pending account',
+      });
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.authService.login(user);
+    const result = await this.authService.login(user);
+    await this.auditLogsService.createLog({
+      userId: String((user as any)?._id || ''),
+      userCin: user?.cin,
+      userName: `${user?.firstname || ''} ${user?.lastname || ''}`.trim(),
+      userRole: (user as any)?.role?.name,
+      actionType: 'login',
+      actionLabel: 'User logged in',
+      resourceType: 'auth',
+      status: 'success',
+      severity: 'normal',
+      ipAddress: req?.ip,
+      sessionId: result.session_id,
+    });
+    return result;
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Body() body: { sessionId?: string }, @Request() req: any) {
+    const userId = String(req?.user?.sub || req?.user?.userId || '');
+    const loginLog = await this.auditLogsService.findLatestLogin(userId, body?.sessionId);
+    const durationSec = loginLog
+      ? Math.max(0, Math.floor((Date.now() - new Date((loginLog as any).createdAt).getTime()) / 1000))
+      : undefined;
+    await this.auditLogsService.createLog({
+      userId,
+      actionType: 'logout',
+      actionLabel: 'User logged out',
+      resourceType: 'auth',
+      status: 'success',
+      severity: 'normal',
+      ipAddress: req?.ip,
+      sessionId: body?.sessionId,
+      sessionDurationSec: durationSec,
+      details: durationSec != null ? `Session duration: ${durationSec}s` : undefined,
+    });
+    return { message: 'Logout tracked' };
   }
 
   @Post('register')
-  async register(@Body() registerDto: any) {
+  async register(@Body() registerDto: any, @Request() req: any) {
     const {
       cin,
       password,
@@ -48,7 +99,7 @@ export class AuthController {
       adresse,
     );
 
-    return {
+    const response = {
       message: 'User registered successfully',
       user: {
         id: user._id,
@@ -62,6 +113,19 @@ export class AuthController {
         role: user.role,
       },
     };
+    await this.auditLogsService.createLog({
+      userId: String(user._id),
+      userCin: user.cin,
+      userName: `${user.firstname || ''} ${user.lastname || ''}`.trim(),
+      actionType: 'create',
+      actionLabel: 'User registered (pending approval)',
+      resourceType: 'user',
+      resourceId: String(user._id),
+      status: 'success',
+      severity: 'important',
+      ipAddress: req?.ip,
+    });
+    return response;
   }
 
   @Post('approve-user/:userId')
@@ -77,6 +141,17 @@ export class AuthController {
       body.password,
       adminId,
     );
+    await this.auditLogsService.createLog({
+      userId: String(adminId),
+      userName: 'Super Admin',
+      actionType: 'update',
+      actionLabel: 'Approved user account',
+      resourceType: 'user',
+      resourceId: userId,
+      status: 'success',
+      severity: 'important',
+      ipAddress: req?.ip,
+    });
     return {
       message: 'User approved successfully',
       user: updatedUser,
@@ -94,6 +169,18 @@ export class AuthController {
       userId,
       body.reason,
     );
+    await this.auditLogsService.createLog({
+      userId: String(req?.user?.sub || ''),
+      userName: 'Super Admin',
+      actionType: 'update',
+      actionLabel: 'Rejected user account',
+      resourceType: 'user',
+      resourceId: userId,
+      status: 'success',
+      severity: 'important',
+      ipAddress: req?.ip,
+      details: body.reason,
+    });
     return {
       message: 'User rejected successfully',
       user: updatedUser,

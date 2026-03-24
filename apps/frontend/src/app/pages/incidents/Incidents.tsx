@@ -13,6 +13,7 @@ import { canEdit } from '../../utils/permissions';
 import { mockIncidents } from '../../utils/mockData';
 import { toast } from 'sonner';
 import axios from 'axios';
+import { trackAuditEvent } from '../../action/audit.action';
 
 // API pour rechercher des utilisateurs
 const api = axios.create({
@@ -369,6 +370,14 @@ export default function Incidents() {
       setIncidents(incidents.map(incident =>
         incident.id === id ? { ...incident, status: 'resolved' } : incident
       ));
+      trackAuditEvent({
+        actionType: "update",
+        actionLabel: "Resolved incident",
+        resourceType: "incident",
+        resourceId: id,
+        severity: "important",
+        status: "success",
+      });
 
       toast.success('Incident marqué comme résolu');
     } catch (error) {
@@ -391,6 +400,14 @@ export default function Incidents() {
       // Mettre à jour le state local
       setIncidents(incidents.filter(incident => incident.id !== id));
       setFilteredIncidents(filteredIncidents.filter(incident => incident.id !== id));
+      trackAuditEvent({
+        actionType: "delete",
+        actionLabel: "Deleted incident",
+        resourceType: "incident",
+        resourceId: id,
+        severity: "critical",
+        status: "success",
+      });
 
       toast.success('Incident supprimé avec succès');
     } catch (error) {
@@ -546,6 +563,15 @@ Pour toute question, veuillez contacter l'administrateur système.
   const handleShowIncidentDetails = (incident: any) => {
     setSelectedIncidentDetails(incident);
     setShowIncidentDetailsDialog(true);
+    trackAuditEvent({
+      actionType: "view",
+      actionLabel: "Viewed incident details",
+      resourceType: "incident",
+      resourceId: String(incident?.id || ""),
+      severity: "normal",
+      status: "success",
+      details: incident?.title || incident?.type,
+    });
   };
 
   // Fonction pour trouver un utilisateur par CIN (API réelle)

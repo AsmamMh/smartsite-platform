@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { AuthState, User, RegisterData } from "../types";
 import axios from "axios";
+import { trackLogout } from "../action/audit.action";
 
 
 
@@ -38,6 +39,9 @@ export const useAuthStore = create<AuthState>()(
             },
             isAuthenticated: true,
           });
+          if (res.data.session_id) {
+            localStorage.setItem("session_id", res.data.session_id);
+          }
 
           return res.data;
         } catch (error: any) {
@@ -98,7 +102,10 @@ export const useAuthStore = create<AuthState>()(
         return res.data;
       },
 
-      logout: () => {
+      logout: async () => {
+        const sessionId = localStorage.getItem("session_id") || undefined;
+        await trackLogout(sessionId);
+        localStorage.removeItem("session_id");
         // Clear authorization header
         delete api.defaults.headers.common["Authorization"];
         set({ user: null, isAuthenticated: false });

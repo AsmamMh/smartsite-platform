@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../componen
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
 import { Input } from "../../components/ui/input";
 import { toast } from "react-hot-toast";
+import { trackAuditEvent } from "../../action/audit.action";
 import {
   AlertTriangle,
   CheckCircle,
@@ -322,6 +323,15 @@ export default function SuperAdminProjectsDashboard() {
   const openProjectDetails = (project: Project) => {
     setSelectedProject(project);
     setDetailsOpen(true);
+    trackAuditEvent({
+      actionType: "view",
+      actionLabel: "Viewed project details",
+      resourceType: "project",
+      resourceId: project.id,
+      severity: "normal",
+      status: "success",
+      details: project.name,
+    });
   };
 
   const openStatsDetails = (type: "total" | "en_cours" | "termines" | "retard" | "urgent" | "pms") => {

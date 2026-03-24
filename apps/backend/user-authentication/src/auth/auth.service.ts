@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { RolesService } from '../roles/roles.service';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 import { LoginDto } from './dto';
 
 @Injectable()
@@ -58,6 +59,7 @@ export class AuthService {
 
     const userData = user.toObject ? user.toObject() : user;
 
+    const sessionId = randomUUID();
     return {
       access_token: this.jwtService.sign(payload),
       id: userData._id,
@@ -65,6 +67,7 @@ export class AuthService {
       lastname: userData.lastname,
       firstname: userData.firstname,
       role: userData.role || null,
+      session_id: sessionId,
     };
   }
 

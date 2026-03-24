@@ -21,6 +21,7 @@ import Map from "./pages/map/Map";
 import Notifications from "./pages/notifications/Notifications";
 import UserManagement from "./pages/users/UserManagement";
 import PendingUsers from "./pages/admin/PendingUsers";
+import SystemLogs from "./pages/admin/SystemLogs";
 import Profile from "./pages/profile/Profile";
 import Home2 from "./pages/Home/Home2";
 import Pricing from "./pages/pricing/Pricing";
@@ -140,6 +141,10 @@ export const router = createBrowserRouter([
       {
         path: "admin/pending-users",
         element: <PendingUsers />,
+      },
+      {
+        path: "admin/system-logs",
+        element: <SystemLogs />,
       },
       {
         path: "profile",

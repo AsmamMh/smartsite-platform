@@ -231,6 +231,12 @@ export const navigationItems: NavItem[] = [
     icon: UserCog,
     roles: ["super_admin"],
   },
+  {
+    label: "System Logs",
+    href: "/admin/system-logs",
+    icon: Clock,
+    roles: ["super_admin"],
+  },
 ];
 
 export const getNavigationForRole = (role: RoleType): NavItem[] => {
