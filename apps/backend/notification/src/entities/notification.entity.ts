@@ -29,6 +29,9 @@ export class Notification extends Document {
 
   @Prop()
   data: any;
+
+  @Prop({ default: false })
+  trash: boolean;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

@@ -1,4 +1,39 @@
 import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Notification } from 'src/entities/notification.entity';
 
 @Injectable()
-export class NotificationService {}
+export class NotificationService {
+  constructor(
+    @InjectModel(Notification.name) private notifModel: Model<Notification>,
+  ) {}
+
+  async getAllNotifications() {
+    return await this.notifModel.find().exec();
+  }
+
+  async getNotiFicationByUserId(userId: string) {
+    return await this.notifModel.find({ userId }).exec();
+  }
+
+  async createNotification(userId: string, message: string) {
+    const newNotification = new this.notifModel({
+      userId,
+      message,
+      read: false,
+    });
+    return await newNotification.save();
+  }
+
+  async markAsRead(notificationId: string) {
+    return await this.notifModel.findByIdAndUpdate(notificationId, {
+      isRead: true,
+    });
+  }
+
+  async deleteNotificationById(notificationId: string) {
+    return await this.notifModel.findByIdAndDelete(notificationId);
+  }
+  
+}
