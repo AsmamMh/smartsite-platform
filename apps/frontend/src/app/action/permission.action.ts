@@ -93,7 +93,7 @@ export const accessPermissionByurl = async (url: string) => {
   const token = useAuthStore.getState().user.access_token;
 
   const { data } = await axios.get(
-    `http://localhost:3000/users/acessurl/${url}`,
+    `https://smartsite-platform-auth.vercel.app/users/acessurl/${url}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -106,7 +106,7 @@ export const accessPermissionByurl = async (url: string) => {
 export const getMynavigationAccess = async () => {
   const token = useAuthStore.getState().user.access_token;
   const { data } = await axios.get(
-    `http://localhost:3000/users/mypermissions`,
+    `https://smartsite-platform-auth.vercel.app/users/mypermissions`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
