@@ -93,41 +93,7 @@ export const mockSites: Site[] = [
   },
 ];
 
-export const mockClients: Client[] = [
-  {
-    id: '1',
-    name: 'TechCorp International',
-    address: '100 Innovation Drive',
-    contact: 'Jane Smith',
-    email: 'jane@techcorp.com',
-    phone: '+216 71 123 456',
-    projects: 3,
-    totalValue: 12000000,
-    createdAt: '2025-06-01',
-  },
-  {
-    id: '2',
-    name: 'Luxury Living Properties',
-    address: '200 Premium Boulevard',
-    contact: 'Robert Johnson',
-    email: 'robert@luxuryliving.com',
-    phone: '+216 71 234 567',
-    projects: 2,
-    totalValue: 15000000,
-    createdAt: '2025-08-15',
-  },
-  {
-    id: '3',
-    name: 'Retail Ventures Group',
-    address: '300 Shopping Lane',
-    contact: 'Maria Garcia',
-    email: 'maria@retailventures.com',
-    phone: '+216 71 345 678',
-    projects: 1,
-    totalValue: 3000000,
-    createdAt: '2025-09-01',
-  },
-];
+export const mockTasks:Task[] = []
 
 export const mockSuppliers: Supplier[] = [
   {
@@ -177,44 +143,7 @@ export const mockSuppliers: Supplier[] = [
   },
 ];
 
-export const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'critical',
-    title: 'Safety Violation Detected',
-    message: 'Missing PPE detected on Site 1 - Downtown Office Complex',
-    read: false,
-    createdAt: '2026-02-17T10:30:00',
-    userId: '8',
-  },
-  {
-    id: '2',
-    type: 'warning',
-    title: 'Budget Alert',
-    message: 'Project RT-2026-002 has consumed 75% of allocated budget',
-    read: false,
-    createdAt: '2026-02-17T09:15:00',
-    userId: '6',
-  },
-  {
-    id: '3',
-    type: 'info',
-    title: 'Task Completed',
-    message: 'Foundation work completed on Site 2',
-    read: true,
-    createdAt: '2026-02-16T16:45:00',
-    userId: '3',
-  },
-  {
-    id: '4',
-    type: 'critical',
-    title: 'Delay Prediction',
-    message: 'AI predicts 2-week delay on Shopping Mall project',
-    read: false,
-    createdAt: '2026-02-17T08:00:00',
-    userId: '2',
-  },
-];
+
 
 export const mockIncidents: Incident[] = [
   {
@@ -251,57 +180,6 @@ export const mockIncidents: Incident[] = [
   },
 ];
 
-export const mockTasks: Task[] = [
-  {
-    id: '1',
-    title: 'Foundation Excavation',
-    description: 'Complete excavation for building foundation',
-    status: 'completed',
-    priority: 'high',
-    startDate: '2026-01-15',
-    plannedEndDate: '2026-01-30',
-    actualEndDate: '2026-01-28',
-    progress: 100,
-    workedHours: 320,
-    dependencies: [],
-    projectId: '1',
-    assignees: ['4', '10'],
-    createdAt: '2026-01-10',
-    updatedAt: '2026-01-28',
-  },
-  {
-    id: '2',
-    title: 'Steel Frame Installation',
-    description: 'Install main structural steel framework',
-    status: 'in_progress',
-    priority: 'critical',
-    startDate: '2026-02-01',
-    plannedEndDate: '2026-03-15',
-    progress: 45,
-    workedHours: 580,
-    dependencies: ['1'],
-    projectId: '1',
-    assignees: ['4', '10'],
-    createdAt: '2026-01-25',
-    updatedAt: '2026-02-17',
-  },
-  {
-    id: '3',
-    title: 'Electrical Wiring - First Floor',
-    description: 'Complete electrical installation for first floor',
-    status: 'todo',
-    priority: 'medium',
-    startDate: '2026-03-01',
-    plannedEndDate: '2026-03-20',
-    progress: 0,
-    workedHours: 0,
-    dependencies: ['2'],
-    projectId: '1',
-    assignees: ['4'],
-    createdAt: '2026-02-10',
-    updatedAt: '2026-02-10',
-  },
-];
 
 export const mockTeamMembers: User[] = [
 
