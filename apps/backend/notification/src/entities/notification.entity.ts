@@ -2,10 +2,10 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 
 export enum NotificationTypeEnum {
-  TASK = 'TASK',
-  MESSAGE = 'MESSAGE',
-  ALERT = 'ALERT',
-  OTHER = 'OTHER',
+  TASK = 'INFO',
+  MESSAGE = 'WARNING',
+  ALERT = 'CRITICAL',
+  OTHER = 'SUCCESS',
 }
 
 export enum NotificationPriorityEnum {
@@ -30,7 +30,7 @@ export class Notification extends Document {
 
   @Prop({type: String, enum: NotificationPriorityEnum})
   priority: NotificationPriorityEnum;
-
+  //  type: "info" | "warning" | "critical" | "success";
   @Prop({ type: String, enum: NotificationTypeEnum })
   type: NotificationTypeEnum;
 

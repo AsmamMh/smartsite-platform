@@ -16,6 +16,23 @@ export const userApi = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+export const NotificationApi = axios.create({
+  baseURL: process.env.NOTIFICATION_URL || "http://localhost:3004/notification",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${localStorage.getItem("smartsite")}`,
+  },
+});
+
+NotificationApi.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().user.access_token;
+  console.log(token);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
 planingApi.interceptors.request.use((config) => {
   const token = useAuthStore.getState().user.access_token;
   console.log("interceptor token", token);
