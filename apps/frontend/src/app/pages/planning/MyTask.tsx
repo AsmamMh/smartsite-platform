@@ -631,7 +631,7 @@ function MyKanbanBoardColumn({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <KanbanBoardColumnIconButton ref={moreOptionsButtonReference}>
-                  {/* <MoreHorizontalIcon /> */}
+                  <MoreHorizontalIcon /> 
                   <span className="sr-only">
                     More options for {column.title}
                   </span>

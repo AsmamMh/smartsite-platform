@@ -1,12 +1,21 @@
 /* eslint-disable unicorn/no-null */
-
+import {
+  DropdownMenuPortal,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   CircleIcon,
+  Edit2Icon,
   Link,
   MoreHorizontalIcon,
   PenIcon,
   PlusIcon,
   Trash2Icon,
+  TrashIcon,
   Warehouse,
 } from "lucide-react";
 import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
@@ -540,7 +549,6 @@ export function MyKanbanBoard() {
       {columns.map((column) =>
         jsLoaded ? (
           <MyKanbanBoardColumn
-            
             activeCardId={activeCardId}
             column={column}
             key={column._id}
@@ -674,6 +682,15 @@ function MyKanbanBoardColumn({
     };
   }
 
+  const { isOpen, onOpen, setType, setMilestoneid } = useTaskStageModal();
+  const updateColumn = (column_id: string) => {
+    console.log("update column===================", column_id);
+    setMilestoneid(column_id);
+    setType("edit");
+    onOpen();
+  };
+  const deleteColumn = (column_id: string) => {};
+
   return (
     <KanbanBoardColumn
       columnId={column._id}
@@ -681,70 +698,44 @@ function MyKanbanBoardColumn({
       onDropOverColumn={handleDropOverColumn}
     >
       <KanbanBoardColumnHeader>
-        {isEditingTitle ? (
-          <form
-            className="w-full"
-            onSubmit={handleSubmit}
-            onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) {
-                closeDropdownMenu();
-              }
-            }}
-          >
-            <Input
-              aria-label="Column name"
-              autoFocus
-              defaultValue={column.name}
-              name="columnTitle"
-              onKeyDown={(event) => {
-                if (event.key === "Escape") {
-                  closeDropdownMenu();
-                }
-              }}
-              required
-            />
-          </form>
-        ) : (
-          <>
-            <KanbanBoardColumnTitle columnId={column._id}>
-              {/* <KanbanColorCircle color={"primary"} /> */}
-              <CircleIcon
+        <KanbanBoardColumnTitle columnId={column._id}>
+          <KanbanColorCircle color={column.color} />
+          {/* <CircleIcon
                 className={`text-${column.color} size-3 mx-2 rounded-full bg-${column.color}`}
-              />
-              {column.name}
-            </KanbanBoardColumnTitle>
+              /> */}
+          {column.name}
+        </KanbanBoardColumnTitle>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <MoreHorizontalIcon className="text-gray-400 size-7 cursor-pointer hover:bg-gray-300 hover:rounded-sm" />
+          </DropdownMenuTrigger>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <KanbanBoardColumnIconButton ref={moreOptionsButtonReference}>
-                  {/* <MoreHorizontalIcon /> */}
-                  <span className="sr-only">
-                    More options for {column.name}
-                  </span>
-                </KanbanBoardColumnIconButton>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Column</DropdownMenuLabel>
-
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
-                    <PenIcon />
-                    Edit Details
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    className="text-destructive"
-                    onClick={() => onDeleteColumn(column._id)}
-                  >
-                    <Trash2Icon />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        )}
+          <DropdownMenuContent
+            align="start"
+            side="bottom"
+            sideOffset={8}
+            avoidCollisions={false}
+            className="w-40 z-50"
+          >
+            <DropdownMenuItem
+              onClick={() => {
+                console.log("update column===================", column._id);
+    
+                setMilestoneid(column._id);
+                setType("edit");
+                onOpen();
+              }}
+            >
+              <Edit2Icon /> update
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => deleteColumn(column._id)}
+              className="text-red-600"
+            >
+              <TrashIcon className="text-red-600" /> delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </KanbanBoardColumnHeader>
 
       <KanbanBoardColumnList ref={listReference}>

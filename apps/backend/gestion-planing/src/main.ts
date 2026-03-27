@@ -27,8 +27,8 @@ async function bootstrap() {
   });
   app.use(
     compression({
-      level: 6, // balance between speed & compression
-      threshold: 1024, // only compress responses > 1KB
+      level: 6, 
+      threshold: 1024, 
     }),
   );
   await app.listen(process.env.PORT ?? 3002);

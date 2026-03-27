@@ -25,7 +25,6 @@ import {
   KanbanBoardCardDescription,
   KanbanBoardCardTextarea,
   KanbanBoardColumn,
-  KanbanBoardColumnButton,
   kanbanBoardColumnClassNames,
   KanbanBoardColumnFooter,
   KanbanBoardColumnHeader,
@@ -152,7 +151,10 @@ export function MyKanbanBoard() {
   const { data, isLoading } = useQuery({
     queryKey: ["milestoneTasksData", milestoneId],
     queryFn: async () => {
-      console.log("fetching tasks by milestone iddddddddddddddddd:", milestoneId);
+      console.log(
+        "fetching tasks by milestone iddddddddddddddddd:",
+        milestoneId,
+      );
       const response = await getTasksBYMilestoneId(milestoneId);
       console.log(response);
       setColumns(response);

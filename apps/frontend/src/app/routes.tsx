@@ -117,11 +117,11 @@ export const router = createBrowserRouter([
         element: <PLaningProjects />,
       },
       {
-        path: "milestone-tasks/:milestoneId",
+        path: "milestone-tasksprev/:milestoneId",
         element: <MilestoneTasks />,
       },
       {
-        path: "milestone-tasksC/:milestoneId",
+        path: "milestone-tasks/:milestoneId",
         element: <MilestoneTaskss />,
       },
       {
