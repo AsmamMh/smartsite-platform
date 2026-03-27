@@ -24,6 +24,7 @@ import {
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import {
+  deleteNotificationById,
   getMyNotifications,
   getUnreadNotifications,
 } from "@/app/action/notification.action";
@@ -77,12 +78,9 @@ export default function Notifications() {
     toast.success("All notifications cleared");
   };
 
-  const handleDeleteNotification = (id: number) => {
-    //setNotifications(notifications.filter(n => n.id !== id));
-    toast.success("Notification removed");
-  };
+ 
 
-  const { data: myNotifcations } = useQuery({
+  const { data: myNotifcations,refetch } = useQuery({
     queryKey: ["myNotifications"],
     queryFn: () => getMyNotifications(),
   });
@@ -98,7 +96,14 @@ export default function Notifications() {
   });
 
   console.log("unread notif", unreadNotifs);
-
+   const handleDeleteNotification = async (id: string) => {
+    const res= await deleteNotificationById(id);
+    if(res.status === 200){
+      refetch();
+       toast.success("Notification removed");
+    }
+   
+  };
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -285,7 +290,7 @@ export default function Notifications() {
                       variant="ghost"
                       size="icon"
                       className="flex-shrink-0"
-                      //onClick={() => handleDeleteNotification(notification.id)}
+                      onClick={() => handleDeleteNotification(notification._id)}
                     >
                       <X className="h-4 w-4" />
                     </Button>

@@ -31,3 +31,20 @@ export const getUnreadNotificationCount= async ()=>{
     const {data} = await NotificationApi.get('/unread-count')
     return data;
 }
+
+export const deleteNotificationById =
+    async (id: string) => {
+        try {
+            const res = await NotificationApi.delete(`/${id}`);
+            if (res.status === 200) {
+                return Promise.resolve({ status: res.status, data: res.data });
+            }
+        }
+        catch (error: any) {
+            console.error("Delete notification error:", error?.response?.data?.message);
+            return Promise.resolve({
+                status: error?.response?.status,
+                data: error?.response?.data?.message,
+            });
+        }
+    };
