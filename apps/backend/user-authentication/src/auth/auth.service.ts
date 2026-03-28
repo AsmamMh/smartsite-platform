@@ -19,14 +19,18 @@ export class AuthService {
     private rolesService: RolesService,
   ) {}
 
+  // ✅ FIXED VALIDATE USER
   async validateUser(cin: string, password: string): Promise<any> {
     if (!cin || !password) {
       return null;
     }
-    console.log('validate1', cin, '  ', password);
+
+    console.log('🔍 validateUser:', cin);
+
     const user = await this.usersService.findByCin(cin);
-    console.log('before finding user', user);
+
     if (!user) {
+      console.log('❌ User not found');
       return null;
     }
 
@@ -43,17 +47,45 @@ export class AuthService {
       const { password: _p, password: _m, ...result } = userObj as any;
       return result;
     }
-    return null;
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    // If bcrypt comparison fails, check if password matches in plain text
+    // This is for backward compatibility with old users who have plain text passwords
+    let passwordValid = isMatch;
+    if (!isMatch && user.password) {
+      // Check if it's a plain text password (not a bcrypt hash)
+      if (!user.password.startsWith('$2')) {
+        passwordValid = password === user.password;
+        
+        // If plain text matches, automatically hash it for future use
+        if (passwordValid) {
+          const hashedPassword = await bcrypt.hash(password, 10);
+          await this.usersService.updatePassword(user._id.toString(), hashedPassword);
+          console.log('✅ Password migrated to hashed version');
+        }
+      }
+    }
+
+    if (!passwordValid) {
+      console.log('❌ Password mismatch');
+      return null;
+    }
+
+    // ✅ remove password safely
+    const userObj = user.toObject ? user.toObject() : user;
+    const { password: _removed, ...result } = userObj;
+
+    return result;
   }
 
+  // ✅ LOGIN
   async login(user: any) {
-    console.log('Login user:', user);
     const payload = {
       cin: user.cin,
       sub: user._id,
-      roles: user.roles || [],
+      roles: user.role ? [user.role] : [],
     };
-    console.log('JWT Payload:', payload);
 
     const userData = user.toObject ? user.toObject() : user;
 
@@ -68,6 +100,7 @@ export class AuthService {
     };
   }
 
+  // ✅ REGISTER (corrigé avec hash sûr)
   async register(
     cin: string,
     password: string,
@@ -135,8 +168,6 @@ export class AuthService {
       emailVerificationOtp: otp,
       otpExpiresAt: otpExpiresAt,
     };
-
-    console.log('🔍 DEBUG userData à créer:', userData);
 
     const result = await this.usersService.create(userData);
     console.log('🔍 DEBUG utilisateur créé:', result);
@@ -252,16 +283,18 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    if (user.status !== 'pending') {
-      throw new BadRequestException('User is not in pending status');
+    // Hash the password if provided
+    let hashedPassword = user.password;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
     const updatedUser = await this.usersService.update(userId, {
       password: hashedPassword,
       status: 'approved',
       approvedBy: adminId,
       approvedAt: new Date(),
+      //password: hashedPassword,
     });
 
     console.log('🔍 DEBUG: Vérification email pour utilisateur approuvé...');

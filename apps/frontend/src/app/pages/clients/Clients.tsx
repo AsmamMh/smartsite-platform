@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useAuthStore } from '../../store/authStore';
 import { canEdit } from '../../utils/permissions';
 import { toast } from 'sonner';
-import { getAllClients, createClient, updateClient, deleteClient } from '@/app/action/user.action';
+import { getAllClients, createClient, updateClient, deleteUser } from '@/app/action/user.action';
 import { User } from '@/app/types';
 
 export default function Clients() {
@@ -169,7 +169,7 @@ export default function Clients() {
     setIsLoading(true);
     try {
       const token = user?.access_token;
-      const res = await deleteClient(selectedClient._id, token);
+      const res = await deleteUser(selectedClient._id);
       if (res.status === 200) {
         toast.success('Client deleted successfully!');
         setDeleteOpen(false);

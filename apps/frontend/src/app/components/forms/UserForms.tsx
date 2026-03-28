@@ -51,7 +51,7 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
           .max(32, "lastName must be at most 32 characters.")
           .optional(),
         email: z.string().email("Invalid email address").optional(),
-        telephone: z.string().optional(),
+        phoneNumber: z.string().optional(),
         password: z
           .string()
           .max(32, "Password must be at most 32 characters.")
@@ -99,7 +99,7 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
       firstName: "",
       lastName: "",
       email: "",
-      telephone: "",
+      phoneNumber: "",
       password: "",
       address: "",
       confirmPassword: "",
@@ -124,7 +124,7 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
           firstName: res.data.firstName,
           lastName: res.data.lastName,
           email: res.data.email,
-          telephone: res.data.telephone,
+          phoneNumber: res.data.phoneNumber,
           address: res.data.address,
           role: res.data.role?._id || "",
         });
@@ -278,7 +278,7 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
               )}
             />
             <Controller
-              name="telephone"
+              name="phoneNumber"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
@@ -287,9 +287,9 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
                   </FieldLabel>
                   <Input
                     {...field}
-                    id="form-rhf-demo-telephone"
+                    id="form-rhf-demo-phoneNumber"
                     aria-invalid={fieldState.invalid}
-                    placeholder="Enter telephone"
+                    placeholder="Enter phoneNumber"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (

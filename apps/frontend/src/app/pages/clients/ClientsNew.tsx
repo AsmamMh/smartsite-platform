@@ -45,7 +45,7 @@ import {
   getAllClients,
   createClient,
   updateClient,
-  deleteClient,
+  deleteUser,
 } from "@/app/action/user.action";
 import { User } from "@/app/types";
 
@@ -218,7 +218,7 @@ export default function ClientsNew() {
     setIsLoading(true);
     try {
       const token = user?.access_token;
-      const res = await deleteClient(selectedClient._id, token);
+      const res = await deleteUser(selectedClient._id);
       if (res.status === 200) {
         toast.success("Client deleted successfully!");
         setDeleteOpen(false);

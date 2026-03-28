@@ -47,13 +47,14 @@ import {
   getTaskById,
   updateTask,
 } from "@/app/action/planing.action";
-import { getAllUsers } from "@/app/action/user.action";
+import { getAllUsers, getUsersBySite } from "@/app/action/user.action";
 import { data, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAllTaskStages } from "@/app/action/taskStage.action";
 import { getAllTaskStagesByMilestoneId } from "@/app/action/task.actions";
 import { PlusIcon } from "lucide-react";
 import useTaskStageModal from "@/app/hooks/use-task-stage-modal";
+import { getMilestoneById } from "@/app/action/milestone.action";
 
 const todayAtMidnight = () => {
   const today = new Date();
@@ -147,17 +148,6 @@ const TaskForms = ({ type }: { type: "edit" | "add" }) => {
   const onSubmit = async (data: z.infer<typeof formSchema>) =>
     mutation.mutate(data);
 
-  const loadUsers = async () => {
-    try {
-      const response = await getAllUsers();
-      if (response?.status === 200 && Array.isArray(response.data)) {
-        setAvailableUsers(response.data);
-      }
-    } catch {
-      toast.error("Failed to load users.");
-    }
-  };
-
   const loadTaskData = async () => {
     if (type !== "edit" || !taskId) {
       return;
@@ -185,10 +175,15 @@ const TaskForms = ({ type }: { type: "edit" | "add" }) => {
     }
   };
 
-  useEffect(() => {
-    loadUsers();
-   // loadTaskData();
-  }, [type, taskId]);
+  // useEffect(() => {
+  //   loadUsers();
+  //   console.log("Task ID from params:sssssssssssssssssssssssssss", taskId);
+  //  // loadTaskData();
+  // }, [type, taskId]);
+  // useEffect(() => {
+  //   console.log("Milestone ID in TaskForms:", milestoneId);
+  //   loadUsers();
+  // }, []);
 
   const { data: taskStages } = useQuery({
     queryKey: ["getAllTaskStages"],
@@ -199,8 +194,39 @@ const TaskForms = ({ type }: { type: "edit" | "add" }) => {
     setMilestoneid: setTaskstageMilestoneId,
   } = useTaskStageModal();
 
+  const { data: users, isLoading: LODINGuSER } = useQuery({
+    queryKey: ["projectUsers", milestoneId],
+    enabled: !!milestoneId,
+    queryFn: async () => {
+      try {
+        if (!milestoneId) return [];
+
+        const milestone = await getMilestoneById(milestoneId);
+        const siteId = milestone?.siteId;
+
+        if (!siteId) {
+          console.warn("No siteId on milestone; falling back to all users");
+          const all = await getAllUsers();
+          return Array.isArray(all?.data) ? all.data : [];
+        }
+
+        const response = await getUsersBySite(siteId);
+        if (response?.status === 200 && Array.isArray(response.data)) {
+          return response.data;
+        }
+        return [];
+      } catch (error) {
+        console.error("Error loading project users", error);
+        toast.error("Failed to load users for this project.");
+        return [];
+      }
+    },
+  });
+  
+
   return (
     <>
+    
       <form id="form-rhf-TaskForms" onSubmit={form.handleSubmit(onSubmit)}>
         <FieldGroup>
           <Controller
@@ -262,12 +288,13 @@ const TaskForms = ({ type }: { type: "edit" | "add" }) => {
               <Field>
                 <FieldLabel>Assigned Users</FieldLabel>
                 <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border p-3">
-                  {availableUsers.length === 0 ? (
+                  {users && !LODINGuSER &&  users.length === 0 ? (
+                    
                     <p className="text-sm text-muted-foreground">
                       No users available.
                     </p>
                   ) : (
-                    availableUsers.map((user) => {
+                   users && !LODINGuSER && users.map((user) => {
                       const userId = user._id;
                       const label =
                         user.firstName && user.lastName

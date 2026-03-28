@@ -75,7 +75,6 @@ export class UsersController {
       const decoded: any = this.jwtService.verify(token);
       const userId = decoded.sub;
       const user = await this.usersService.findById(userId);
-
       if (!user) {
         return { error: 'User not found' };
       }
@@ -140,7 +139,6 @@ export class UsersController {
     try {
       const decoded: any = this.jwtService.verify(token);
       const userId = decoded.sub;
-
       return await this.usersService.changePassword(
         userId,
         passwordData.currentPassword,
@@ -186,5 +184,75 @@ export class UsersController {
   @Put('ban/:id')
   async ban(@Param('id') id: string) {
     return this.usersService.handleBan(id);
+  }
+
+  // ============ TEAM ASSIGNMENT ENDPOINTS ============
+
+  /**
+   * Assign a manager to a user
+   */
+  @Post(':id/manager')
+  async assignManager(
+    @Param('id') userId: string,
+    @Body() body: { managerId: string },
+  ) {
+    return this.usersService.assignManager(userId, body.managerId);
+  }
+
+  /**
+   * Modify a user's manager
+   */
+  @Put(':id/manager')
+  async modifyManager(
+    @Param('id') userId: string,
+    @Body() body: { managerId: string },
+  ) {
+    return this.usersService.modifyManager(userId, body.managerId);
+  }
+
+  /**
+   * View a user's manager
+   */
+  @Get(':id/manager')
+  async getManager(@Param('id') userId: string) {
+    return this.usersService.getManager(userId);
+  }
+
+  /**
+   * Set responsibilities for a user
+   */
+  @Put(':id/responsibilities')
+  async setResponsibilities(
+    @Param('id') userId: string,
+    @Body() body: { responsibilities: string },
+  ) {
+    return this.usersService.setResponsibilities(userId, body.responsibilities);
+  }
+
+  /**
+   * Get users by site
+   */
+  @Get('site/:siteId')
+  async getUsersBySite(@Param('siteId') siteId: string) {
+    return this.usersService.getUsersBySite(siteId);
+  }
+
+  /**
+   * Assign user to a site
+   */
+  @Post(':id/site')
+  async assignToSite(
+    @Param('id') userId: string,
+    @Body() body: { siteId: string },
+  ) {
+    return this.usersService.assignToSite(userId, body.siteId);
+  }
+
+  /**
+   * Remove user from a site
+   */
+  @Delete(':id/site')
+  async removeFromSite(@Param('id') userId: string) {
+    return this.usersService.removeFromSite(userId);
   }
 }

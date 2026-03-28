@@ -26,13 +26,19 @@ export class MilestoneService {
     return milestones;
   }
 
-  async findOne(id: number) {
-    const milestone = await this.milestoneModel.findById(id).populate("tasks").exec();
+  async findOne(id: string) {
+    const milestone = await this.milestoneModel
+      .findById(id)
+      .populate('tasks')
+      .exec();
     return milestone;
   }
 
-  async update(id: number, updateMilestoneDto: UpdateMilestoneDto) {
-    const updatedMilestone=await this.milestoneModel.findByIdAndUpdate(id, updateMilestoneDto, { new: true }).populate("tasks").exec();
+  async update(id: string, updateMilestoneDto: UpdateMilestoneDto) {
+    const updatedMilestone = await this.milestoneModel
+      .findByIdAndUpdate(id, updateMilestoneDto, { new: true })
+      .populate('tasks')
+      .exec();
     if(!updatedMilestone){
       throw new Error(`Milestone with id ${id} not found`);
     }
@@ -41,11 +47,14 @@ export class MilestoneService {
   }
 
    async getMilestonesByProjectId(projectId:string){
-     const response = await this.milestoneModel.find({projectId:projectId}).populate("tasks").exec();
+     const response = await this.milestoneModel
+       .find({ projectId: projectId })
+       .populate('tasks')
+       .exec();
      return response; 
    }
 
-  async remove(id: number) {
+  async remove(id: string) {
     const milestone = await this.milestoneModel.findByIdAndDelete(id).exec();
     if (!milestone) {
       throw new Error(`Milestone with id ${id} not found`);
