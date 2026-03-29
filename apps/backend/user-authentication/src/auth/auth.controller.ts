@@ -10,13 +10,17 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private auditLogsService: AuditLogsService,
+  ) { }
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body() loginDto: LoginDto, @Request() req: any) {
     console.log('user:', loginDto);
     const user = await this.authService.validateUser(
       loginDto.cin,
@@ -24,14 +28,71 @@ export class AuthController {
     );
     console.log('valdiate user:', user);
     if (!user) {
+      await this.auditLogsService.createLog({
+        userCin: loginDto.cin,
+        actionType: 'login',
+        actionLabel: 'Login failed',
+        resourceType: 'auth',
+        status: 'failed',
+        severity: 'critical',
+        ipAddress: req?.ip,
+        details: 'Invalid credentials or pending account',
+      });
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.authService.login(user);
+    const result = await this.authService.login(user);
+    await this.auditLogsService.createLog({
+      userId: String((user as any)?._id || ''),
+      userCin: user?.cin,
+      userName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
+      userRole: (user as any)?.role?.name,
+      actionType: 'login',
+      actionLabel: 'User logged in',
+      resourceType: 'auth',
+      status: 'success',
+      severity: 'normal',
+      ipAddress: req?.ip,
+      sessionId: result.session_id,
+    });
+    return result;
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Body() body: { sessionId?: string }, @Request() req: any) {
+    const userId = String(req?.user?.sub || req?.user?.userId || '');
+    const loginLog = await this.auditLogsService.findLatestLogin(
+      userId,
+      body?.sessionId,
+    );
+    const durationSec = loginLog
+      ? Math.max(
+        0,
+        Math.floor(
+          (Date.now() - new Date((loginLog as any).createdAt).getTime()) /
+          1000,
+        ),
+      )
+      : undefined;
+    await this.auditLogsService.createLog({
+      userId,
+      actionType: 'logout',
+      actionLabel: 'User logged out',
+      resourceType: 'auth',
+      status: 'success',
+      severity: 'normal',
+      ipAddress: req?.ip,
+      sessionId: body?.sessionId,
+      sessionDurationSec: durationSec,
+      details:
+        durationSec != null ? `Session duration: ${durationSec}s` : undefined,
+    });
+    return { message: 'Logout tracked' };
   }
 
   @Post('register')
-  async register(@Body() registerDto: any) {
+  async register(@Body() registerDto: any, @Request() req: any) {
     const {
       cin,
       password,
@@ -41,7 +102,7 @@ export class AuthController {
       email,
 
       telephone,
-    adresse,
+      address,
       companyName,
     } = registerDto;
     const user = await this.authService.register(
@@ -53,11 +114,11 @@ export class AuthController {
       email,
 
       telephone,
-    adresse,
+      address,
       companyName,
     );
 
-    return {
+    const response = {
       message: 'User registered successfully',
       user: {
         id: user._id,
@@ -68,12 +129,24 @@ export class AuthController {
 
         telephone: user.telephone,
 
-
         address: user.address,
         role: user.role,
         companyName: user.companyName,
       },
     };
+    await this.auditLogsService.createLog({
+      userId: String(user._id),
+      userCin: user.cin,
+      userName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+      actionType: 'create',
+      actionLabel: 'User registered (pending approval)',
+      resourceType: 'user',
+      resourceId: String(user._id),
+      status: 'success',
+      severity: 'important',
+      ipAddress: req?.ip,
+    });
+    return response;
   }
 
   @Post('approve-user/:userId')
@@ -89,40 +162,46 @@ export class AuthController {
       body.password,
       adminId,
     );
+    await this.auditLogsService.createLog({
+      userId: String(adminId),
+      userName: 'Super Admin',
+      actionType: 'update',
+      actionLabel: 'Approved user account',
+      resourceType: 'user',
+      resourceId: userId,
+      status: 'success',
+      severity: 'important',
+      ipAddress: req?.ip,
+    });
     return {
       message: 'User approved successfully',
       user: updatedUser,
     };
   }
 
-  @Post('verify-otp')
-  async verifyOTP(@Body() body: { cin: string; otp: string }) {
-    return this.authService.verifyOTP(body.cin, body.otp);
-  }
-
-  @Post('resend-otp')
-  async resendOTP(@Body() body: { cin: string }) {
-    return this.authService.resendOTP(body.cin);
-  }
-
-  @Post('forgot-password')
-  async forgotPassword(@Body() body: { email: string }) {
-    return this.authService.forgotPassword(body.email);
-  }
-
-  @Post('reset-password')
-  async resetPassword(
-    @Body() body: { email: string; resetCode: string; newPassword: string },
+  @Post('reject-user/:userId')
+  @UseGuards(JwtAuthGuard)
+  async rejectUser(
+    @Param('userId') userId: string,
+    @Body() body: { reason?: string },
+    @Request() req: any,
   ) {
-    return this.authService.resetPassword(
-      body.email,
-      body.resetCode,
-      body.newPassword,
-    );
-  }
-
-  @Post('resend-reset-code')
-  async resendResetCode(@Body() body: { email: string }) {
-    return this.authService.resendResetCode(body.email);
+    const updatedUser = await this.authService.rejectUser(userId, body.reason);
+    await this.auditLogsService.createLog({
+      userId: String(req?.user?.sub || ''),
+      userName: 'Super Admin',
+      actionType: 'update',
+      actionLabel: 'Rejected user account',
+      resourceType: 'user',
+      resourceId: userId,
+      status: 'success',
+      severity: 'important',
+      ipAddress: req?.ip,
+      details: body.reason,
+    });
+    return {
+      message: 'User rejected successfully',
+      user: updatedUser,
+    };
   }
 }

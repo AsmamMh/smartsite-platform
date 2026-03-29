@@ -4,25 +4,28 @@ import { JwtModule } from '@nestjs/jwt';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User, UserSchema } from './entities/user.entity';
-import { Role, RoleSchema } from '../roles/entities/role.entity';
+import { Role, RoleSchema } from 'src/roles/entities/role.entity';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 import { EmailModule } from '../email/email.module';
 import { RolesModule } from '../roles/roles.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema },
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
 
-        { name: Role.name, schema: RoleSchema },
+      { name: Role.name, schema: RoleSchema },
     ]),
     JwtModule.register({
       secret: 'smartiste',
       signOptions: { expiresIn: '24h' },
     }),
+    AuditLogsModule,
     EmailModule,
-    RolesModule
+    RolesModule,
   ],
   providers: [UsersService],
   controllers: [UsersController],
   exports: [UsersService],
 })
-export class UsersModule {}
+export class UsersModule { }

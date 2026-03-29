@@ -2,11 +2,12 @@ import { createBrowserRouter, Navigate } from "react-router";
 import DashboardLayout from "./layouts/DashboardLayout";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
-import VerifyOTP from "./pages/auth/VerifyOTP";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import ChangePasswordFirstLogin from "./pages/auth/ChangePasswordFirstLogin";
 import Dashboard from "./pages/dashboards/Dashboard";
+import ProjectManagerDashboard from "./pages/dashboard/ProjectManagerDashboard";
+import SuperAdminProjectsDashboard from "./pages/dashboard/SuperAdminProjectsDashboard";
 import Sites from "./pages/sites/Sites";
 import Projects from "./pages/projects/Projects";
 import Planning from "./pages/planning/MyTask";
@@ -23,6 +24,7 @@ import Map from "./pages/map/Map";
 import Notifications from "./pages/notifications/Notifications";
 import UserManagement from "./pages/users/UserManagement";
 import PendingUsers from "./pages/admin/PendingUsers";
+import SystemLogs from "./pages/admin/SystemLogs";
 import Profile from "./pages/profile/Profile";
 import Home2 from "./pages/Home/Home2";
 import Pricing from "./pages/pricing/Pricing";
@@ -60,10 +62,6 @@ export const router = createBrowserRouter([
     element: <Register />,
   },
   {
-    path: "/verify-otp",
-    element: <VerifyOTP />,
-  },
-  {
     path: "/forgot-password",
     element: <ForgotPassword />,
   },
@@ -84,20 +82,16 @@ export const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
-        path: "change-password-first-login",
-        element: <ChangePasswordFirstLogin />,
+        path: "project-manager-dashboard",
+        element: <ProjectManagerDashboard />,
       },
       {
-        path: "profile",
-        element: <Profile />,
+        path: "super-admin-projects",
+        element: <SuperAdminProjectsDashboard />,
       },
       {
         path: "sites",
         element: <Sites />,
-      },
-      {
-        path: "my-task",
-        element: <MyTask />,
       },
 
       {
@@ -183,6 +177,10 @@ export const router = createBrowserRouter([
       {
         path: "admin/pending-users",
         element: <PendingUsers />,
+      },
+      {
+        path: "admin/system-logs",
+        element: <SystemLogs />,
       },
       {
         path: "profile",

@@ -2,11 +2,12 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { AuthState, User, RegisterData } from "../types";
 import axios from "axios";
+import { trackLogout } from "../action/audit.action";
 
 
 
 const api = axios.create({
-  baseURL: "https://smartsite-platform-auth.vercel.app",
+  baseURL: "http://localhost:3000",
 });
 
 export const useAuthStore = create<AuthState>()(
@@ -39,7 +40,10 @@ export const useAuthStore = create<AuthState>()(
             },
             isAuthenticated: true,
           });
-          
+          if (res.data.session_id) {
+            localStorage.setItem("session_id", res.data.session_id);
+          }
+
           return res.data;
         } catch (error: any) {
           console.error('Login failed:', error.response?.data?.message || error.message);
@@ -74,7 +78,7 @@ export const useAuthStore = create<AuthState>()(
           email,
           telephone,
           departement,
-          adresse: address,
+          address,
           role,
           companyName,
           preferredLanguage,
@@ -97,13 +101,18 @@ export const useAuthStore = create<AuthState>()(
         return res.data;
       },
 
-      // Rejeter / supprimer un utilisateur (admin)
-      rejectUser: async (userId: string) => {
-        const res = await api.delete(`/users/${userId}`);
+      // Rejeter un utilisateur (admin)
+      rejectUser: async (userId: string, reason?: string) => {
+        const res = await api.post(`/auth/reject-user/${userId}`, {
+          reason,
+        });
         return res.data;
       },
 
-      logout: () => {
+      logout: async () => {
+        const sessionId = localStorage.getItem("session_id") || undefined;
+        await trackLogout(sessionId);
+        localStorage.removeItem("session_id");
         // Clear authorization header
         delete api.defaults.headers.common["Authorization"];
         set({ user: null, isAuthenticated: false });

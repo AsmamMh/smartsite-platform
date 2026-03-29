@@ -82,7 +82,7 @@ export interface PaginatedSitesResponse {
 export const fetchSites = async (filters?: SiteFilters): Promise<PaginatedSitesResponse> => {
   try {
     const params: Record<string, string> = {};
-    
+
     if (filters?.page) params.page = filters.page.toString();
     if (filters?.limit) params.limit = filters.limit.toString();
     if (filters?.nom) params.nom = filters.nom;
@@ -93,7 +93,7 @@ export const fetchSites = async (filters?: SiteFilters): Promise<PaginatedSitesR
     if (filters?.budgetMax) params.budgetMax = filters.budgetMax.toString();
 
     const response = await api.get('/gestion-sites', { params });
-    
+
     // Map backend data to frontend format
     return {
       ...response.data,

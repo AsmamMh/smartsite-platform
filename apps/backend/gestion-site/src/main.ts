@@ -4,23 +4,23 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Enable CORS for frontend integration
   app.enableCors();
-  
+
   // Enable validation
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
     transform: true,
     forbidNonWhitelisted: true,
   }));
-  
+
   // Set global prefix
   app.setGlobalPrefix('api');
-  
-  const port = process.env.PORT || 3000;
+
+  const port = process.env.PORT || 3001;
   await app.listen(port);
-  
+
   console.log(`🚀 Gestion Site API is running on: http://localhost:${port}/api`);
   console.log(`📋 Available endpoints:`);
   console.log(`   POST   /api/gestion-sites           - Create a new site`);

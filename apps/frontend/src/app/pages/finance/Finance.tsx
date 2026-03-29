@@ -12,7 +12,9 @@ import { toast } from 'sonner';
 
 export default function Finance() {
   const user = useAuthStore((state) => state.user);
-  const canManageFinance = user && canEdit(user.role.name, 'finance');
+  // Contournement : si le role est null, utiliser un role par défaut
+  const userRole = user?.role || { name: 'super_admin' as const };
+  const canManageFinance = user && canEdit(userRole.name, 'finance');
   const [transactions, setTransactions] = useState([
     { id: 1, description: 'Material Purchase', amount: 50000, type: 'expense', date: '2026-02-15', reference: 'MAT-001', vendor: 'ABC Suppliers', category: 'Materials' },
     { id: 2, description: 'Client Payment', amount: 100000, type: 'income', date: '2026-02-14', reference: 'INV-2026-001', vendor: 'BuildCorp Ltd', category: 'Project Income' },
@@ -26,7 +28,7 @@ export default function Finance() {
   const totalIncome = transactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
-  
+
   const totalExpense = transactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -62,7 +64,7 @@ export default function Finance() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Financial Management</h1>
           <p className="text-gray-500 mt-1">Budget tracking and financial analysis</p>
-        </div>        {canManageFinance ? (        <Dialog>
+        </div>        {canManageFinance ? (<Dialog>
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
               + Record Transaction
@@ -97,7 +99,7 @@ export default function Finance() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="trans-type">Type</Label>
-                <select 
+                <select
                   id="trans-type"
                   className="w-full px-3 py-2 border rounded-md"
                   value={newTransaction.type}
@@ -107,7 +109,7 @@ export default function Finance() {
                   <option value="expense">Expense</option>
                 </select>
               </div>
-              <Button 
+              <Button
                 className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
                 onClick={handleAddTransaction}
               >
@@ -206,7 +208,7 @@ export default function Finance() {
                   </p>
                 </div>
               </div>
-              
+
               <div className="border-t pt-4 space-y-3">
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Description</p>
@@ -226,16 +228,16 @@ export default function Finance() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Date</p>
-                  <p className="text-gray-900">{new Date(selectedTransaction.date).toLocaleDateString('fr-FR', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
+                  <p className="text-gray-900">{new Date(selectedTransaction.date).toLocaleDateString('fr-FR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
                   })}</p>
                 </div>
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button 
+                <Button
                   className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
                   onClick={() => {
                     setDetailsDialogOpen(false);
@@ -244,8 +246,8 @@ export default function Finance() {
                 >
                   Export
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="flex-1"
                   onClick={() => setDetailsDialogOpen(false)}
                 >

@@ -13,12 +13,12 @@ export class User extends Document {
   @Prop({ required: true, unique: true, trim: true })
   cin: string;
 
-  @Prop({ required: false }) 
+  @Prop({ required: false })
   password: string;
 
   @Prop()
   profilePicture?: string;
-  
+
   @Prop({ type: Types.ObjectId, ref: 'Role', required: true })
   role: Types.ObjectId;
 
@@ -55,7 +55,14 @@ export class User extends Document {
   @Prop()
   approvedAt?: Date;
 
-  
+  @Prop()
+  rejectedAt?: Date;
+
+  @Prop()
+  rejectReason?: string;
+
+  @Prop()
+  motDePasse?: string;
 
   @Prop([String])
   certifications?: string[];
@@ -72,13 +79,11 @@ export class User extends Document {
   @Prop()
   otpExpiresAt?: Date;
 
-
   @Prop({ default: false })
   passwordChnage: boolean;
 
   @Prop({ default: true })
   firstLogin: boolean;
-
 
   @Prop()
   passwordResetCode?: string;

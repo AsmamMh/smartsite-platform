@@ -8,6 +8,7 @@ import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { RolesService } from '../roles/roles.service';
 import * as bcrypt from 'bcrypt';
+import { randomUUID } from 'crypto';
 import { LoginDto } from './dto';
 
 @Injectable()
@@ -17,7 +18,7 @@ export class AuthService {
     private jwtService: JwtService,
     private emailService: EmailService,
     private rolesService: RolesService,
-  ) {}
+  ) { }
 
   async validateUser(cin: string, password: string): Promise<any> {
     if (!cin || !password) {
@@ -27,6 +28,12 @@ export class AuthService {
     const user = await this.usersService.findByCin(cin);
     console.log('before finding user', user);
     if (!user) {
+      return null;
+    }
+
+    // Check if user is approved
+    if ((user as any).status !== 'approved') {
+      console.log('User not approved:', (user as any).status);
       return null;
     }
 
@@ -57,6 +64,7 @@ export class AuthService {
 
     const userData = user.toObject ? user.toObject() : user;
 
+    const sessionId = randomUUID();
     return {
       access_token: this.jwtService.sign(payload),
       id: userData._id,
@@ -64,7 +72,7 @@ export class AuthService {
       lastName: userData.lastName,
       firstName: userData.firstName,
       role: userData.role || null,
-      firstLogin: userData.firstLogin || false,
+      session_id: sessionId,
     };
   }
 
@@ -98,33 +106,33 @@ export class AuthService {
       throw new BadRequestException('User already exists');
     }
 
-    // Find default "client" role if no role provided
-    let roleId = role;
-    if (!roleId) {
-      const clientRole = await this.rolesService.findByName('client');
-      if (!clientRole) {
-        throw new BadRequestException(
-          'Default client role not found. Please create a "client" role first.',
-        );
-      }
-      roleId = clientRole._id.toString();
-      console.log('🔍 DEBUG: Using default client role:', roleId);
-    }
-
     const hashedPassword = password
       ? await bcrypt.hash(password, 10)
       : undefined;
 
-    // Generate 6-digit OTP
+    // Récupérer le rôle demandé depuis la base (plus fiable que des IDs hardcodés)
+    const normalizedRole = (role || 'user').trim();
+    const roleDoc = await this.rolesService.findByName(normalizedRole);
+    const fallbackRoleDoc = roleDoc
+      ? null
+      : await this.rolesService.findByName('user');
+    const resolvedRole = roleDoc || fallbackRoleDoc;
+    if (!resolvedRole) {
+      throw new BadRequestException(
+        'Aucun rôle valide trouvé en base (seed roles manquant)',
+      );
+    }
+
+    // Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
     const userData = {
       cin,
       password: hashedPassword,
       lastName,
       firstName,
-      role: roleId,
+      role: resolvedRole._id,
       email: email || address,
       telephone,
 
@@ -289,122 +297,49 @@ export class AuthService {
     return updatedUser;
   }
 
-  async forgotPassword(email: string) {
-    const user = await this.usersService.findByEmail(email);
-
+  async rejectUser(userId: string, reason?: string) {
+    const user = await this.usersService.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    // Generate 6-digit reset code
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const resetCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // Valid for 15 minutes
+    if (user.status !== 'pending') {
+      throw new BadRequestException('User is not in pending status');
+    }
 
-    // Update user with reset code
-    await this.usersService.update(user._id.toString(), {
-      passwordResetCode: resetCode,
-      passwordResetCodeExpiresAt: resetCodeExpiresAt,
+    // Marquer l'utilisateur comme rejeté
+    const updatedUser = await this.usersService.update(userId, {
+      status: 'rejected',
+      rejectedAt: new Date(),
+      rejectReason: reason || 'Aucun motif spécifié',
     });
 
-    // Send reset code email
-    if (user.email) {
+    console.log('🔍 DEBUG: Vérification email pour utilisateur rejeté...');
+    console.log('🔍 DEBUG: updatedUser:', updatedUser);
+    console.log('🔍 DEBUG: updatedUser.email:', updatedUser?.email);
+
+    // Envoyer un email de rejet si l'utilisateur a un email
+    if (updatedUser && updatedUser.email) {
+      console.log('📧 ENVOI EMAIL REJET: Envoi en cours à', updatedUser.email);
       try {
-        await this.emailService.sendPasswordResetEmail(
-          user.email,
-          user.firstName,
-          resetCode,
+        await this.emailService.sendRejectionEmail(
+          updatedUser.email,
+          updatedUser.firstName,
+          updatedUser.lastName,
+          updatedUser.cin,
+          reason || 'Aucun motif spécifié',
         );
-        console.log('✅ Reset code sent to', user.email);
-      } catch (error) {
-        console.error('❌ Failed to send reset code email:', error);
-        throw new BadRequestException('Failed to send reset code email');
-      }
-    }
-
-    return {
-      success: true,
-      message: 'Reset code sent to your email',
-    };
-  }
-
-  async resetPassword(email: string, resetCode: string, newPassword: string) {
-    const user = await this.usersService.findByEmail(email);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (!user.passwordResetCode) {
-      throw new BadRequestException('No reset code found for this user');
-    }
-
-    if (
-      user.passwordResetCodeExpiresAt &&
-      new Date() > user.passwordResetCodeExpiresAt
-    ) {
-      throw new BadRequestException('Reset code has expired');
-    }
-
-    if (user.passwordResetCode !== resetCode) {
-      throw new BadRequestException('Invalid reset code');
-    }
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update user password and clear reset code
-    const updatedUser = await this.usersService.update(user._id.toString(), {
-      password: hashedPassword,
-      passwordResetCode: null,
-      passwordResetCodeExpiresAt: null,
-    });
-
-    if (!updatedUser) {
-      throw new BadRequestException('Failed to reset password');
-    }
-
-    console.log('✅ Password reset for user:', user.cin);
-    return {
-      success: true,
-      message: 'Password reset successfully',
-    };
-  }
-
-  async resendResetCode(email: string) {
-    const user = await this.usersService.findByEmail(email);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // Generate new reset code
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const resetCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
-
-    // Update user with new reset code
-    await this.usersService.update(user._id.toString(), {
-      passwordResetCode: resetCode,
-      passwordResetCodeExpiresAt: resetCodeExpiresAt,
-    });
-
-    // Send reset code email
-    if (user.email) {
-      try {
-        await this.emailService.sendPasswordResetEmail(
-          user.email,
-          user.firstName,
-          resetCode,
+        console.log(
+          '✅ EMAIL DE REJET ENVOYÉ avec succès à',
+          updatedUser.email,
         );
-        console.log('✅ Reset code resent to', user.email);
       } catch (error) {
-        console.error('❌ Failed to resend reset code email:', error);
-        throw new BadRequestException('Failed to send reset code email');
+        console.error('❌ Failed to send rejection email:', error);
       }
+    } else {
+      console.log("⚠️ PAS D'EMAIL: Utilisateur sans adresse email");
     }
 
-    return {
-      success: true,
-      message: 'Reset code sent to your email',
-    };
+    return updatedUser;
   }
 }

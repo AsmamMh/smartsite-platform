@@ -17,7 +17,9 @@ import type { Role, RoleType } from '../../types/index';
 
 export default function Team() {
   const user = useAuthStore((state) => state.user);
-  const canManageTeam = user && canEdit(user.role.name, 'team');
+  // Contournement : si le role est null, utiliser un role par défaut
+  const userRole = user?.role || { name: 'super_admin' as const };
+  const canManageTeam = user && canEdit(userRole.name, 'team');
   const [members, setMembers] = useState([...mockTeamMembers]);
   const [searchTerm, setSearchTerm] = useState('');
   const [newMember, setNewMember] = useState({
@@ -63,7 +65,7 @@ export default function Team() {
       lastLoginDate: new Date().toISOString(),
       createdDate: new Date().toISOString(),
     };
-   // setMembers([...members, member]);
+    // setMembers([...members, member]);
     setNewMember({ firstName: '', lastName: '', email: '', phone: '', role: 'user' });
     toast.success('Team member added successfully!');
   };
@@ -115,87 +117,87 @@ export default function Team() {
           <p className="text-gray-500 mt-1">Manage your construction team members</p>
         </div>
         {canManageTeam ? (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Team Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Team Member</DialogTitle>
-              <DialogDescription>
-                Add a new member to your construction team
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first-name">First Name</Label>
-                  <Input
-                    id="first-name"
-                    placeholder="John"
-                    value={newMember.firstName}
-                    onChange={(e) => setNewMember({ ...newMember, firstName: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last-name">Last Name</Label>
-                  <Input
-                    id="last-name"
-                    placeholder="Doe"
-                    value={newMember.lastName}
-                    onChange={(e) => setNewMember({ ...newMember, lastName: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="john@example.com"
-                  value={newMember.email}
-                  onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  placeholder="+216 12 345 678"
-                  value={newMember.phone}
-                  onChange={(e) => setNewMember({ ...newMember, phone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select
-                  value={newMember.role}
-                  onValueChange={(value) => setNewMember({ ...newMember, role: value as RoleType })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(roleLabels).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button 
-                className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
-                onClick={handleAddMember}
-              >
-                Add Member
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Team Member
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Team Member</DialogTitle>
+                <DialogDescription>
+                  Add a new member to your construction team
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="first-name">First Name</Label>
+                    <Input
+                      id="first-name"
+                      placeholder="John"
+                      value={newMember.firstName}
+                      onChange={(e) => setNewMember({ ...newMember, firstName: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="last-name">Last Name</Label>
+                    <Input
+                      id="last-name"
+                      placeholder="Doe"
+                      value={newMember.lastName}
+                      onChange={(e) => setNewMember({ ...newMember, lastName: e.target.value })}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={newMember.email}
+                    onChange={(e) => setNewMember({ ...newMember, email: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    placeholder="+216 12 345 678"
+                    value={newMember.phone}
+                    onChange={(e) => setNewMember({ ...newMember, phone: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <Select
+                    value={newMember.role}
+                    onValueChange={(value) => setNewMember({ ...newMember, role: value as RoleType })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(roleLabels).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                  onClick={handleAddMember}
+                >
+                  Add Member
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         ) : (
           <Button disabled className="opacity-50 cursor-not-allowed">
             <Plus className="h-4 w-4 mr-2" />
@@ -272,14 +274,14 @@ export default function Team() {
               </Select>
             </div>
             <div className="flex gap-2">
-              <Button 
+              <Button
                 className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
                 onClick={handleSaveMemberEdit}
               >
                 Save Changes
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="flex-1"
                 onClick={() => setEditDialogOpen(false)}
               >
@@ -340,20 +342,20 @@ export default function Team() {
                   </div>
 
                   <div className="flex gap-2 mt-4 pt-4 border-t">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex-1"
                       onClick={() => handleEditMember(member)}
                     >
                       <Edit className="h-3 w-3 mr-1" />
                       Edit
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex-1 text-red-600 hover:text-red-700 hover:bg-red-50"
-                      //onClick={() => handleRemoveMember(member._id, `${member.firstName} ${member.lastName}`)}
+                    //onClick={() => handleRemoveMember(member._id, `${member.firstName} ${member.lastName}`)}
                     >
                       <Trash2 className="h-3 w-3 mr-1" />
                       Remove
