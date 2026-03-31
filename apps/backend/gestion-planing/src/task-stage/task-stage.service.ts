@@ -28,6 +28,19 @@ export class TaskStageService {
       .populate('tasks')
       .exec()
   }
+
+
+  async findByMilestoneIdAndteamId(milestoneId: string,teamId:string) {
+    return await this.taskStageModel
+      .find({ milestoneId })
+      .select('_id name order color')
+      .populate({
+        path: 'tasks',
+        match: { assignedTeams: teamId },
+      })
+      .exec(); 
+  }
+  
   
 
   

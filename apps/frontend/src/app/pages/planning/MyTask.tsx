@@ -1,12 +1,5 @@
 import {
-  CircleIcon,
-  Edit2Icon,
-  Link,
-  MoreHorizontalIcon,
-  PenIcon,
   PlusIcon,
-  Trash2Icon,
-  TrashIcon,
   Warehouse,
 } from "lucide-react";
 import type { ChangeEvent, FormEvent, KeyboardEvent } from "react";
@@ -20,7 +13,6 @@ import type {
 import {
   KanbanBoard,
   KanbanBoardCard,
-  KanbanBoardCardButton,
   KanbanBoardCardButtonGroup,
   KanbanBoardCardDescription,
   KanbanBoardCardTextarea,
@@ -46,7 +38,6 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogMedia,
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
@@ -75,6 +66,7 @@ import { deleteTask, updateTAskNew } from "@/app/action/planing.action";
 import { useParams } from "react-router";
 import useTaskModal from "@/app/hooks/use-task-modal";
 import {
+  getMyTAsks,
   getTaskByTeamid,
   getTaskSTagesByMilestoneId,
 } from "@/app/action/task.actions";
@@ -104,10 +96,12 @@ export default function MyTask() {
     queryFn: getCuureentUser,
   });
 
+
+  
   const { data: tasks } = useQuery({
     queryKey: ["tasks", user?.teamId],
     enabled: !!user?.teamId,
-    queryFn: () => getTaskByTeamid(user.teamId[0]),
+    queryFn: () => getTaskByTeamid(user.teamId[0],),
   });
 
   
@@ -173,11 +167,14 @@ export function MyKanbanBoard() {
   //   },
   // });
   //console.log(data);
-
+  const {data:user}= useQuery({
+    queryKey: ["currentUser"],
+    queryFn: getCuureentUser,
+  })
   const { data } = useQuery({
     queryKey: ["getTaskSTagesByMilestoneId", milestoneId],
     queryFn: () =>
-      getTaskSTagesByMilestoneId(milestoneId || "").then((data) => {
+      getMyTAsks(milestoneId || "", "69c92c7f799120ff49399621" ).then((data) => {
         console.log("fetching tasks by milestone id:", milestoneId);
         console.log("Fetched columns data:", data);
         setColumns(data);

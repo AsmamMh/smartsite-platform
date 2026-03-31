@@ -24,12 +24,28 @@ export class TaskStageController {
     const taskStages = await this.taskStageService.findByProjectId(projectId);
     return taskStages;
   }
+
+
+
   @Post('milestone/:milestoneId')
   async create(
     @Param('milestoneId') milestoneId: string,
     @Body() taskStage: TaskStage,
   ) {
     return this.taskStageService.create(milestoneId, taskStage);
+  }
+
+  @Get('milestone/:milestoneId/team/:teamId')
+  async findByMilestoneIdAndteamId(
+    @Param('milestoneId') milestoneId: string,
+    @Param('teamId') teamId: string,
+  ) {
+    const taskStages =
+      await this.taskStageService.findByMilestoneIdAndteamId(
+        milestoneId,
+        teamId,
+      );
+    return taskStages;
   }
 
   @Get('milestone/:milestoneId')
