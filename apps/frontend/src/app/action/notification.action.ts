@@ -47,6 +47,11 @@ export const getTeamUnreadNotificationCount = async (teamId: string) => {
   return data;
 };
 
+export const markTeamNotificationsAsRead = async (teamId: string) => {
+  const { data } = await NotificationApi.post(`/team/${teamId}/mark-all-read`);
+  return data;
+};
+
 export const deleteNotificationById = async (id: string) => {
   try {
     const res = await NotificationApi.delete(`/${id}`);

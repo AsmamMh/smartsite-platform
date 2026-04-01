@@ -33,6 +33,7 @@ import {
   getTeamUnreadNotifications,
   getTeamUnreadNotificationCount,
   getUnreadNotificationCount,
+  markTeamNotificationsAsRead,
 } from "@/app/action/notification.action";
 import { useAuthStore } from "@/app/store/authStore";
 
@@ -93,9 +94,24 @@ export default function Notifications() {
     }
   };
 
-  const handleMarkAllAsRead = () => {
-    //console.log(res, "ressssssssssssssssssssssss");
-    toast.success("All notifications marked as read");
+  const handleMarkAllAsRead = async () => {
+    if (!hasTeamFilter) {
+      toast.error("No team found for the current user");
+      return;
+    }
+
+    try {
+      await markTeamNotificationsAsRead(normalizedTeamId);
+      await Promise.all([
+        refetch(),
+        refetchTeamNotifications(),
+        refetchTeamUnreadNotifications(),
+        refetchTeamUnreadCount(),
+      ]);
+      toast.success("All team notifications marked as read");
+    } catch {
+      toast.error("Failed to mark notifications as read");
+    }
   };
 
  
@@ -121,10 +137,28 @@ export default function Notifications() {
     enabled: hasTeamFilter,
   });
 
+  const { refetch: refetchTeamNotifications } = useQuery({
+    queryKey: ["teamNotifications", normalizedTeamId],
+    queryFn: () => getTeamNotifications(normalizedTeamId),
+    enabled: false,
+  });
+
+  const { refetch: refetchTeamUnreadNotifications } = useQuery({
+    queryKey: ["teamUnreadNotifications", normalizedTeamId],
+    queryFn: () => getTeamUnreadNotifications(normalizedTeamId),
+    enabled: false,
+  });
+
   const { data: teamUnreadCount } = useQuery({
     queryKey: ["teamUnreadNotificationCount", normalizedTeamId],
     queryFn: () => getTeamUnreadNotificationCount(normalizedTeamId),
     enabled: hasTeamFilter,
+  });
+
+  const { refetch: refetchTeamUnreadCount } = useQuery({
+    queryKey: ["teamUnreadNotificationCount", normalizedTeamId],
+    queryFn: () => getTeamUnreadNotificationCount(normalizedTeamId),
+    enabled: false,
   });
 
   console.log("unread notif", unreadNotifs);
@@ -153,7 +187,7 @@ export default function Notifications() {
           <Button
             variant="outline"
             onClick={handleMarkAllAsRead}
-            disabled={UnreadNotifCount === 0}
+            disabled={!hasTeamFilter || (teamUnreadCount ?? 0) === 0}
           >
             Mark All as Read
           </Button>
@@ -164,29 +198,7 @@ export default function Notifications() {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Team Notifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {hasTeamFilter ? (
-            <div className="rounded-lg border bg-gray-50 p-4 text-sm text-gray-700">
-              <div className="font-medium">Your team id: {normalizedTeamId}</div>
-              <div className="mt-1">
-                Team unread count: {teamUnreadCount ?? 0}
-              </div>
-            </div>
-          ) : (
-            <div className="rounded-lg border bg-yellow-50 p-4 text-sm text-yellow-800">
-              No team assigned to the current user yet.
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
+     
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">

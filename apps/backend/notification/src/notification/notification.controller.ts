@@ -107,6 +107,12 @@ export class NotificationController {
     );
   }
 
+  @UseGuards(JwtGuard)
+  @Post('team/:teamId/mark-all-read')
+  async markAllTeamNotificationsAsRead(@Param('teamId') teamId: string) {
+    return await this.notificationService.markAllAsReadByTeamId(teamId);
+  }
+
 
   @Delete(':id')
   async deleteNotification(@Param('id') id: string) {

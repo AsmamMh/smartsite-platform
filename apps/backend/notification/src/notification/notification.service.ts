@@ -36,6 +36,13 @@ export class NotificationService {
     });
   }
 
+  async markAllAsReadByRecipientId(recipientId: string) {
+    return await this.notifModel.updateMany(
+      { recipentId: recipientId, isRead: false },
+      { $set: { isRead: true } },
+    ).exec();
+  }
+
   async deleteNotificationById(notificationId: string) {
     return await this.notifModel.findByIdAndDelete(notificationId);
   }
@@ -74,5 +81,9 @@ export class NotificationService {
     return await this.notifModel
       .countDocuments({ recipentId: teamId, isRead: false })
       .exec();
+  }
+
+  async markAllAsReadByTeamId(teamId: string) {
+    return await this.markAllAsReadByRecipientId(teamId);
   }
 }
