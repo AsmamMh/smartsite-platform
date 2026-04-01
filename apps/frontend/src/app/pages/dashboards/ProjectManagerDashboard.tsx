@@ -13,12 +13,12 @@ export default function ProjectManagerDashboard() {
   // const completedTasks = mockTasks.filter(t => t.status === 'completed').length;
   // const pendingTasks = mockTasks.filter(t => t.status === 'todo').length;
 
-  // return (
-  //   <div className="space-y-6">
-  //     <div>
-  //       <h1 className="text-3xl font-bold text-gray-900">Project Management Dashboard</h1>
-  //       <p className="text-gray-500 mt-1">Welcome, {user?.firstName} - Track and manage your projects</p>
-  //     </div>
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Project Management Dashboard</h1>
+        <p className="text-gray-500 mt-1">Welcome, {user?.firstName} - Track and manage your projects</p>
+      </div>
 
   //     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
   //       <StatCard title="Active Projects" value={mockProjects.length} icon={Calendar} subtitle="Currently managing" />

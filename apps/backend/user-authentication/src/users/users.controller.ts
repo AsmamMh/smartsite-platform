@@ -17,12 +17,13 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 
 @Controller('users')
 //@UseGuards(JwtAuthGuard)
+//@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
     private auditLogsService: AuditLogsService,
-  ) { }
+  ) {}
 
   @Post()
   async create(@Body() createUserDto: any) {
@@ -186,13 +187,22 @@ export class UsersController {
     return this.usersService.getAllclients();
   }
 
+  @Get('clients')
+  async getAllClients() {
+    return this.usersService.getAllclients();
+  }
+
   @Get(':id')
   async findById(@Param('id') id: string) {
     return this.usersService.findById(id);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: any, @Req() req: any) {
+  async update(
+    @Param('id') id: string,
+    @Body() updateUserDto: any,
+    @Req() req: any,
+  ) {
     const updated = await this.usersService.update(id, updateUserDto);
     await this.auditLogsService.createLog({
       userId: String(req?.user?.sub || ''),

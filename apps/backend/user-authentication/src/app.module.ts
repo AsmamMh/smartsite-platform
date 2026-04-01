@@ -11,8 +11,6 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { StaticsModule } from './statics/statics.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
 
-
-
 @Module({
   imports: [
     ConfigModule.forRoot({

@@ -13,6 +13,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { GestionSiteService, SiteFilters, PaginationOptions, PaginatedResult } from './gestion-site.service';
 import { CreateSiteDto, UpdateSiteDto } from './dto';
 
@@ -156,5 +157,70 @@ export class GestionSiteController {
   @HttpCode(HttpStatus.OK)
   async restore(@Param('id') id: string) {
     return this.gestionSiteService.restore(id);
+  }
+
+  // ============ TEAM ASSIGNMENT ENDPOINTS ============
+
+  /**
+   * Assign a team to a site
+   */
+  @Post(':id/teams')
+  @HttpCode(HttpStatus.OK)
+  async assignTeam(
+    @Param('id') siteId: string,
+    @Body() body: { userId: string },
+  ) {
+    return this.gestionSiteService.assignTeamToSite(siteId, body.userId);
+  }
+
+  /**
+   * Remove a team from a site
+   */
+  @Delete(':id/teams/:userId')
+  @HttpCode(HttpStatus.OK)
+  async removeTeam(
+    @Param('id') siteId: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.gestionSiteService.removeTeamFromSite(siteId, userId);
+  }
+
+  /**
+   * View teams assigned to a site
+   */
+  @Get(':id/teams')
+  async getTeams(@Param('id') siteId: string) {
+    return this.gestionSiteService.getTeamsAssignedToSite(siteId);
+  }
+
+  /**
+   * Get all sites with their assigned teams
+   */
+  @Get('teams/all')
+  async getAllSitesWithTeams() {
+    return this.gestionSiteService.getAllSitesWithTeams();
+  }
+
+  /**
+   * Get all team IDs that are assigned to any site (for Teams page to check site assignment)
+   */
+  @Get('teams/assigned-ids')
+  async getAssignedTeamIds() {
+    const sites = await this.gestionSiteService.getAllSitesWithTeams();
+    
+    // Create a map of teamId -> site info
+    const teamToSiteMap: Record<string, { siteId: string; siteName: string }> = {};
+    sites.forEach((site: any) => {
+      if (site.teamIds) {
+        site.teamIds.forEach((teamId: string) => {
+          teamToSiteMap[teamId] = {
+            siteId: site._id.toString(),
+            siteName: site.nom
+          };
+        });
+      }
+    });
+    
+    return teamToSiteMap;
   }
 }

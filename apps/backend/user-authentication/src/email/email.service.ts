@@ -25,9 +25,12 @@ export class EmailService {
       // Development: Use Ethereal test account with valid credentials
       this.transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
+        host: 'smtp.gmail.com',
         port: 587,
         secure: false,
         auth: {
+          user: 'chedly.rebai123@gmail.com',
+          pass: process.env.EMAIL_PASS,
           user: 'chedly.rebai123@gmail.com',
           pass: process.env.EMAIL_PASS,
         },
@@ -283,10 +286,15 @@ export class EmailService {
         html: htmlContent,
       });
 
-      console.log('✅ EMAIL SERVICE: Mot de passe temporaire envoyé avec succès !');
+      console.log(
+        '✅ EMAIL SERVICE: Mot de passe temporaire envoyé avec succès !',
+      );
       console.log('📧 EMAIL SERVICE: Message ID:', result.messageId);
     } catch (error) {
-      console.error('❌ EMAIL SERVICE: Erreur envoi mot de passe temporaire:', error);
+      console.error(
+        '❌ EMAIL SERVICE: Erreur envoi mot de passe temporaire:',
+        error,
+      );
       throw error;
     }
   }

@@ -4,8 +4,6 @@ import type { AuthState, User, RegisterData } from "../types";
 import axios from "axios";
 import { trackLogout } from "../action/audit.action";
 
-
-
 const api = axios.create({
   baseURL: "http://localhost:3000",
 });
@@ -26,13 +24,15 @@ export const useAuthStore = create<AuthState>()(
           const token = res.data.access_token;
           // attach token globally
           api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-          console.log('Login successful, token:', token);
+          console.log("Login successful, token:", token);
 
           set({
             user: {
               access_token: res.data.access_token,
               id: res.data.id,
               cin: res.data.cin,
+              firstName: res.data.firstName,
+              lastName: res.data.lastName,
               firstName: res.data.firstName,
               lastName: res.data.lastName,
               role: res.data.role,
@@ -46,7 +46,10 @@ export const useAuthStore = create<AuthState>()(
 
           return res.data;
         } catch (error: any) {
-          console.error('Login failed:', error.response?.data?.message || error.message);
+          console.error(
+            "Login failed:",
+            error.response?.data?.message || error.message,
+          );
           set({
             user: null,
             isAuthenticated: false,
@@ -59,6 +62,8 @@ export const useAuthStore = create<AuthState>()(
       register: async (
         cin: string,
         password: string,
+        firstName: string,
+        lastName: string,
         firstName: string,
         lastName: string,
         email: string,
@@ -75,11 +80,16 @@ export const useAuthStore = create<AuthState>()(
           password, // généralement vide, mot de passe généré à l'approbation
           firstName,
           lastName,
+          firstName,
+          lastName,
           email,
-          telephone,
+          phoneNumber,
           departement,
           address,
           role,
+          companyName,
+          preferredLanguage,
+          certifications,
           companyName,
           preferredLanguage,
           certifications,

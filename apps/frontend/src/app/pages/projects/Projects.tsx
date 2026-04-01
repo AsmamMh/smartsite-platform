@@ -1,30 +1,54 @@
-import { Briefcase } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { useAuthStore } from '../../store/authStore';
-import { canEdit } from '../../utils/permissions';
-import { toast } from 'sonner';
+import { Briefcase } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
+import { useAuthStore } from "../../store/authStore";
+import { canEdit } from "../../utils/permissions";
+import { toast } from "sonner";
 import {
   getSyncedProjectsWithDetails,
-  type SyncedProject
-} from '../../action/synced-project.action';
+  type SyncedProject,
+} from "../../action/synced-project.action";
 
 export default function Projects() {
   const user = useAuthStore((state) => state.user);
   // Contournement : si le role est null, utiliser un role par défaut
-  const userRole = user?.role || { name: 'super_admin' as const };
-  const canManageProjects = user && canEdit(userRole.name, 'projects');
+  const userRole = user?.role || { name: "super_admin" as const };
+  const canManageProjects = user && canEdit(userRole.name, "projects");
   const [projects, setProjects] = useState<SyncedProject[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newProject, setNewProject] = useState({ name: '', client: '', budget: '' });
+  const [newProject, setNewProject] = useState({
+    name: "",
+    client: "",
+    budget: "",
+  });
   const [viewDetailsOpen, setViewDetailsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [selectedProject, setSelectedProject] = useState<SyncedProject | null>(null);
-  const [editData, setEditData] = useState({ name: '', client: '', budget: '', status: '', progress: 0 });
+  const [selectedProject, setSelectedProject] = useState<SyncedProject | null>(
+    null,
+  );
+  const [editData, setEditData] = useState({
+    name: "",
+    client: "",
+    budget: "",
+    status: "",
+    progress: 0,
+  });
 
   // Charger les projets synchronisés
   useEffect(() => {
@@ -34,8 +58,8 @@ export default function Projects() {
         const syncedProjects = await getSyncedProjectsWithDetails();
         setProjects(syncedProjects);
       } catch (error) {
-        console.error('Error loading projects:', error);
-        toast.error('Failed to load projects');
+        console.error("Error loading projects:", error);
+        toast.error("Failed to load projects");
       } finally {
         setLoading(false);
       }
@@ -46,35 +70,35 @@ export default function Projects() {
 
   const handleAddProject = () => {
     if (!newProject.name || !newProject.client || !newProject.budget) {
-      toast.error('All fields are required');
+      toast.error("All fields are required");
       return;
     }
     const project: SyncedProject = {
       _id: `temp_${Date.now()}`,
       name: newProject.name,
       description: `Project for ${newProject.client}`,
-      status: 'planning',
+      status: "planning",
       progress: 0,
-      priority: 'medium',
+      priority: "medium",
       deadline: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
-      assignedTo: user?._id || '',
-      assignedToName: user?.firstName || 'Unknown',
-      assignedToRole: user?.role?.name || 'user',
+      assignedTo: user?._id || "",
+      assignedToName: user?.firstName || "Unknown",
+      assignedToRole: user?.role?.name || "user",
       tasks: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      projectManagerName: user?.firstName || 'Unknown',
+      projectManagerName: user?.firstName || "Unknown",
       budget: parseInt(newProject.budget),
       assignedTeam: [],
       assignedSites: [],
       teamSize: 0,
       siteCount: 0,
       totalTeamBudget: 0,
-      totalSiteBudget: 0
+      totalSiteBudget: 0,
     };
     setProjects([...projects, project]);
-    setNewProject({ name: '', client: '', budget: '' });
-    toast.success('Project created successfully!');
+    setNewProject({ name: "", client: "", budget: "" });
+    toast.success("Project created successfully!");
   };
 
   const handleViewDetails = (project: SyncedProject) => {
@@ -89,39 +113,51 @@ export default function Projects() {
       client: project.client,
       budget: project.budget,
       status: project.status,
-      progress: project.progress
+      progress: project.progress,
     });
     setEditOpen(true);
   };
 
   const handleSaveEdit = () => {
     if (!editData.name || !editData.client || !editData.budget) {
-      toast.error('All fields are required');
+      toast.error("All fields are required");
       return;
     }
-    setProjects(projects.map(p =>
-      p.id === selectedProject.id
-        ? { ...p, name: editData.name, client: editData.client, budget: typeof editData.budget === 'string' ? parseInt(editData.budget) : editData.budget, status: editData.status, progress: editData.progress }
-        : p
-    ));
+    setProjects(
+      projects.map((p) =>
+        p.id === selectedProject.id
+          ? {
+              ...p,
+              name: editData.name,
+              client: editData.client,
+              budget:
+                typeof editData.budget === "string"
+                  ? parseInt(editData.budget)
+                  : editData.budget,
+              status: editData.status,
+              progress: editData.progress,
+            }
+          : p,
+      ),
+    );
     setEditOpen(false);
-    toast.success('Project updated successfully!');
+    toast.success("Project updated successfully!");
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'en_cours':
-      case 'in_progress':
-        return 'bg-blue-100 text-blue-800';
-      case 'planning':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'terminé':
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'en_retard':
-        return 'bg-red-100 text-red-800';
+      case "en_cours":
+      case "in_progress":
+        return "bg-blue-100 text-blue-800";
+      case "planning":
+        return "bg-yellow-100 text-yellow-800";
+      case "terminé":
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "en_retard":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
   return (
@@ -152,7 +188,9 @@ export default function Projects() {
                     id="project-name"
                     placeholder="e.g., Downtown Office Tower"
                     value={newProject.name}
-                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, name: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -161,7 +199,9 @@ export default function Projects() {
                     id="client"
                     placeholder="e.g., Acme Corporation"
                     value={newProject.client}
-                    onChange={(e) => setNewProject({ ...newProject, client: e.target.value })}
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, client: e.target.value })
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -171,7 +211,9 @@ export default function Projects() {
                     type="number"
                     placeholder="e.g., 1500000"
                     value={newProject.budget}
-                    onChange={(e) => setNewProject({ ...newProject, budget: e.target.value })}
+                    onChange={(e) =>
+                      setNewProject({ ...newProject, budget: e.target.value })
+                    }
                   />
                 </div>
                 <Button
@@ -208,8 +250,16 @@ export default function Projects() {
                     <Briefcase className="h-5 w-5" />
                     {project.name}
                   </CardTitle>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}>
-                    {project.status === 'en_cours' ? 'In Progress' : project.status === 'planning' ? 'Planning' : project.status === 'terminé' ? 'Completed' : project.status}
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(project.status)}`}
+                  >
+                    {project.status === "en_cours"
+                      ? "In Progress"
+                      : project.status === "planning"
+                        ? "Planning"
+                        : project.status === "terminé"
+                          ? "Completed"
+                          : project.status}
                   </span>
                 </div>
               </CardHeader>
@@ -218,7 +268,9 @@ export default function Projects() {
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Progress</span>
-                      <span className="text-sm font-semibold text-gray-900">{project.progress}%</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {project.progress}%
+                      </span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
@@ -228,8 +280,14 @@ export default function Projects() {
                     </div>
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <Dialog open={viewDetailsOpen} onOpenChange={setViewDetailsOpen}>
-                      <DialogTrigger asChild onClick={() => handleViewDetails(project)}>
+                    <Dialog
+                      open={viewDetailsOpen}
+                      onOpenChange={setViewDetailsOpen}
+                    >
+                      <DialogTrigger
+                        asChild
+                        onClick={() => handleViewDetails(project)}
+                      >
                         <Button size="sm" variant="outline">
                           View Details
                         </Button>
@@ -241,62 +299,104 @@ export default function Projects() {
                         {selectedProject && (
                           <div className="space-y-4">
                             <div>
-                              <p className="text-sm text-gray-600">Project Name</p>
-                              <p className="font-semibold text-gray-900">{selectedProject.name}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Description</p>
-                              <p className="font-semibold text-gray-900">{selectedProject.description}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Project Manager</p>
-                              <p className="font-semibold text-gray-900">{selectedProject.projectManagerName}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Budget</p>
-                              <p className="font-semibold text-gray-900">${(selectedProject.budget || 0).toLocaleString()}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Priority</p>
-                              <p className="font-semibold text-gray-900">{selectedProject.priority}</p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-600">Status</p>
-                              <p className={`font-semibold px-3 py-1 rounded-full text-sm inline-block ${getStatusColor(selectedProject.status)}`}>
-                                {selectedProject.status === 'en_cours' ? 'In Progress' : selectedProject.status === 'planning' ? 'Planning' : selectedProject.status === 'terminé' ? 'Completed' : selectedProject.status}
+                              <p className="text-sm text-gray-600">
+                                Project Name
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {selectedProject.name}
                               </p>
                             </div>
                             <div>
-                              <p className="text-sm text-gray-600 mb-2">Progress: {selectedProject.progress}%</p>
+                              <p className="text-sm text-gray-600">
+                                Description
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {selectedProject.description}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">
+                                Project Manager
+                              </p>
+                              <p className="font-semibold text-gray-900">
+                                {selectedProject.projectManagerName}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">Budget</p>
+                              <p className="font-semibold text-gray-900">
+                                $
+                                {(selectedProject.budget || 0).toLocaleString()}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">Priority</p>
+                              <p className="font-semibold text-gray-900">
+                                {selectedProject.priority}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600">Status</p>
+                              <p
+                                className={`font-semibold px-3 py-1 rounded-full text-sm inline-block ${getStatusColor(selectedProject.status)}`}
+                              >
+                                {selectedProject.status === "en_cours"
+                                  ? "In Progress"
+                                  : selectedProject.status === "planning"
+                                    ? "Planning"
+                                    : selectedProject.status === "terminé"
+                                      ? "Completed"
+                                      : selectedProject.status}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600 mb-2">
+                                Progress: {selectedProject.progress}%
+                              </p>
                               <div className="w-full bg-gray-200 rounded-full h-2">
                                 <div
                                   className="bg-gradient-to-r from-blue-600 to-green-600 h-2 rounded-full"
-                                  style={{ width: `${selectedProject.progress}%` }}
+                                  style={{
+                                    width: `${selectedProject.progress}%`,
+                                  }}
                                 />
                               </div>
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Deadline</p>
-                              <p className="font-semibold text-gray-900">{new Date(selectedProject.deadline).toLocaleDateString()}</p>
+                              <p className="font-semibold text-gray-900">
+                                {new Date(
+                                  selectedProject.deadline,
+                                ).toLocaleDateString()}
+                              </p>
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Team Size</p>
-                              <p className="font-semibold text-gray-900">{selectedProject.teamSize || 0} members</p>
+                              <p className="font-semibold text-gray-900">
+                                {selectedProject.teamSize || 0} members
+                              </p>
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Sites</p>
-                              <p className="font-semibold text-gray-900">{selectedProject.siteCount || 0} sites</p>
+                              <p className="font-semibold text-gray-900">
+                                {selectedProject.siteCount || 0} sites
+                              </p>
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Tasks</p>
-                              <p className="font-semibold text-gray-900">{selectedProject.tasks.length} tasks</p>
+                              <p className="font-semibold text-gray-900">
+                                {selectedProject.tasks.length} tasks
+                              </p>
                             </div>
                           </div>
                         )}
                       </DialogContent>
                     </Dialog>
                     <Dialog open={editOpen} onOpenChange={setEditOpen}>
-                      <DialogTrigger asChild onClick={() => handleEditProject(project)}>
+                      <DialogTrigger
+                        asChild
+                        onClick={() => handleEditProject(project)}
+                      >
                         <Button size="sm" variant="outline">
                           Edit
                         </Button>
@@ -304,7 +404,9 @@ export default function Projects() {
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Edit Project</DialogTitle>
-                          <DialogDescription>Update project information</DialogDescription>
+                          <DialogDescription>
+                            Update project information
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                           <div className="space-y-2">
@@ -312,7 +414,12 @@ export default function Projects() {
                             <Input
                               id="edit-name"
                               value={editData.name}
-                              onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                              onChange={(e) =>
+                                setEditData({
+                                  ...editData,
+                                  name: e.target.value,
+                                })
+                              }
                             />
                           </div>
                           <div className="space-y-2">
@@ -320,7 +427,12 @@ export default function Projects() {
                             <Input
                               id="edit-client"
                               value={editData.client}
-                              onChange={(e) => setEditData({ ...editData, client: e.target.value })}
+                              onChange={(e) =>
+                                setEditData({
+                                  ...editData,
+                                  client: e.target.value,
+                                })
+                              }
                             />
                           </div>
                           <div className="space-y-2">
@@ -329,7 +441,7 @@ export default function Projects() {
                               id="edit-budget"
                               type="number"
                               value={editData.budget}
-                            //  onChange={(e) => setEditData({ ...editData, budget: parseInt(e.target.value) })}
+                              //  onChange={(e) => setEditData({ ...editData, budget: parseInt(e.target.value) })}
                             />
                           </div>
                           <div className="space-y-2">
@@ -338,7 +450,12 @@ export default function Projects() {
                               id="edit-status"
                               className="w-full px-3 py-2 border rounded-md"
                               value={editData.status}
-                              onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                              onChange={(e) =>
+                                setEditData({
+                                  ...editData,
+                                  status: e.target.value,
+                                })
+                              }
                             >
                               <option value="planning">Planning</option>
                               <option value="in_progress">In Progress</option>
@@ -353,7 +470,12 @@ export default function Projects() {
                               min="0"
                               max="100"
                               value={editData.progress}
-                              onChange={(e) => setEditData({ ...editData, progress: parseInt(e.target.value) })}
+                              onChange={(e) =>
+                                setEditData({
+                                  ...editData,
+                                  progress: parseInt(e.target.value),
+                                })
+                              }
                             />
                           </div>
                           <Button

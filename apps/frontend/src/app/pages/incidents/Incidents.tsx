@@ -1,37 +1,67 @@
-import { AlertTriangle, Search, Upload, FileText, Send, User, Download, UserCheck, Users, Sparkles, Loader2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Badge } from '../../components/ui/badge';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Textarea } from '../../components/ui/textarea';
-import { useAuthStore } from '../../store/authStore';
-import { canEdit } from '../../utils/permissions';
-import { mockIncidents } from '../../utils/mockData';
-import { toast } from 'sonner';
-import axios from 'axios';
-import { trackAuditEvent } from '../../action/audit.action';
+import {
+  AlertTriangle,
+  Search,
+  Upload,
+  FileText,
+  Send,
+  User,
+  Download,
+  UserCheck,
+  Users,
+  Sparkles,
+  Loader2,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
+import { Textarea } from "../../components/ui/textarea";
+import { useAuthStore } from "../../store/authStore";
+import { canEdit } from "../../utils/permissions";
+import { mockIncidents } from "../../utils/mockData";
+import { toast } from "sonner";
+import axios from "axios";
+import { trackAuditEvent } from "../../action/audit.action";
 
 // API pour rechercher des utilisateurs
 const api = axios.create({
-  baseURL: 'http://localhost:3003',
+  baseURL: "http://localhost:3003",
   timeout: 10000, // 10 secondes timeout
 });
 
 // API pour les incidents (port différent)
 const incidentsApi = axios.create({
-  baseURL: 'http://localhost:3003',
+  baseURL: "http://localhost:3003",
   timeout: 10000, // 10 secondes timeout
 });
 
 // Récupérer le token depuis plusieurs sources (store persist + clé directe)
 const getAuthToken = (): string | null => {
-  const directToken = localStorage.getItem('access_token');
+  const directToken = localStorage.getItem("access_token");
   if (directToken) return directToken;
-  const persisted = localStorage.getItem('smartsite-auth');
+  const persisted = localStorage.getItem("smartsite-auth");
   if (!persisted) return null;
   try {
     const parsed = JSON.parse(persisted);
@@ -47,20 +77,37 @@ incidentsApi.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  console.log('🔍 Frontend: Requête Incidents API:', config.method?.toUpperCase(), config.url, 'avec token:', !!token);
+  console.log(
+    "🔍 Frontend: Requête Incidents API:",
+    config.method?.toUpperCase(),
+    config.url,
+    "avec token:",
+    !!token,
+  );
   return config;
 });
 
 // Interceptor pour les réponses (debug) - incidents API
 incidentsApi.interceptors.response.use(
   (response) => {
-    console.log('🔍 Frontend: Réponse Incidents API réussie:', response.config.url, response.status, 'taille:', Array.isArray(response.data) ? response.data.length : 'non-array');
+    console.log(
+      "🔍 Frontend: Réponse Incidents API réussie:",
+      response.config.url,
+      response.status,
+      "taille:",
+      Array.isArray(response.data) ? response.data.length : "non-array",
+    );
     return response;
   },
   (error) => {
-    console.error('❌ Frontend: Erreur Incidents API:', error.config?.url, error.response?.status, error.message);
+    console.error(
+      "❌ Frontend: Erreur Incidents API:",
+      error.config?.url,
+      error.response?.status,
+      error.message,
+    );
     return Promise.reject(error);
-  }
+  },
 );
 
 // Configuration des headers pour l'authentification
@@ -69,47 +116,64 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  console.log('🔍 Frontend: Requête API:', config.method?.toUpperCase(), config.url, 'avec token:', !!token);
+  console.log(
+    "🔍 Frontend: Requête API:",
+    config.method?.toUpperCase(),
+    config.url,
+    "avec token:",
+    !!token,
+  );
   return config;
 });
 
 // Interceptor pour les réponses (debug)
 api.interceptors.response.use(
   (response) => {
-    console.log('🔍 Frontend: Réponse API réussie:', response.config.url, response.status, 'taille:', Array.isArray(response.data) ? response.data.length : 'non-array');
+    console.log(
+      "🔍 Frontend: Réponse API réussie:",
+      response.config.url,
+      response.status,
+      "taille:",
+      Array.isArray(response.data) ? response.data.length : "non-array",
+    );
     return response;
   },
   (error) => {
-    console.error('❌ Frontend: Erreur API:', error.config?.url, error.response?.status, error.message);
+    console.error(
+      "❌ Frontend: Erreur API:",
+      error.config?.url,
+      error.response?.status,
+      error.message,
+    );
     return Promise.reject(error);
-  }
+  },
 );
 
 export default function Incidents() {
-  console.log('🎯 Frontend: Composant Incidents monté!');
+  console.log("🎯 Frontend: Composant Incidents monté!");
 
   const user = useAuthStore((state) => state.user);
-  console.log('🎯 Frontend: User depuis store:', user);
+  console.log("🎯 Frontend: User depuis store:", user);
 
   // Contournement : si le role est null, utiliser un role par défaut
-  const userRole = user?.role || { name: 'super_admin' as const };
-  const canManageIncidents = user && canEdit(userRole.name, 'incidents');
+  const userRole = user?.role || { name: "super_admin" as const };
+  const canManageIncidents = user && canEdit(userRole.name, "incidents");
   const [incidents, setIncidents] = useState(mockIncidents);
   const [filteredIncidents, setFilteredIncidents] = useState(mockIncidents);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [newIncident, setNewIncident] = useState({
-    type: '',
-    description: '',
-    severity: 'medium',
+    type: "",
+    description: "",
+    severity: "medium",
     image: null as File | null,
     pdfReport: null as File | null,
-    assignedUserCin: '', // Champ optionnel pour assignation directe
-    assignedUserRole: 'all',  // Champ optionnel pour filtre par rôle avec valeur par défaut
-    incidentName: '' // Nouveau champ pour le nom de l'incident
+    assignedUserCin: "", // Champ optionnel pour assignation directe
+    assignedUserRole: "all", // Champ optionnel pour filtre par rôle avec valeur par défaut
+    incidentName: "", // Nouveau champ pour le nom de l'incident
   });
   const [showAssignDialog, setShowAssignDialog] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<any>(null);
-  const [targetUserCin, setTargetUserCin] = useState('');
+  const [targetUserCin, setTargetUserCin] = useState("");
   const [foundUser, setFoundUser] = useState<any>(null);
   const [isSearchingUser, setIsSearchingUser] = useState(false);
 
@@ -117,25 +181,32 @@ export default function Incidents() {
   const [showUserSelectDialog, setShowUserSelectDialog] = useState(false);
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<any[]>([]);
-  const [userSearchTerm, setUserSearchTerm] = useState('');
-  const [selectedRole, setSelectedRole] = useState('all');
-  const [selectedUserForIncident, setSelectedUserForIncident] = useState<any>(null);
-  const [assignRoleFilter, setAssignRoleFilter] = useState<string>('all');
-  const [assignCinSearch, setAssignCinSearch] = useState<string>('');
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState("all");
+  const [selectedUserForIncident, setSelectedUserForIncident] =
+    useState<any>(null);
+  const [assignRoleFilter, setAssignRoleFilter] = useState<string>("all");
+  const [assignCinSearch, setAssignCinSearch] = useState<string>("");
   const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
-  const [selectedIncidentDetails, setSelectedIncidentDetails] = useState<any>(null);
-  const [showIncidentDetailsDialog, setShowIncidentDetailsDialog] = useState(false);
+  const [selectedIncidentDetails, setSelectedIncidentDetails] =
+    useState<any>(null);
+  const [showIncidentDetailsDialog, setShowIncidentDetailsDialog] =
+    useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const incidentsPerPage = 6;
 
-  console.log('🎯 Frontend: États initialisés - allUsers.length:', allUsers.length);
+  console.log(
+    "🎯 Frontend: États initialisés - allUsers.length:",
+    allUsers.length,
+  );
 
   // Filtrer les incidents par recherche
   useEffect(() => {
-    const filtered = incidents.filter(incident =>
-      incident.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      incident.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      incident.reportedBy?.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = incidents.filter(
+      (incident) =>
+        incident.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        incident.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        incident.reportedBy?.toLowerCase().includes(searchTerm.toLowerCase()),
     );
     setFilteredIncidents(filtered);
     setCurrentPage(1); // Réinitialiser à la première page lors de la recherche
@@ -144,7 +215,10 @@ export default function Incidents() {
   // Calculer les incidents pour la page actuelle
   const indexOfLastIncident = currentPage * incidentsPerPage;
   const indexOfFirstIncident = indexOfLastIncident - incidentsPerPage;
-  const currentIncidents = filteredIncidents.slice(indexOfFirstIncident, indexOfLastIncident);
+  const currentIncidents = filteredIncidents.slice(
+    indexOfFirstIncident,
+    indexOfLastIncident,
+  );
 
   // Calculer le nombre total de pages
   const totalPages = Math.ceil(filteredIncidents.length / incidentsPerPage);
@@ -161,12 +235,15 @@ export default function Incidents() {
   ) as string[];
 
   const filteredAssignableUsers = assignableUsers.filter((u) => {
-    const matchesRole = assignRoleFilter === 'all' || u?.role?.name === assignRoleFilter;
+    const matchesRole =
+      assignRoleFilter === "all" || u?.role?.name === assignRoleFilter;
     const q = assignCinSearch.trim().toLowerCase();
     const matchesCin =
       !q ||
-      String(u?.cin || '').toLowerCase().includes(q) ||
-      `${u?.firstname || u?.firstName || ''} ${u?.lastname || u?.lastName || ''}`
+      String(u?.cin || "")
+        .toLowerCase()
+        .includes(q) ||
+      `${u?.firstname || u?.firstName || ""} ${u?.lastname || u?.lastName || ""}`
         .toLowerCase()
         .includes(q);
     return matchesRole && matchesCin;
@@ -177,76 +254,109 @@ export default function Incidents() {
     let filtered = allUsers;
 
     // Filtrer par rôle
-    if (selectedRole !== 'all') {
-      filtered = filtered.filter(user => user.role?.name === selectedRole);
+    if (selectedRole !== "all") {
+      filtered = filtered.filter((user) => user.role?.name === selectedRole);
     }
 
     // Filtrer par terme de recherche
     if (userSearchTerm) {
-      filtered = filtered.filter(user =>
-        user.cin?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-        user.firstname?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-        user.lastname?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (user) =>
+          user.cin?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+          user.firstname
+            ?.toLowerCase()
+            .includes(userSearchTerm.toLowerCase()) ||
+          user.lastname?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+          user.email?.toLowerCase().includes(userSearchTerm.toLowerCase()),
       );
     }
 
     setFilteredUsers(filtered);
-    console.log('🔍 Frontend: Filtrage utilisateurs - Total:', allUsers.length, 'Filtrés:', filtered.length);
+    console.log(
+      "🔍 Frontend: Filtrage utilisateurs - Total:",
+      allUsers.length,
+      "Filtrés:",
+      filtered.length,
+    );
   }, [allUsers, userSearchTerm, selectedRole]);
 
   // Charger tous les utilisateurs au démarrage - UNE SEULE FOIS
   useEffect(() => {
-    console.log('🔄 Frontend: useEffect déclenché!');
+    console.log("🔄 Frontend: useEffect déclenché!");
 
     const loadAllUsers = async () => {
       try {
-        console.log('🔍 Frontend: Début du chargement des utilisateurs...');
+        console.log("🔍 Frontend: Début du chargement des utilisateurs...");
 
         // Vérifier le token directement
         const token = getAuthToken();
-        console.log('🔍 Frontend: Token brut:', token ? 'présent' : 'absent');
+        console.log("🔍 Frontend: Token brut:", token ? "présent" : "absent");
 
         if (!token) {
-          console.error('❌ Frontend: Aucun token disponible');
-          toast.error('Veuillez vous reconnecter - Token manquant dans localStorage');
+          console.error("❌ Frontend: Aucun token disponible");
+          toast.error(
+            "Veuillez vous reconnecter - Token manquant dans localStorage",
+          );
           return;
         }
 
-        console.log('🔍 Frontend: Appel API en cours...');
-        const response = await api.get('/users');
-        console.log('🔍 Frontend: Réponse reçue:', response.data.length, 'utilisateurs');
-        console.log('🔍 Frontend: Type de réponse:', typeof response.data, 'Array?', Array.isArray(response.data));
+        console.log("🔍 Frontend: Appel API en cours...");
+        const response = await api.get("/users");
+        console.log(
+          "🔍 Frontend: Réponse reçue:",
+          response.data.length,
+          "utilisateurs",
+        );
+        console.log(
+          "🔍 Frontend: Type de réponse:",
+          typeof response.data,
+          "Array?",
+          Array.isArray(response.data),
+        );
 
         if (response.data.length > 0) {
-          console.log('🔍 Frontend: Premier utilisateur:', {
+          console.log("🔍 Frontend: Premier utilisateur:", {
             cin: response.data[0].cin,
-            name: response.data[0].firstname + ' ' + response.data[0].lastname,
+            name: response.data[0].firstname + " " + response.data[0].lastname,
             role: response.data[0].role?.name,
-            status: response.data[0].status
+            status: response.data[0].status,
           });
         }
 
-        console.log('🔍 Frontend: Avant setAllUsers - allUsers.length:', allUsers.length);
-        console.log('🔍 Frontend: Données à setter:', JSON.stringify(response.data).slice(0, 100) + '...');
+        console.log(
+          "🔍 Frontend: Avant setAllUsers - allUsers.length:",
+          allUsers.length,
+        );
+        console.log(
+          "🔍 Frontend: Données à setter:",
+          JSON.stringify(response.data).slice(0, 100) + "...",
+        );
 
         setAllUsers(response.data);
 
-        console.log('🔍 Frontend: setAllUsers appelé');
-        console.log('✅ Frontend: Utilisateurs chargés - réponse length:', response.data.length);
+        console.log("🔍 Frontend: setAllUsers appelé");
+        console.log(
+          "✅ Frontend: Utilisateurs chargés - réponse length:",
+          response.data.length,
+        );
 
         // Forcer la vérification après un court délai
         setTimeout(() => {
-          console.log('🔍 Frontend: Vérification différée - allUsers.length:', allUsers.length);
+          console.log(
+            "🔍 Frontend: Vérification différée - allUsers.length:",
+            allUsers.length,
+          );
         }, 500);
-
       } catch (error) {
-        console.error('❌ Frontend: Erreur lors du chargement des utilisateurs:', error);
+        console.error(
+          "❌ Frontend: Erreur lors du chargement des utilisateurs:",
+          error,
+        );
         if (error.response) {
-          console.error('❌ Frontend: Status:', error.response.status);
-          console.error('❌ Frontend: Data:', error.response.data);
+          console.error("❌ Frontend: Status:", error.response.status);
+          console.error("❌ Frontend: Data:", error.response.data);
         }
-        toast.error('Erreur lors du chargement des utilisateurs');
+        toast.error("Erreur lors du chargement des utilisateurs");
       }
     };
 
@@ -255,16 +365,25 @@ export default function Incidents() {
     // Charger les incidents depuis la base de données
     const loadIncidents = async () => {
       try {
-        console.log('🔍 Frontend: Chargement des incidents depuis la base...');
+        console.log("🔍 Frontend: Chargement des incidents depuis la base...");
 
-        const response = await incidentsApi.get('/incidents');
-        console.log('🔍 Frontend: Incidents chargés depuis la base:', response.data.length);
-        console.log('🔍 Frontend: Structure des incidents:', JSON.stringify(response.data[0], null, 2));
+        const response = await incidentsApi.get("/incidents");
+        console.log(
+          "🔍 Frontend: Incidents chargés depuis la base:",
+          response.data.length,
+        );
+        console.log(
+          "🔍 Frontend: Structure des incidents:",
+          JSON.stringify(response.data[0], null, 2),
+        );
 
         setIncidents(response.data);
         setFilteredIncidents(response.data);
-        console.log('✅ Frontend: Incidents sauvegardés dans le state local');
-        console.log('🔍 Frontend: Incidents avec assignation:', response.data.filter((i: any) => i.assignedTo));
+        console.log("✅ Frontend: Incidents sauvegardés dans le state local");
+        console.log(
+          "🔍 Frontend: Incidents avec assignation:",
+          response.data.filter((i: any) => i.assignedTo),
+        );
 
         // Debug: Afficher les champs d'assignation pour chaque incident
         response.data.forEach((incident: any, index: number) => {
@@ -273,18 +392,20 @@ export default function Incidents() {
             title: incident.title,
             assignedTo: incident.assignedTo,
             assignedUserRole: incident.assignedUserRole,
-            hasAssignment: !!(incident.assignedTo || incident.assignedUserRole)
+            hasAssignment: !!(incident.assignedTo || incident.assignedUserRole),
           });
         });
-
       } catch (error) {
-        console.error('❌ Frontend: Erreur lors du chargement des incidents:', error);
+        console.error(
+          "❌ Frontend: Erreur lors du chargement des incidents:",
+          error,
+        );
         if (error.response) {
-          console.error('❌ Frontend: Status:', error.response.status);
-          console.error('❌ Frontend: Data:', error.response.data);
+          console.error("❌ Frontend: Status:", error.response.status);
+          console.error("❌ Frontend: Data:", error.response.data);
         }
         // En cas d'erreur, utiliser les mock data
-        console.log('🔄 Frontend: Utilisation des mock data en fallback');
+        console.log("🔄 Frontend: Utilisation des mock data en fallback");
         setIncidents(mockIncidents);
         setFilteredIncidents(mockIncidents);
       }
@@ -295,7 +416,7 @@ export default function Incidents() {
 
   const handleAddIncident = async () => {
     if (!newIncident.type || !newIncident.description) {
-      toast.error('All fields are required');
+      toast.error("All fields are required");
       return;
     }
 
@@ -306,56 +427,71 @@ export default function Incidents() {
         type: newIncident.type, // Backend attend aussi 'type'
         description: newIncident.description,
         severity: newIncident.severity,
-        reportedBy: user?.cin || 'Unknown',
-        siteId: 'default-site',
+        reportedBy: user?.cin || "Unknown",
+        siteId: "default-site",
         assignedToCin: newIncident.assignedUserCin || null, // Utiliser le bon champ
-        assignedUserRole: newIncident.assignedUserRole !== 'all' ? newIncident.assignedUserRole : null
+        assignedUserRole:
+          newIncident.assignedUserRole !== "all"
+            ? newIncident.assignedUserRole
+            : null,
       };
 
-      console.log('🔍 Frontend: Envoi incident vers API:', incidentData);
+      console.log("🔍 Frontend: Envoi incident vers API:", incidentData);
 
       // Sauvegarder dans la base de données via l'API
-      const response = await incidentsApi.post('/incidents', incidentData);
-      console.log('✅ Frontend: Incident sauvegardé dans la base:', response.data);
+      const response = await incidentsApi.post("/incidents", incidentData);
+      console.log(
+        "✅ Frontend: Incident sauvegardé dans la base:",
+        response.data,
+      );
 
       // Ajouter l'incident au state local
       const incident = {
         id: response.data.id || String(incidents.length + 1),
         title: newIncident.incidentName || newIncident.type, // Utiliser le nom personnalisé ou le type
-        type: newIncident.type as 'safety' | 'quality' | 'delay' | 'other',
+        type: newIncident.type as "safety" | "quality" | "delay" | "other",
         description: newIncident.description,
-        severity: newIncident.severity as 'medium' | 'low' | 'high' | 'critical',
-        reportedBy: user?.cin || 'Unknown',
-        status: 'open' as 'open' | 'investigating' | 'resolved' | 'closed',
+        severity: newIncident.severity as
+          | "medium"
+          | "low"
+          | "high"
+          | "critical",
+        reportedBy: user?.cin || "Unknown",
+        status: "open" as "open" | "investigating" | "resolved" | "closed",
         createdAt: new Date().toISOString(),
-        siteId: 'default-site',
+        siteId: "default-site",
         assignedTo: newIncident.assignedUserCin || null, // Utiliser le bon champ
-        assignedUserRole: newIncident.assignedUserRole !== 'all' ? newIncident.assignedUserRole || null : null
+        assignedUserRole:
+          newIncident.assignedUserRole !== "all"
+            ? newIncident.assignedUserRole || null
+            : null,
       };
 
       // Mettre à jour les états dans le bon ordre
       setIncidents([incident, ...incidents]);
       setFilteredIncidents([incident, ...incidents]); // Mettre à jour filteredIncidents aussi
       setNewIncident({
-        type: '',
-        description: '',
-        severity: 'medium',
+        type: "",
+        description: "",
+        severity: "medium",
         image: null,
         pdfReport: null,
-        assignedUserCin: '',
-        assignedUserRole: 'all',
-        incidentName: ''
+        assignedUserCin: "",
+        assignedUserRole: "all",
+        incidentName: "",
       });
 
-      toast.success('Incident enregistré avec succès dans la base de données');
-
+      toast.success("Incident enregistré avec succès dans la base de données");
     } catch (error) {
-      console.error('❌ Frontend: Erreur lors de la sauvegarde de l\'incident:', error);
+      console.error(
+        "❌ Frontend: Erreur lors de la sauvegarde de l'incident:",
+        error,
+      );
       if (error.response) {
-        console.error('❌ Frontend: Status:', error.response.status);
-        console.error('❌ Frontend: Data:', error.response.data);
+        console.error("❌ Frontend: Status:", error.response.status);
+        console.error("❌ Frontend: Data:", error.response.data);
       }
-      toast.error('Erreur lors de l\'enregistrement de l\'incident');
+      toast.error("Erreur lors de l'enregistrement de l'incident");
     }
   };
 
@@ -363,13 +499,15 @@ export default function Incidents() {
     try {
       // Mettre à jour l'incident dans la base de données
       await incidentsApi.put(`/incidents/${id}`, {
-        status: 'resolved'
+        status: "resolved",
       });
 
       // Mettre à jour le state local
-      setIncidents(incidents.map(incident =>
-        incident.id === id ? { ...incident, status: 'resolved' } : incident
-      ));
+      setIncidents(
+        incidents.map((incident) =>
+          incident.id === id ? { ...incident, status: "resolved" } : incident,
+        ),
+      );
       trackAuditEvent({
         actionType: "update",
         actionLabel: "Resolved incident",
@@ -379,17 +517,22 @@ export default function Incidents() {
         status: "success",
       });
 
-      toast.success('Incident marqué comme résolu');
+      toast.success("Incident marqué comme résolu");
     } catch (error) {
-      console.error('❌ Frontend: Erreur lors de la résolution de l\'incident:', error);
-      toast.error('Erreur lors de la résolution de l\'incident');
+      console.error(
+        "❌ Frontend: Erreur lors de la résolution de l'incident:",
+        error,
+      );
+      toast.error("Erreur lors de la résolution de l'incident");
     }
   };
 
   const handleDeleteIncident = async (id: string) => {
     try {
       // Confirmation de suppression
-      const confirmed = window.confirm('Êtes-vous sûr de vouloir supprimer cet incident ? Cette action est irréversible.');
+      const confirmed = window.confirm(
+        "Êtes-vous sûr de vouloir supprimer cet incident ? Cette action est irréversible.",
+      );
       if (!confirmed) {
         return;
       }
@@ -398,8 +541,10 @@ export default function Incidents() {
       await incidentsApi.delete(`/incidents/${id}`);
 
       // Mettre à jour le state local
-      setIncidents(incidents.filter(incident => incident.id !== id));
-      setFilteredIncidents(filteredIncidents.filter(incident => incident.id !== id));
+      setIncidents(incidents.filter((incident) => incident.id !== id));
+      setFilteredIncidents(
+        filteredIncidents.filter((incident) => incident.id !== id),
+      );
       trackAuditEvent({
         actionType: "delete",
         actionLabel: "Deleted incident",
@@ -409,17 +554,20 @@ export default function Incidents() {
         status: "success",
       });
 
-      toast.success('Incident supprimé avec succès');
+      toast.success("Incident supprimé avec succès");
     } catch (error) {
-      console.error('❌ Frontend: Erreur lors de la suppression de l\'incident:', error);
-      toast.error('Erreur lors de la suppression de l\'incident');
+      console.error(
+        "❌ Frontend: Erreur lors de la suppression de l'incident:",
+        error,
+      );
+      toast.error("Erreur lors de la suppression de l'incident");
     }
   };
 
   // Fonction pour assigner un incident à un utilisateur
   const handleAssignIncident = async () => {
     if (!selectedIncident || !targetUserCin.trim()) {
-      toast.error('Veuillez spécifier le CIN de l\'utilisateur');
+      toast.error("Veuillez spécifier le CIN de l'utilisateur");
       return;
     }
 
@@ -433,7 +581,7 @@ export default function Incidents() {
       setFoundUser(user);
       toast.success(`Incident assigné à ${user.name} (${user.cin})`);
     } else {
-      toast.error('Utilisateur non trouvé pour ce CIN');
+      toast.error("Utilisateur non trouvé pour ce CIN");
     }
 
     setIsSearchingUser(false);
@@ -442,8 +590,8 @@ export default function Incidents() {
   // Fonction pour ouvrir la sélection d'utilisateur
   const openUserSelectDialog = () => {
     setShowUserSelectDialog(true);
-    setUserSearchTerm('');
-    setSelectedRole('all');
+    setUserSearchTerm("");
+    setSelectedRole("all");
   };
 
   // Fonction pour sélectionner un utilisateur pour l'incident
@@ -456,7 +604,7 @@ export default function Incidents() {
   // Fonction pour générer une description avec l'IA
   const generateDescriptionWithAI = async () => {
     if (!newIncident.type || !newIncident.severity) {
-      toast.error('Veuillez sélectionner le type et la gravité de l\'incident');
+      toast.error("Veuillez sélectionner le type et la gravité de l'incident");
       return;
     }
 
@@ -464,44 +612,54 @@ export default function Incidents() {
 
     try {
       // Simuler une génération IA (remplacer par un appel API réel)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const descriptions = {
         safety: {
           low: "Incident mineur de sécurité : situation contrôlée sans risque immédiat pour le personnel. Mesures préventives recommandées pour éviter récurrence.",
-          medium: "Incident de sécurité modéré : risque potentiel pour le personnel avec nécessité d'intervention immédiate. Évaluation des procédures de sécurité requise.",
+          medium:
+            "Incident de sécurité modéré : risque potentiel pour le personnel avec nécessité d'intervention immédiate. Évaluation des procédures de sécurité requise.",
           high: "Incident de sécurité majeur : risque élevé pour le personnel avec arrêt temporaire des activités. Investigation complète et plan d'action corrective urgent.",
-          critical: "Incident critique de sécurité : danger immédiat et grave pour le personnel. Évacuation et arrêt complet des activités en cours. Intervention d'urgence requise."
+          critical:
+            "Incident critique de sécurité : danger immédiat et grave pour le personnel. Évacuation et arrêt complet des activités en cours. Intervention d'urgence requise.",
         },
         quality: {
           low: "Non-conformité qualité mineure : écart acceptable dans les tolérances standards. Action corrective simple et rapide à mettre en œuvre.",
-          medium: "Non-conformité qualité modérée : impact sur les spécifications du produit. Analyse des causes et mise en place de mesures correctives.",
+          medium:
+            "Non-conformité qualité modérée : impact sur les spécifications du produit. Analyse des causes et mise en place de mesures correctives.",
           high: "Non-conformité qualité majeure : impact significatif sur la performance du produit. Arrêt de production et investigation complète requise.",
-          critical: "Non-conformité qualité critique : défaillance complète du produit. Rappel produit possible et révision complète du processus qualité."
+          critical:
+            "Non-conformité qualité critique : défaillance complète du produit. Rappel produit possible et révision complète du processus qualité.",
         },
         delay: {
           low: "Retard mineur : impact négligeable sur le planning. Rattrapage possible sans ressources supplémentaires.",
-          medium: "Retard modéré : impact sur le planning avec nécessité de réorganisation. Communication aux parties prenantes requise.",
+          medium:
+            "Retard modéré : impact sur le planning avec nécessité de réorganisation. Communication aux parties prenantes requise.",
           high: "Retard majeur : impact significatif sur le planning et budget. Plan de récupération urgent et réévaluation des délais.",
-          critical: "Retard critique : arrêt du projet avec impact contractuel. Négociation avec client et révision complète du planning."
+          critical:
+            "Retard critique : arrêt du projet avec impact contractuel. Négociation avec client et révision complète du planning.",
         },
         other: {
           low: "Incident mineur : situation gérable avec les ressources actuelles. Monitoring et documentation suffisants.",
-          medium: "Incident modéré : nécessite une attention particulière et des ressources additionnelles. Plan d'action à définir.",
+          medium:
+            "Incident modéré : nécessite une attention particulière et des ressources additionnelles. Plan d'action à définir.",
           high: "Incident majeur : impact significatif sur les opérations. Intervention immédiate et coordination d'équipe requise.",
-          critical: "Incident critique : urgence absolue avec impact sur plusieurs départements. Mobilisation de toutes les ressources nécessaires."
-        }
+          critical:
+            "Incident critique : urgence absolue avec impact sur plusieurs départements. Mobilisation de toutes les ressources nécessaires.",
+        },
       };
 
-      const generatedDescription = descriptions[newIncident.type as keyof typeof descriptions]?.[newIncident.severity as keyof typeof descriptions.safety] ||
+      const generatedDescription =
+        descriptions[newIncident.type as keyof typeof descriptions]?.[
+          newIncident.severity as keyof typeof descriptions.safety
+        ] ||
         "Description générée automatiquement pour cet incident. Veuillez compléter avec les détails spécifiques.";
 
       setNewIncident({ ...newIncident, description: generatedDescription });
-      toast.success('Description générée avec succès par l\'IA');
-
+      toast.success("Description générée avec succès par l'IA");
     } catch (error) {
-      console.error('Erreur lors de la génération IA:', error);
-      toast.error('Erreur lors de la génération de la description');
+      console.error("Erreur lors de la génération IA:", error);
+      toast.error("Erreur lors de la génération de la description");
     } finally {
       setIsGeneratingDescription(false);
     }
@@ -509,8 +667,8 @@ export default function Incidents() {
 
   // Fonction pour filtrer les utilisateurs par rôle
   const getUniqueRoles = () => {
-    const roles = allUsers.map(user => user.role?.name).filter(Boolean);
-    return ['all', ...Array.from(new Set(roles))];
+    const roles = allUsers.map((user) => user.role?.name).filter(Boolean);
+    return ["all", ...Array.from(new Set(roles))];
   };
 
   // Fonction pour exporter un incident en PDF
@@ -524,19 +682,19 @@ RAPPORT D'INCIDENT - SMARTSITE PLATFORM
 INFORMATIONS DE L'INCIDENT
 ---------------------------
 ID: ${incident.id}
-Type: ${incident.type?.toUpperCase() || 'N/A'}
-Gravité: ${incident.severity?.toUpperCase() || 'N/A'}
-Statut: ${incident.status?.toUpperCase() || 'N/A'}
-Date de création: ${new Date(incident.createdAt).toLocaleString('fr-FR')}
+Type: ${incident.type?.toUpperCase() || "N/A"}
+Gravité: ${incident.severity?.toUpperCase() || "N/A"}
+Statut: ${incident.status?.toUpperCase() || "N/A"}
+Date de création: ${new Date(incident.createdAt).toLocaleString("fr-FR")}
 
 DESCRIPTION
 -----------
-${incident.description || 'N/A'}
+${incident.description || "N/A"}
 
 INFORMATIONS DU RAPPORTEUR
 -------------------------
-Nom: ${incident.reportedBy || 'N/A'}
-Date du rapport: ${new Date().toLocaleString('fr-FR')}
+Nom: ${incident.reportedBy || "N/A"}
+Date du rapport: ${new Date().toLocaleString("fr-FR")}
 Généré par: SmartSite Platform
 
 ==========================================
@@ -546,17 +704,17 @@ Pour toute question, veuillez contacter l'administrateur système.
     `;
 
     // Créer un Blob et le télécharger
-    const blob = new Blob([pdfContent], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([pdfContent], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = url;
-    link.download = `incident_${incident.id}_${new Date().toISOString().split('T')[0]}.txt`;
+    link.download = `incident_${incident.id}_${new Date().toISOString().split("T")[0]}.txt`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    toast.success('Rapport d\'incident exporté avec succès !');
+    toast.success("Rapport d'incident exporté avec succès !");
   };
 
   // Fonction pour afficher les détails d'un incident
@@ -580,7 +738,7 @@ Pour toute question, veuillez contacter l'administrateur système.
       const response = await api.get(`/users/cin/${cin}`);
       return response.data;
     } catch (error) {
-      console.error('Erreur lors de la recherche utilisateur:', error);
+      console.error("Erreur lors de la recherche utilisateur:", error);
       return null;
     }
   };
@@ -589,8 +747,12 @@ Pour toute question, veuillez contacter l'administrateur système.
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Incident Management</h1>
-          <p className="text-gray-500 mt-1">Track and resolve safety and quality incidents</p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Incident Management
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Track and resolve safety and quality incidents
+          </p>
         </div>
         {canManageIncidents ? (
           <Dialog>
@@ -609,7 +771,12 @@ Pour toute question, veuillez contacter l'administrateur système.
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="incident-type">Incident Type</Label>
-                  <Select value={newIncident.type} onValueChange={(value) => setNewIncident({ ...newIncident, type: value })}>
+                  <Select
+                    value={newIncident.type}
+                    onValueChange={(value) =>
+                      setNewIncident({ ...newIncident, type: value })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="e.g., Safety Hazard, Quality Issue" />
                     </SelectTrigger>
@@ -622,10 +789,12 @@ Pour toute question, veuillez contacter l'administrateur système.
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="reportedByCin">Your CIN (non-modifiable)</Label>
+                  <Label htmlFor="reportedByCin">
+                    Your CIN (non-modifiable)
+                  </Label>
                   <Input
                     id="reportedByCin"
-                    value={user?.cin || ''}
+                    value={user?.cin || ""}
                     disabled
                     className="bg-gray-100"
                     placeholder="Your CIN will be automatically filled"
@@ -638,7 +807,12 @@ Pour toute question, veuillez contacter l'administrateur système.
                       id="description"
                       placeholder="Describe the incident in detail..."
                       value={newIncident.description}
-                      onChange={(e) => setNewIncident({ ...newIncident, description: e.target.value })}
+                      onChange={(e) =>
+                        setNewIncident({
+                          ...newIncident,
+                          description: e.target.value,
+                        })
+                      }
                       rows={3}
                     />
                     <div className="flex justify-end">
@@ -671,14 +845,24 @@ Pour toute question, veuillez contacter l'administrateur système.
                     id="incidentName"
                     placeholder="Donnez un nom à cet incident (optionnel)"
                     value={newIncident.incidentName}
-                    onChange={(e) => setNewIncident({ ...newIncident, incidentName: e.target.value })}
+                    onChange={(e) =>
+                      setNewIncident({
+                        ...newIncident,
+                        incidentName: e.target.value,
+                      })
+                    }
                     className="w-full"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="assignedUserCin">Assigner à un utilisateur (optionnel)</Label>
+                  <Label htmlFor="assignedUserCin">
+                    Assigner à un utilisateur (optionnel)
+                  </Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <Select value={assignRoleFilter} onValueChange={setAssignRoleFilter}>
+                    <Select
+                      value={assignRoleFilter}
+                      onValueChange={setAssignRoleFilter}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Filtrer par rôle" />
                       </SelectTrigger>
@@ -703,9 +887,11 @@ Pour toute question, veuillez contacter l'administrateur système.
                       setNewIncident({
                         ...newIncident,
                         assignedUserCin: value === "none" ? "" : value,
-                        assignedUserRole: value === "none"
-                          ? "all"
-                          : (assignableUsers.find((u) => u.cin === value)?.role?.name || "all"),
+                        assignedUserRole:
+                          value === "none"
+                            ? "all"
+                            : assignableUsers.find((u) => u.cin === value)?.role
+                                ?.name || "all",
                       })
                     }
                   >
@@ -716,7 +902,8 @@ Pour toute question, veuillez contacter l'administrateur système.
                       <SelectItem value="none">Non assigné</SelectItem>
                       {filteredAssignableUsers.map((u) => (
                         <SelectItem key={u._id} value={u.cin}>
-                          {(u.firstname || u.firstName || "")} {(u.lastname || u.lastName || "")} - CIN: {u.cin}
+                          {u.firstname || u.firstName || ""}{" "}
+                          {u.lastname || u.lastName || ""} - CIN: {u.cin}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -730,17 +917,24 @@ Pour toute question, veuillez contacter l'administrateur système.
                         ...newIncident,
                         assignedUserCin: e.target.value,
                         assignedUserRole:
-                          assignableUsers.find((u) => u.cin === e.target.value)?.role?.name || "all",
+                          assignableUsers.find((u) => u.cin === e.target.value)
+                            ?.role?.name || "all",
                       })
                     }
                   />
                   <p className="text-xs text-gray-500">
-                    Choisir depuis la base, filtrer par rôle, ou saisir directement le CIN.
+                    Choisir depuis la base, filtrer par rôle, ou saisir
+                    directement le CIN.
                   </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="severity">Severity</Label>
-                  <Select value={newIncident.severity} onValueChange={(value) => setNewIncident({ ...newIncident, severity: value })}>
+                  <Select
+                    value={newIncident.severity}
+                    onValueChange={(value) =>
+                      setNewIncident({ ...newIncident, severity: value })
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select severity" />
                     </SelectTrigger>
@@ -759,29 +953,45 @@ Pour toute question, veuillez contacter l'administrateur système.
                       id="image"
                       type="file"
                       accept="image/*"
-                      onChange={(e) => setNewIncident({ ...newIncident, image: e.target.files?.[0] || null })}
+                      onChange={(e) =>
+                        setNewIncident({
+                          ...newIncident,
+                          image: e.target.files?.[0] || null,
+                        })
+                      }
                       className="flex-1"
                     />
                     <Upload className="h-4 w-4 text-gray-400" />
                   </div>
                   {newIncident.image && (
-                    <p className="text-xs text-green-600">Image selected: {newIncident.image.name}</p>
+                    <p className="text-xs text-green-600">
+                      Image selected: {newIncident.image.name}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="pdfReport">Upload PDF Report (optional)</Label>
+                  <Label htmlFor="pdfReport">
+                    Upload PDF Report (optional)
+                  </Label>
                   <div className="flex items-center space-x-2">
                     <Input
                       id="pdfReport"
                       type="file"
                       accept=".pdf"
-                      onChange={(e) => setNewIncident({ ...newIncident, pdfReport: e.target.files?.[0] || null })}
+                      onChange={(e) =>
+                        setNewIncident({
+                          ...newIncident,
+                          pdfReport: e.target.files?.[0] || null,
+                        })
+                      }
                       className="flex-1"
                     />
                     <FileText className="h-4 w-4 text-gray-400" />
                   </div>
                   {newIncident.pdfReport && (
-                    <p className="text-xs text-green-600">PDF selected: {newIncident.pdfReport.name}</p>
+                    <p className="text-xs text-green-600">
+                      PDF selected: {newIncident.pdfReport.name}
+                    </p>
                   )}
                 </div>
                 <Button
@@ -823,30 +1033,57 @@ Pour toute question, veuillez contacter l'administrateur système.
           <div className="space-y-3">
             {currentIncidents.length === 0 ? (
               <p className="text-center py-8 text-gray-500">
-                {searchTerm ? 'Aucun incident trouvé pour cette recherche' : 'No incidents reported'}
+                {searchTerm
+                  ? "Aucun incident trouvé pour cette recherche"
+                  : "No incidents reported"}
               </p>
             ) : (
               currentIncidents.map((incident) => (
-                <div key={incident.id} className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => handleShowIncidentDetails(incident)}>
+                <div
+                  key={incident.id}
+                  className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => handleShowIncidentDetails(incident)}
+                >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{(incident as any).title?.toUpperCase() || (incident as any).incidentName?.toUpperCase() || incident.type.toUpperCase()}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{incident.description}</p>
+                      <h3 className="font-semibold text-gray-900">
+                        {(incident as any).title?.toUpperCase() ||
+                          (incident as any).incidentName?.toUpperCase() ||
+                          incident.type.toUpperCase()}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {incident.description}
+                      </p>
                       <div className="text-xs text-gray-400 mt-2 space-y-1">
                         <p>Reported by: {incident.reportedBy}</p>
                         <p>{new Date(incident.createdAt).toLocaleString()}</p>
                         {/* Debug: Afficher les champs d'assignation */}
-                        {process.env.NODE_ENV === 'development' && (
+                        {process.env.NODE_ENV === "development" && (
                           <div className="text-xs bg-yellow-50 p-1 rounded mt-1">
-                            <div>Debug assignedTo: "{(incident as any).assignedTo}"</div>
-                            <div>Debug assignedUserRole: "{(incident as any).assignedUserRole}"</div>
-                            <div>Debug hasAssignment: {!!((incident as any).assignedTo || (incident as any).assignedUserRole)}</div>
+                            <div>
+                              Debug assignedTo: "{(incident as any).assignedTo}"
+                            </div>
+                            <div>
+                              Debug assignedUserRole: "
+                              {(incident as any).assignedUserRole}"
+                            </div>
+                            <div>
+                              Debug hasAssignment:{" "}
+                              {
+                                !!(
+                                  (incident as any).assignedTo ||
+                                  (incident as any).assignedUserRole
+                                )
+                              }
+                            </div>
                           </div>
                         )}
                         {(incident as any).assignedTo && (
                           <div className="flex items-center gap-1 text-blue-600">
                             <User className="h-3 w-3" />
-                            <span>Assigné à: {(incident as any).assignedTo}</span>
+                            <span>
+                              Assigné à: {(incident as any).assignedTo}
+                            </span>
                             {(incident as any).assignedUserRole && (
                               <Badge variant="outline" className="text-xs ml-1">
                                 {(incident as any).assignedUserRole}
@@ -859,30 +1096,42 @@ Pour toute question, veuillez contacter l'administrateur système.
                     <div className="flex items-center gap-2 ml-4">
                       <Badge
                         variant={
-                          incident.severity === 'critical' || incident.severity === 'high' ? 'destructive' :
-                            incident.severity === 'medium' ? 'default' : 'secondary'
+                          incident.severity === "critical" ||
+                          incident.severity === "high"
+                            ? "destructive"
+                            : incident.severity === "medium"
+                              ? "default"
+                              : "secondary"
                         }
                       >
                         {incident.severity}
                       </Badge>
-                      <Badge variant={incident.status === 'resolved' || incident.status === 'closed' ? 'secondary' : 'destructive'}>
+                      <Badge
+                        variant={
+                          incident.status === "resolved" ||
+                          incident.status === "closed"
+                            ? "secondary"
+                            : "destructive"
+                        }
+                      >
                         {incident.status}
                       </Badge>
                     </div>
                   </div>
                   <div className="flex gap-2 mt-3">
-                    {incident.status !== 'resolved' && incident.status !== 'closed' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleResolveIncident(String(incident.id));
-                        }}
-                      >
-                        Mark as Resolved
-                      </Button>
-                    )}
+                    {incident.status !== "resolved" &&
+                      incident.status !== "closed" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleResolveIncident(String(incident.id));
+                          }}
+                        >
+                          Mark as Resolved
+                        </Button>
+                      )}
                     <Button
                       size="sm"
                       variant="outline"
@@ -962,8 +1211,12 @@ Pour toute question, veuillez contacter l'administrateur système.
             <div className="space-y-4">
               <div className="p-3 bg-gray-50 rounded-lg">
                 <h4 className="font-semibold text-sm">Incident Details</h4>
-                <p className="text-sm text-gray-600 mt-1">{selectedIncident.type}</p>
-                <p className="text-xs text-gray-500">{selectedIncident.description}</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  {selectedIncident.type}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {selectedIncident.description}
+                </p>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="targetUserCin">User CIN</Label>
@@ -998,12 +1251,15 @@ Pour toute question, veuillez contacter l'administrateur système.
               </div>
               <div className="flex justify-end gap-2">
                 <>
-                  <Button variant="outline" onClick={() => {
-                    setShowAssignDialog(false);
-                    setSelectedIncident(null);
-                    setTargetUserCin('');
-                    setFoundUser(null);
-                  }}>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowAssignDialog(false);
+                      setSelectedIncident(null);
+                      setTargetUserCin("");
+                      setFoundUser(null);
+                    }}
+                  >
                     Cancel
                   </Button>
                   <Button
@@ -1030,7 +1286,10 @@ Pour toute question, veuillez contacter l'administrateur système.
       </Dialog>
 
       {/* Dialogue de sélection d'utilisateur */}
-      <Dialog open={showUserSelectDialog} onOpenChange={setShowUserSelectDialog}>
+      <Dialog
+        open={showUserSelectDialog}
+        onOpenChange={setShowUserSelectDialog}
+      >
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Sélectionner un utilisateur</DialogTitle>
@@ -1060,9 +1319,9 @@ Pour toute question, veuillez contacter l'administrateur système.
                     <SelectValue placeholder="Tous les rôles" />
                   </SelectTrigger>
                   <SelectContent>
-                    {getUniqueRoles().map(role => (
+                    {getUniqueRoles().map((role) => (
                       <SelectItem key={role} value={role}>
-                        {role === 'all' ? 'Tous les rôles' : role}
+                        {role === "all" ? "Tous les rôles" : role}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1077,10 +1336,13 @@ Pour toute question, veuillez contacter l'administrateur système.
                     <UserCheck className="h-4 w-4 text-green-600" />
                     <div>
                       <p className="text-sm font-medium text-green-800">
-                        Utilisateur sélectionné: {selectedUserForIncident.firstname} {selectedUserForIncident.lastname}
+                        Utilisateur sélectionné:{" "}
+                        {selectedUserForIncident.firstname}{" "}
+                        {selectedUserForIncident.lastname}
                       </p>
                       <p className="text-xs text-green-600">
-                        CIN: {selectedUserForIncident.cin} | Email: {selectedUserForIncident.email}
+                        CIN: {selectedUserForIncident.cin} | Email:{" "}
+                        {selectedUserForIncident.email}
                       </p>
                     </div>
                   </div>
@@ -1088,7 +1350,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                     size="sm"
                     onClick={() => {
                       setSelectedUserForIncident(null);
-                      toast.info('Sélection annulée');
+                      toast.info("Sélection annulée");
                     }}
                   >
                     Annuler
@@ -1099,11 +1361,12 @@ Pour toute question, veuillez contacter l'administrateur système.
 
             <div className="space-y-2 max-h-96 overflow-y-auto">
               <div className="text-xs text-gray-500 mb-2">
-                Total utilisateurs: {allUsers.length} | Filtrés: {filteredUsers.length}
+                Total utilisateurs: {allUsers.length} | Filtrés:{" "}
+                {filteredUsers.length}
               </div>
 
               {/* Debug info */}
-              {process.env.NODE_ENV === 'development' && (
+              {process.env.NODE_ENV === "development" && (
                 <div className="text-xs bg-yellow-50 p-2 rounded mb-2">
                   <div>Debug Info:</div>
                   <div>allUsers.length: {allUsers.length}</div>
@@ -1111,29 +1374,36 @@ Pour toute question, veuillez contacter l'administrateur système.
                   <div>userSearchTerm: "{userSearchTerm}"</div>
                   <div>selectedRole: "{selectedRole}"</div>
                   <div>user?.cin: "{user?.cin}"</div>
-                  <div>localStorage token: {!!localStorage.getItem('access_token') ? 'true' : 'false'}</div>
+                  <div>
+                    localStorage token:{" "}
+                    {!!localStorage.getItem("access_token") ? "true" : "false"}
+                  </div>
                 </div>
               )}
 
               {/* Bouton de debug pour forcer le rechargement */}
-              {process.env.NODE_ENV === 'development' && allUsers.length === 0 && (
-                <button
-                  onClick={async () => {
-                    console.log('🔄 Debug: Forcing reload...');
-                    try {
-                      console.log('🔄 Debug: Appel direct API...');
-                      const response = await api.get('/users');
-                      console.log('🔄 Debug: Réponse directe:', response.data.length);
-                      setAllUsers(response.data);
-                    } catch (error) {
-                      console.error('🔄 Debug: Erreur directe:', error);
-                    }
-                  }}
-                  className="w-full p-2 bg-red-500 text-white rounded mb-2"
-                >
-                  Forcer Reload (Debug)
-                </button>
-              )}
+              {process.env.NODE_ENV === "development" &&
+                allUsers.length === 0 && (
+                  <button
+                    onClick={async () => {
+                      console.log("🔄 Debug: Forcing reload...");
+                      try {
+                        console.log("🔄 Debug: Appel direct API...");
+                        const response = await api.get("/users");
+                        console.log(
+                          "🔄 Debug: Réponse directe:",
+                          response.data.length,
+                        );
+                        setAllUsers(response.data);
+                      } catch (error) {
+                        console.error("🔄 Debug: Erreur directe:", error);
+                      }
+                    }}
+                    className="w-full p-2 bg-red-500 text-white rounded mb-2"
+                  >
+                    Forcer Reload (Debug)
+                  </button>
+                )}
 
               {allUsers.length === 0 ? (
                 <p className="text-center py-8 text-gray-500">
@@ -1141,9 +1411,9 @@ Pour toute question, veuillez contacter l'administrateur système.
                 </p>
               ) : filteredUsers.length === 0 ? (
                 <p className="text-center py-8 text-gray-500">
-                  {userSearchTerm || selectedRole !== 'all'
-                    ? 'Aucun utilisateur trouvé pour ces critères'
-                    : 'Aucun utilisateur disponible'}
+                  {userSearchTerm || selectedRole !== "all"
+                    ? "Aucun utilisateur trouvé pour ces critères"
+                    : "Aucun utilisateur disponible"}
                 </p>
               ) : (
                 <>
@@ -1171,7 +1441,13 @@ Pour toute question, veuillez contacter l'administrateur système.
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Badge variant={user.status === 'approved' ? 'default' : 'secondary'}>
+                          <Badge
+                            variant={
+                              user.status === "approved"
+                                ? "default"
+                                : "secondary"
+                            }
+                          >
                             {user.status}
                           </Badge>
                           {user.role && (
@@ -1188,17 +1464,24 @@ Pour toute question, veuillez contacter l'administrateur système.
             </div>
 
             <div className="flex justify-end gap-2 pt-4 border-t">
-              <Button variant="outline" onClick={() => setShowUserSelectDialog(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setShowUserSelectDialog(false)}
+              >
                 Fermer
               </Button>
               {selectedUserForIncident && (
-                <Button onClick={() => {
-                  if (selectedIncident) {
-                    toast.success(`Incident assigné à ${selectedUserForIncident.firstname} ${selectedUserForIncident.lastname}`);
-                    setShowUserSelectDialog(false);
-                    setSelectedUserForIncident(null);
-                  }
-                }}>
+                <Button
+                  onClick={() => {
+                    if (selectedIncident) {
+                      toast.success(
+                        `Incident assigné à ${selectedUserForIncident.firstname} ${selectedUserForIncident.lastname}`,
+                      );
+                      setShowUserSelectDialog(false);
+                      setSelectedUserForIncident(null);
+                    }
+                  }}
+                >
                   <Send className="h-3 w-3 mr-1" />
                   Confirmer l'assignation
                 </Button>
@@ -1209,7 +1492,10 @@ Pour toute question, veuillez contacter l'administrateur système.
       </Dialog>
 
       {/* Modal de détails d'incident */}
-      <Dialog open={showIncidentDetailsDialog} onOpenChange={setShowIncidentDetailsDialog}>
+      <Dialog
+        open={showIncidentDetailsDialog}
+        onOpenChange={setShowIncidentDetailsDialog}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -1226,7 +1512,11 @@ Pour toute question, veuillez contacter l'administrateur système.
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {(selectedIncidentDetails as any).title?.toUpperCase() || (selectedIncidentDetails as any).incidentName?.toUpperCase() || selectedIncidentDetails.type.toUpperCase()}
+                    {(selectedIncidentDetails as any).title?.toUpperCase() ||
+                      (
+                        selectedIncidentDetails as any
+                      ).incidentName?.toUpperCase() ||
+                      selectedIncidentDetails.type.toUpperCase()}
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
                     ID: {selectedIncidentDetails.id}
@@ -1235,15 +1525,24 @@ Pour toute question, veuillez contacter l'administrateur système.
                 <div className="flex items-center gap-2">
                   <Badge
                     variant={
-                      selectedIncidentDetails.severity === 'critical' || selectedIncidentDetails.severity === 'high' ? 'destructive' :
-                        selectedIncidentDetails.severity === 'medium' ? 'default' : 'secondary'
+                      selectedIncidentDetails.severity === "critical" ||
+                      selectedIncidentDetails.severity === "high"
+                        ? "destructive"
+                        : selectedIncidentDetails.severity === "medium"
+                          ? "default"
+                          : "secondary"
                     }
                     className="text-sm"
                   >
                     {selectedIncidentDetails.severity.toUpperCase()}
                   </Badge>
                   <Badge
-                    variant={selectedIncidentDetails.status === 'resolved' || selectedIncidentDetails.status === 'closed' ? 'secondary' : 'destructive'}
+                    variant={
+                      selectedIncidentDetails.status === "resolved" ||
+                      selectedIncidentDetails.status === "closed"
+                        ? "secondary"
+                        : "destructive"
+                    }
                     className="text-sm"
                   >
                     {selectedIncidentDetails.status.toUpperCase()}
@@ -1255,37 +1554,63 @@ Pour toute question, veuillez contacter l'administrateur système.
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-3">
                   <div>
-                    <Label className="text-sm font-medium text-gray-700">Type d'incident</Label>
-                    <p className="text-sm text-gray-900">{selectedIncidentDetails.type.toUpperCase()}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Signalé par</Label>
-                    <p className="text-sm text-gray-900">{selectedIncidentDetails.reportedBy}</p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Date de création</Label>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Type d'incident
+                    </Label>
                     <p className="text-sm text-gray-900">
-                      {new Date(selectedIncidentDetails.createdAt).toLocaleString('fr-FR')}
+                      {selectedIncidentDetails.type.toUpperCase()}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-700">Dernière mise à jour</Label>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Signalé par
+                    </Label>
                     <p className="text-sm text-gray-900">
-                      {selectedIncidentDetails.updatedAt ? new Date(selectedIncidentDetails.updatedAt).toLocaleString('fr-FR') : 'N/A'}
+                      {selectedIncidentDetails.reportedBy}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Date de création
+                    </Label>
+                    <p className="text-sm text-gray-900">
+                      {new Date(
+                        selectedIncidentDetails.createdAt,
+                      ).toLocaleString("fr-FR")}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Dernière mise à jour
+                    </Label>
+                    <p className="text-sm text-gray-900">
+                      {selectedIncidentDetails.updatedAt
+                        ? new Date(
+                            selectedIncidentDetails.updatedAt,
+                          ).toLocaleString("fr-FR")
+                        : "N/A"}
                     </p>
                   </div>
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <Label className="text-sm font-medium text-gray-700">Site</Label>
-                    <p className="text-sm text-gray-900">{(selectedIncidentDetails as any).siteId || 'N/A'}</p>
+                    <Label className="text-sm font-medium text-gray-700">
+                      Site
+                    </Label>
+                    <p className="text-sm text-gray-900">
+                      {(selectedIncidentDetails as any).siteId || "N/A"}
+                    </p>
                   </div>
                   {(selectedIncidentDetails as any).assignedTo && (
                     <div>
-                      <Label className="text-sm font-medium text-gray-700">Assigné à</Label>
+                      <Label className="text-sm font-medium text-gray-700">
+                        Assigné à
+                      </Label>
                       <div className="flex items-center gap-2 mt-1">
                         <User className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm text-gray-900">{(selectedIncidentDetails as any).assignedTo}</span>
+                        <span className="text-sm text-gray-900">
+                          {(selectedIncidentDetails as any).assignedTo}
+                        </span>
                         {(selectedIncidentDetails as any).assignedUserRole && (
                           <Badge variant="outline" className="text-xs">
                             {(selectedIncidentDetails as any).assignedUserRole}
@@ -1299,26 +1624,32 @@ Pour toute question, veuillez contacter l'administrateur système.
 
               {/* Description */}
               <div>
-                <Label className="text-sm font-medium text-gray-700">Description</Label>
+                <Label className="text-sm font-medium text-gray-700">
+                  Description
+                </Label>
                 <div className="mt-1 p-3 bg-gray-50 rounded-md">
                   <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                    {selectedIncidentDetails.description || 'Aucune description fournie'}
+                    {selectedIncidentDetails.description ||
+                      "Aucune description fournie"}
                   </p>
                 </div>
               </div>
 
               {/* Actions */}
               <div className="flex justify-end gap-2 pt-4 border-t">
-                {selectedIncidentDetails.status !== 'resolved' && selectedIncidentDetails.status !== 'closed' && (
-                  <Button
-                    onClick={() => {
-                      handleResolveIncident(String(selectedIncidentDetails.id));
-                      setShowIncidentDetailsDialog(false);
-                    }}
-                  >
-                    Marquer comme résolu
-                  </Button>
-                )}
+                {selectedIncidentDetails.status !== "resolved" &&
+                  selectedIncidentDetails.status !== "closed" && (
+                    <Button
+                      onClick={() => {
+                        handleResolveIncident(
+                          String(selectedIncidentDetails.id),
+                        );
+                        setShowIncidentDetailsDialog(false);
+                      }}
+                    >
+                      Marquer comme résolu
+                    </Button>
+                  )}
                 <Button
                   variant="outline"
                   onClick={() => handleExportPDF(selectedIncidentDetails)}

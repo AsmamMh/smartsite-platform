@@ -75,6 +75,9 @@ export interface User {
   preferredLanguage?: string;
   projectsCount?: number;
   companyName?: string;
+  preferredLanguage?: string;
+  projectsCount?: number;
+  companyName?: string;
   createdDate: string;
   lastLoginDate?: string;
   avatar?: string;
@@ -136,6 +139,8 @@ export interface AuthState {
     access_token: string;
     id: string;
     cin: string;
+    firstName: string;
+    lastName: string;
     firstName: string;
     lastName: string;
     role: UserRole;

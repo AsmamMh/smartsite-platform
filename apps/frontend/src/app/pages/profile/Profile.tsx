@@ -103,8 +103,38 @@ export default function Profile() {
       newPassword: "",
       confirmPassword: "",
     },
+
+  const passwordForm = useForm<PasswordFormData>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
   });
 
+  // Load user data
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    setIsLoadingData(true);
+    try {
+      console.log("Fetching current user data...");
+      const userData = (await getCurrentUser(authUser)).data;
+      console.log("User data fetched:", userData);
+      if (userData) {
+        setUser(userData);
+        console.log("Current user data:", userData);
+      }
+    } catch (error: any) {
+      console.error("Error loading user:", error);
+      toast.error("Erreur lors du chargement du profil");
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
   // Load user data
   useEffect(() => {
     loadUserData();
@@ -130,8 +160,32 @@ export default function Profile() {
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
+  const getInitials = (firstName: string, lastName: string) => {
+    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
   };
 
+  const handleSaveProfile = async (data: ProfileFormData) => {
+    setIsLoading(true);
+    try {
+      if (updateProfile) {
+        const result = await updateProfile(data);
+        if (result && !result.error) {
+          toast.success("Profil mis à jour avec succès!");
+          setUser({ ...user, ...data });
+          setIsEditing(false);
+        } else {
+          toast.error(result.error || "Erreur lors de la mise à jour");
+        }
+      }
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      toast.error(
+        error?.response?.data?.message ||
+          "Erreur lors de la mise à jour du profil",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   const handleSaveProfile = async (data: ProfileFormData) => {
     setIsLoading(true);
     try {
@@ -203,10 +257,34 @@ export default function Profile() {
       </div>
     );
   }
+  };
+
+  if (isLoadingData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-gray-500">
+          Impossible de charger les données du profil
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto p-6">
+    <div className="space-y-6 max-w-5xl mx-auto p-6">
       <div>
+        <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
+        <p className="text-gray-500 mt-1">
+          Gérez vos informations personnelles
+        </p>
         <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
         <p className="text-gray-500 mt-1">
           Gérez vos informations personnelles
@@ -214,7 +292,45 @@ export default function Profile() {
       </div>
 
       {/* Profile Card */}
+      {/* Profile Card */}
       <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Informations Personnelles</CardTitle>
+          {!isEditing ? (
+            <Button
+              onClick={() => setIsEditing(true)}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              Modifier
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => {
+                  setIsEditing(false);
+                  profileForm.reset();
+                }}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <X className="h-4 w-4" />
+                Annuler
+              </Button>
+              <Button
+                onClick={profileForm.handleSubmit(handleSaveProfile)}
+                disabled={isLoading}
+                size="sm"
+                className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+              >
+                <Save className="h-4 w-4" />
+                {isLoading ? "Enregistrement..." : "Enregistrer"}
+              </Button>
+            </div>
+          )}
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Informations Personnelles</CardTitle>
           {!isEditing ? (
@@ -258,6 +374,8 @@ export default function Profile() {
             <Avatar className="h-24 w-24">
               <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-2xl">
                 {getInitials(user.firstName, user.lastName)}
+              <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-2xl">
+                {getInitials(user.firstName, user.lastName)}
               </AvatarFallback>
             </Avatar>
 
@@ -271,7 +389,25 @@ export default function Profile() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
+
+            {!isEditing ? (
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {user.firstName} {user.lastName}
+                  </h2>
+                  <p className="text-gray-500">CIN: {user.cin}</p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
                   <div className="flex items-center gap-3 text-gray-600">
+                    <Mail className="h-5 w-5 text-indigo-600" />
+                    <div>
+                      <p className="text-xs text-gray-500">Email</p>
+                      <p className="font-medium">
+                        {user.email || "Non renseigné"}
+                      </p>
+                    </div>
                     <Mail className="h-5 w-5 text-indigo-600" />
                     <div>
                       <p className="text-xs text-gray-500">Email</p>
@@ -295,6 +431,14 @@ export default function Profile() {
                       <div>
                         <p className="text-xs text-gray-500">Adresse</p>
                         <p className="font-medium">{user.address}</p>
+                    </div>
+                  )}
+                  {user.address && (
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <MapPin className="h-5 w-5 text-indigo-600" />
+                      <div>
+                        <p className="text-xs text-gray-500">Adresse</p>
+                        <p className="font-medium">{user.address}</p>
                       </div>
                     </div>
                   )}
@@ -304,7 +448,22 @@ export default function Profile() {
                       <div>
                         <p className="text-xs text-gray-500">Département</p>
                         <p className="font-medium">{user.departement}</p>
+                  )}
+                  {user.departement && (
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <Shield className="h-5 w-5 text-indigo-600" />
+                      <div>
+                        <p className="text-xs text-gray-500">Département</p>
+                        <p className="font-medium">{user.departement}</p>
                       </div>
+                    </div>
+                  )}
+                  {user.companyName && (
+                    <div className="flex items-center gap-3 text-gray-600">
+                      <Building className="h-5 w-5 text-indigo-600" />
+                      <div>
+                        <p className="text-xs text-gray-500">Entreprise</p>
+                        <p className="font-medium">{user.companyName}</p>
                     </div>
                   )}
                   {user.companyName && (
@@ -344,6 +503,37 @@ export default function Profile() {
                         </Badge>
                       ))}
                     </div>
+                  )}
+                  <div className="flex items-center gap-3 text-gray-600">
+                    <Calendar className="h-5 w-5 text-indigo-600" />
+                    <div>
+                      <p className="text-xs text-gray-500">Inscrit le</p>
+                      <p className="font-medium">
+                        {user.createdAt
+                          ? new Date(user.createdAt).toLocaleDateString("fr-FR")
+                          : "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {user.certifications && user.certifications.length > 0 && (
+                  <div className="pt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Award className="h-5 w-5 text-indigo-600" />
+                      <p className="text-sm font-medium text-gray-700">
+                        Certifications
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {user.certifications.map((cert: string, idx: number) => (
+                        <Badge key={idx} variant="secondary">
+                          {cert}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
                   </div>
                 )}
               </div>
@@ -584,10 +774,134 @@ export default function Profile() {
 
       {/* Account Status */}
       <Card>
+      {/* Password Change Card */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Sécurité</CardTitle>
+          {!isEditingPassword && (
+            <Button
+              onClick={() => setIsEditingPassword(true)}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
+              <Edit className="h-4 w-4" />
+              Changer le mot de passe
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {isEditingPassword ? (
+            <form
+              onSubmit={passwordForm.handleSubmit(handleChangePassword)}
+              className="space-y-4 max-w-md"
+            >
+              <FieldGroup>
+                <Controller
+                  name="currentPassword"
+                  control={passwordForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="currentPassword">
+                        Mot de passe actuel
+                      </FieldLabel>
+                      <Input {...field} id="currentPassword" type="password" />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+
+              <FieldGroup>
+                <Controller
+                  name="newPassword"
+                  control={passwordForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="newPassword">
+                        Nouveau mot de passe
+                      </FieldLabel>
+                      <Input {...field} id="newPassword" type="password" />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+
+              <FieldGroup>
+                <Controller
+                  name="confirmPassword"
+                  control={passwordForm.control}
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <FieldLabel htmlFor="confirmPassword">
+                        Confirmer le mot de passe
+                      </FieldLabel>
+                      <Input {...field} id="confirmPassword" type="password" />
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              </FieldGroup>
+
+              <div className="flex gap-2 pt-4">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setIsEditingPassword(false);
+                    passwordForm.reset();
+                  }}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Annuler
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <Save className="h-4 w-4" />
+                  {isLoading ? "Enregistrement..." : "Changer le mot de passe"}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <p className="text-gray-600">
+              Cliquez sur "Changer le mot de passe" pour mettre à jour votre mot
+              de passe.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Account Status */}
+      <Card>
         <CardHeader>
+          <CardTitle>Statut du Compte</CardTitle>
           <CardTitle>Statut du Compte</CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="p-4 border rounded-lg">
+              <p className="text-sm text-gray-500 mb-1">Statut</p>
+              <Badge
+                variant={user.status === "approved" ? "secondary" : "default"}
+                className="text-sm"
+              >
+                {user.status === "approved"
+                  ? "Approuvé"
+                  : user.status === "pending"
+                    ? "En attente"
+                    : "Actif"}
+              </Badge>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="p-4 border rounded-lg">
               <p className="text-sm text-gray-500 mb-1">Statut</p>
@@ -609,8 +923,23 @@ export default function Profile() {
                 className="text-sm"
               >
                 {user.emailVerified ? "Oui" : "Non"}
+            <div className="p-4 border rounded-lg">
+              <p className="text-sm text-gray-500 mb-1">Email vérifié</p>
+              <Badge
+                variant={user.emailVerified ? "secondary" : "destructive"}
+                className="text-sm"
+              >
+                {user.emailVerified ? "Oui" : "Non"}
               </Badge>
             </div>
+            <div className="p-4 border rounded-lg">
+              <p className="text-sm text-gray-500 mb-1">Compte actif</p>
+              <Badge
+                variant={user.isActif ? "secondary" : "destructive"}
+                className="text-sm"
+              >
+                {user.isActif ? "Oui" : "Non"}
+              </Badge>
             <div className="p-4 border rounded-lg">
               <p className="text-sm text-gray-500 mb-1">Compte actif</p>
               <Badge
@@ -622,6 +951,7 @@ export default function Profile() {
             </div>
           </div>
         </CardContent>
+      </Card>
       </Card>
     </div>
   );

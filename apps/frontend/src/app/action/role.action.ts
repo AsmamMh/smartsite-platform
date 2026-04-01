@@ -3,9 +3,8 @@ import axios from "axios";
 const API_URL = "https://smartsite-platform-auth.vercel.app/roles";
 
 export const getAllRoles = async () => {
-  
-    const {data} = await axios.get(`${API_URL}`);
-    return data;
+  const { data } = await axios.get(`${API_URL}`);
+  return data;
 };
 
 export const getRoleById = async (id: string) => {
@@ -26,10 +25,14 @@ export const getRoleById = async (id: string) => {
 export const createRole = async (
   name: string,
   description?: string,
-  permissions?: string[]
+  permissions?: string[],
 ) => {
   try {
-    const res = await axios.post(`${API_URL}`, {name, description, permissions});
+    const res = await axios.post(`${API_URL}`, {
+      name,
+      description,
+      permissions,
+    });
     if (res.status === 201) {
       return Promise.resolve({ status: res.status, data: res.data });
     }
@@ -46,10 +49,14 @@ export const updateRole = async (
   id: string,
   name?: string,
   description?: string,
-  permissions?: string[]
+  permissions?: string[],
 ) => {
   try {
-    const res = await axios.put(`${API_URL}/${id}`, {name, description, permissions});
+    const res = await axios.put(`${API_URL}/${id}`, {
+      name,
+      description,
+      permissions,
+    });
     if (res.status === 200) {
       return Promise.resolve({ status: res.status, data: res.data });
     }
@@ -79,11 +86,11 @@ export const deleteRole = async (id: string) => {
 
 export const assignPermissionToRole = async (
   roleId: string,
-  permissionId: string
+  permissionId: string,
 ) => {
   try {
     const res = await axios.post(
-      `${API_URL}/${roleId}/permissions/${permissionId}`
+      `${API_URL}/${roleId}/permissions/${permissionId}`,
     );
     if (res.status === 200) {
       return Promise.resolve({ status: res.status, data: res.data });
@@ -99,11 +106,11 @@ export const assignPermissionToRole = async (
 
 export const removePermissionFromRole = async (
   roleId: string,
-  permissionId: string
+  permissionId: string,
 ) => {
   try {
     const res = await axios.delete(
-      `${API_URL}/${roleId}/permissions/${permissionId}`
+      `${API_URL}/${roleId}/permissions/${permissionId}`,
     );
     if (res.status === 200) {
       return Promise.resolve({ status: res.status, data: res.data });

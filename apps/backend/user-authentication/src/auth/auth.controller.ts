@@ -7,6 +7,15 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UnauthorizedException,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -17,7 +26,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private auditLogsService: AuditLogsService,
-  ) { }
+  ) {}
 
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Request() req: any) {
@@ -68,12 +77,12 @@ export class AuthController {
     );
     const durationSec = loginLog
       ? Math.max(
-        0,
-        Math.floor(
-          (Date.now() - new Date((loginLog as any).createdAt).getTime()) /
-          1000,
-        ),
-      )
+          0,
+          Math.floor(
+            (Date.now() - new Date((loginLog as any).createdAt).getTime()) /
+              1000,
+          ),
+        )
       : undefined;
     await this.auditLogsService.createLog({
       userId,
@@ -98,6 +107,8 @@ export class AuthController {
       password,
       firstName,
       lastName,
+      firstName,
+      lastName,
       role,
       email,
 
@@ -108,6 +119,8 @@ export class AuthController {
     const user = await this.authService.register(
       cin,
       password,
+      firstName,
+      lastName,
       firstName,
       lastName,
       role,
@@ -125,12 +138,15 @@ export class AuthController {
         cin: user.cin,
         firstName: user.firstName,
         lastName: user.lastName,
+        firstName: user.firstName,
+        lastName: user.lastName,
         email: user.email,
 
         telephone: user.telephone,
 
         address: user.address,
         role: user.role,
+        companyName: user.companyName,
         companyName: user.companyName,
       },
     };

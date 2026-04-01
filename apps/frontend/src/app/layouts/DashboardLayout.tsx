@@ -71,8 +71,8 @@ export default function DashboardLayout() {
   const navigationItems = getNavigationForRole(userRole.name);
   const unreadNotifications = 0; // Placeholder - will be implemented with real notifications
 
-  const getInitials = (nom: string, lastname: string) => {
-    return `${nom.charAt(0)}${lastname.charAt(0)}`.toUpperCase();
+  const getInitials = (nom: string, lastName: string) => {
+    return `${nom.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
   return (
@@ -135,10 +135,12 @@ export default function DashboardLayout() {
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-gradient-to-br from-blue-600 to-green-600 text-white">
                       {getInitials(user.firstName || "", user.lastName || "")}
+                      {getInitials(user.firstName || "", user.lastName || "")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden md:flex flex-col items-start">
                     <span className="text-sm font-semibold">
+                      {user.firstName} {user.lastName}
                       {user.firstName} {user.lastName}
                     </span>
                     <span className="text-xs text-gray-500">
@@ -152,6 +154,7 @@ export default function DashboardLayout() {
                 <DropdownMenuLabel>
                   <div className="flex flex-col">
                     <span>
+                      {user.firstName} {user.lastName}
                       {user.firstName} {user.lastName}
                     </span>
                     <span className="text-xs font-normal text-gray-500">
@@ -198,10 +201,11 @@ export default function DashboardLayout() {
                   onClick={() => setSidebarOpen(false)}
                   className={`
                         flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-                        ${isActive
-                      ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-md"
-                      : "text-gray-700 hover:bg-gray-100"
-                    }
+                        ${
+                          isActive
+                            ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-md"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }
                       `}
                 >
                   <span className="font-medium">{item.label}</span>

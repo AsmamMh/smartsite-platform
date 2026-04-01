@@ -136,8 +136,8 @@ export default function Register() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       cin: "",
-      firstname: "",
-      lastname: "",
+      firstName: "",
+      lastName: "",
       email: "",
       telephone: "",
       phoneCountryCode: "+216",
@@ -221,6 +221,10 @@ export default function Register() {
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-6"
                 >
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FieldGroup>
                       <Controller
@@ -269,7 +273,7 @@ export default function Register() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FieldGroup>
                       <Controller
-                        name="firstname"
+                        name="firstName"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
@@ -278,7 +282,7 @@ export default function Register() {
                             </FieldLabel>
                             <Input
                               {...field}
-                              id="firstname"
+                              id="firstName"
                               placeholder="Entrez votre prénom"
                               aria-invalid={fieldState.invalid}
                             />
@@ -292,14 +296,14 @@ export default function Register() {
 
                     <FieldGroup>
                       <Controller
-                        name="lastname"
+                        name="lastName"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="lastname">Nom *</FieldLabel>
+                            <FieldLabel htmlFor="lastName">Nom *</FieldLabel>
                             <Input
                               {...field}
-                              id="lastname"
+                              id="lastName"
                               placeholder="Entrez votre nom"
                               aria-invalid={fieldState.invalid}
                             />
@@ -470,7 +474,7 @@ export default function Register() {
 
                   <FieldGroup>
                     <Controller
-                      name="role"
+                      name="address"
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
@@ -643,6 +647,7 @@ export default function Register() {
                   <Button
                     type="submit"
                     disabled={isLoading}
+                    className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                     className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
                     {isLoading ? (

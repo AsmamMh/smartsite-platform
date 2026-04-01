@@ -16,6 +16,7 @@ import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { ArrowLeft, Mail } from "lucide-react";
+import { AUTH_API_URL } from "@/lib/auth-api-url";
 
 const formSchema = z.object({
   email: z.string().email("Email invalide"),
@@ -35,20 +36,11 @@ export default function ForgotPassword() {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      const response = await axios.post(
-        "https://smartsite-platform-auth.vercel.app/auth/forgot-password",
-        {
-          email: data.email,
+      await axios.post(`${AUTH_API_URL}/auth/forgot-password`, {
+        email: data.email,
+      });
 
-        },
-      );
-      
-
-        
-
-
-      
-    toast.success("Code de réinitialisation envoyé à votre email!");
+      toast.success("Code de réinitialisation envoyé à votre email!");
       navigate("/reset-password", { state: { email: data.email } });
     } catch (error: any) {
       const message =
@@ -81,10 +73,9 @@ export default function ForgotPassword() {
               Réinitialiser votre mot de passe
             </h2>
             <p className="mt-2 text-sm leading-6 text-gray-500">
-
               Entrez votre adresse email et nous vous enverrons un code de
               réinitialisation.
-     </p>
+            </p>
           </div>
 
           <div className="mt-10">
@@ -120,11 +111,9 @@ export default function ForgotPassword() {
                 disabled={isLoading}
                 className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white"
               >
-
                 {isLoading
                   ? "Envoi en cours..."
                   : "Envoyer le code de réinitialisation"}
-
               </Button>
             </form>
           </div>

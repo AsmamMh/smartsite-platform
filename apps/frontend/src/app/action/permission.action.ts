@@ -4,11 +4,9 @@ import { useAuthStore } from "../store/authStore";
 const API_URL = "https://smartsite-platform-auth.vercel.app/permissions";
 
 export const getAllPermissions = async () => {
-  
-    const {data} = await axios.get(`${API_URL}`);
-    
+  const { data } = await axios.get(`${API_URL}`);
+
   return data;
-  
 };
 
 export const getPermissionById = async (id: string) => {

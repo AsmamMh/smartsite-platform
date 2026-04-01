@@ -3,9 +3,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
+import { RolesService } from '../roles/roles.service';
 import { RolesService } from '../roles/roles.service';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
@@ -20,14 +26,24 @@ export class AuthService {
     private rolesService: RolesService,
   ) { }
 
+  // ✅ FIXED VALIDATE USER
   async validateUser(cin: string, password: string): Promise<any> {
     if (!cin || !password) {
       return null;
     }
-    console.log('validate1', cin, '  ', password);
+
+    console.log('🔍 validateUser:', cin);
+
     const user = await this.usersService.findByCin(cin);
-    console.log('before finding user', user);
+
     if (!user) {
+      console.log('❌ User not found');
+      return null;
+    }
+
+    // ✅ option sécurité (recommandé)
+    if (user.status && user.status !== 'approved') {
+      console.log('❌ User not approved');
       return null;
     }
 
@@ -53,14 +69,20 @@ export class AuthService {
     return null;
   }
 
+    // ✅ remove password safely
+    const userObj = user.toObject ? user.toObject() : user;
+    const { password: _removed, ...result } = userObj;
+
+    return result;
+  }
+
+  // ✅ LOGIN
   async login(user: any) {
-    console.log('Login user:', user);
     const payload = {
       cin: user.cin,
       sub: user._id,
-      roles: user.roles || [],
+      roles: user.role ? [user.role] : [],
     };
-    console.log('JWT Payload:', payload);
 
     const userData = user.toObject ? user.toObject() : user;
 
@@ -71,14 +93,19 @@ export class AuthService {
       cin: userData.cin,
       lastName: userData.lastName,
       firstName: userData.firstName,
+      lastName: userData.lastName,
+      firstName: userData.firstName,
       role: userData.role || null,
       session_id: sessionId,
     };
   }
 
+  // ✅ REGISTER (corrigé avec hash sûr)
   async register(
     cin: string,
     password: string,
+    firstName: string,
+    lastName: string,
     firstName: string,
     lastName: string,
     role: string,
@@ -143,8 +170,6 @@ export class AuthService {
       emailVerificationOtp: otp,
       otpExpiresAt: otpExpiresAt,
     };
-
-    console.log('🔍 DEBUG userData à créer:', userData);
 
     const result = await this.usersService.create(userData);
     console.log('🔍 DEBUG utilisateur créé:', result);
@@ -260,24 +285,92 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    if (user.status !== 'pending') {
-      throw new BadRequestException('User is not in pending status');
+    // Hash the password if provided
+    let hashedPassword = user.password;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
     const updatedUser = await this.usersService.update(userId, {
       password: hashedPassword,
       status: 'approved',
       approvedBy: adminId,
       approvedAt: new Date(),
+      password: hashedPassword,
     });
 
-    console.log('🔍 DEBUG: Vérification email pour utilisateur approuvé...');
-    console.log('🔍 DEBUG: updatedUser:', updatedUser);
-    console.log('🔍 DEBUG: updatedUser.email:', updatedUser?.email);
+    return updatedUser;
+  }
 
-    if (updatedUser && updatedUser.email) {
-      console.log('📧 ENVOI EMAIL: Envoi en cours à', updatedUser.email);
+  // ✅ VERIFY OTP
+  async verifyOTP(cin: string, otp: string) {
+    const user = await this.usersService.findByCin(cin);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.emailVerificationOtp !== otp) {
+      throw new BadRequestException('Invalid OTP');
+    }
+
+    if (user.otpExpiresAt && new Date() > user.otpExpiresAt) {
+      throw new BadRequestException('OTP has expired');
+    }
+
+    // Update user as verified
+    await this.usersService.update(user._id.toString(), {
+      emailVerified: true,
+      emailVerificationOtp: undefined,
+      otpExpiresAt: undefined,
+      status: 'approved',
+    });
+
+    return { message: 'Email verified successfully' };
+  }
+
+  // ✅ RESEND OTP
+  async resendOTP(cin: string) {
+    const user = await this.usersService.findByCin(cin);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await this.usersService.update(user._id.toString(), {
+      emailVerificationOtp: otp,
+      otpExpiresAt,
+    });
+
+    if (user.email) {
+      try {
+        await this.emailService.sendOTPEmail(user.email, user.firstName, otp);
+      } catch (e) {
+        console.error('❌ OTP email failed:', e);
+      }
+    }
+
+    return { message: 'OTP sent successfully' };
+  }
+
+  // ✅ FORGOT PASSWORD
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      // Don't reveal if user exists
+      return { message: 'If the email exists, a reset code will be sent' };
+    }
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const resetCodeExpiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    await this.usersService.update(user._id.toString(), {
+      passwordResetCode: resetCode,
+      passwordResetCodeExpiresAt: resetCodeExpiresAt,
+    });
+
+    if (user.email) {
       try {
         await this.emailService.sendApprovalEmail(
           updatedUser.email,

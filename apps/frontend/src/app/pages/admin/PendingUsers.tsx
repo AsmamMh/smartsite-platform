@@ -1,9 +1,25 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "../../store/authStore";
 import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../components/ui/select";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
@@ -13,8 +29,9 @@ import type { User } from "../../types";
 
 // Fonction pour générer un mot de passe aléatoire
 function generateRandomPassword(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-  let password = '';
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+  let password = "";
   for (let i = 0; i < 12; i++) {
     password += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -72,7 +89,7 @@ export default function PendingUsers() {
     if (roleFilter === "all") {
       setFilteredUsers(users);
     } else {
-      setFilteredUsers(users.filter(u => u.role?.name === roleFilter));
+      setFilteredUsers(users.filter((u) => u.role?.name === roleFilter));
     }
     // Réinitialiser à la page 1 lors du filtrage
     setCurrentPage(1);
@@ -94,7 +111,7 @@ export default function PendingUsers() {
     try {
       // Générer un mot de passe automatiquement
       const autoPassword = generateRandomPassword();
-      console.log('🔑 Mot de passe généré:', autoPassword);
+      console.log("🔑 Mot de passe généré:", autoPassword);
 
       await approveUser(id, autoPassword);
       toast.success("User approved! Email sent with auto-generated password.");
@@ -129,11 +146,11 @@ export default function PendingUsers() {
 
   // Fonctions de pagination
   const goToPreviousPage = () => {
-    setCurrentPage(prev => Math.max(prev - 1, 1));
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
   };
 
   const goToNextPage = () => {
-    setCurrentPage(prev => Math.min(prev + 1, totalPages));
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
   };
 
   const goToPage = (pageNumber: number) => {
@@ -146,35 +163,39 @@ export default function PendingUsers() {
   };
 
   // Obtenir la liste des roles uniques pour le filtre
-  const uniqueRoles = Array.from(new Set(users.map(u => u.role?.name).filter(Boolean)));
+  const uniqueRoles = Array.from(
+    new Set(users.map((u) => u.role?.name).filter(Boolean)),
+  );
 
   // Fonction pour obtenir le label du rôle
   const getRoleLabel = (role: any) => {
     if (!role) return "Rôle non défini";
-    if (typeof role === 'object' && role.name) {
+    if (typeof role === "object" && role.name) {
       return roleLabels[role.name] || "Rôle non défini";
     }
-    if (typeof role === 'string') {
+    if (typeof role === "string") {
       return roleLabels[role] || "Rôle non défini";
     }
     // Si c'est un document contenant _id, essayer de mapper l'id du rôle
-    if (typeof role === 'object' && role._id) {
+    if (typeof role === "object" && role._id) {
       const roleMap: { [key: string]: string } = {
-        '699e1c79ccc723bcf4a61cad': 'super_admin',
-        '699e1c79ccc723bcf4a61cae': 'director',
-        '699e1c79ccc723bcf4a61caf': 'project_manager',
-        '699e1c79ccc723bcf4a61cb0': 'site_manager',
-        '699e1c79ccc723bcf4a61cb1': 'works_manager',
-        '699e1c79ccc723bcf4a61cb2': 'accountant',
-        '699e1c79ccc723bcf4a61cb3': 'procurement_manager',
-        '699e1c79ccc723bcf4a61cb4': 'qhse_manager',
-        '699e1c79ccc723bcf4a61cb5': 'client',
-        '699e1c79ccc723bcf4a61cb6': 'subcontractor',
-        '699e1c79ccc723bcf4a61cb7': 'user',
+        "699e1c79ccc723bcf4a61cad": "super_admin",
+        "699e1c79ccc723bcf4a61cae": "director",
+        "699e1c79ccc723bcf4a61caf": "project_manager",
+        "699e1c79ccc723bcf4a61cb0": "site_manager",
+        "699e1c79ccc723bcf4a61cb1": "works_manager",
+        "699e1c79ccc723bcf4a61cb2": "accountant",
+        "699e1c79ccc723bcf4a61cb3": "procurement_manager",
+        "699e1c79ccc723bcf4a61cb4": "qhse_manager",
+        "699e1c79ccc723bcf4a61cb5": "client",
+        "699e1c79ccc723bcf4a61cb6": "subcontractor",
+        "699e1c79ccc723bcf4a61cb7": "user",
       };
 
       const roleId = String(role._id);
-      return roleMap[roleId] ? (roleLabels as any)[roleMap[roleId]] || roleMap[roleId] : "Rôle non défini";
+      return roleMap[roleId]
+        ? (roleLabels as any)[roleMap[roleId]] || roleMap[roleId]
+        : "Rôle non défini";
     }
 
     return roleLabels[role] || "Rôle non défini";
@@ -204,7 +225,7 @@ Le motif doit être:
 
       // Appeler une API de génération de texte (simulé pour l'instant)
       // Dans un vrai cas, vous appelleriez une API comme OpenAI, Claude, etc.
-      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulation de chargement
+      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulation de chargement
 
       const generatedReason = `Après examen de votre demande d'inscription en tant que ${getRoleLabel(selectedUser.role?.name) || "candidat"}, nous regrettons de vous informer que votre profil ne correspond pas actuellement aux critères requis pour ce rôle. Nous vous encourageons à consulter nos exigences et à soumettre une nouvelle candidature lorsque vous aurez complété les qualifications nécessaires. Pour améliorer votre profil, nous vous suggérons de fournir plus d'informations sur vos expériences professionnelles et de mettre à jour vos compétences.`;
 
@@ -234,7 +255,7 @@ Le motif doit être:
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les roles</SelectItem>
-                {uniqueRoles.map(role => (
+                {uniqueRoles.map((role) => (
                   <SelectItem key={role} value={role}>
                     {getRoleLabel(role)}
                   </SelectItem>
@@ -247,21 +268,21 @@ Le motif doit être:
             <div className="text-sm text-gray-500">Chargement...</div>
           ) : filteredUsers.length === 0 ? (
             <div className="text-sm text-gray-500">
-              {users.length === 0 ? "Aucun utilisateur en attente" : "Aucun utilisateur trouvé pour ce filtre"}
+              {users.length === 0
+                ? "Aucun utilisateur en attente"
+                : "Aucun utilisateur trouvé pour ce filtre"}
             </div>
           ) : (
             <div className="space-y-3">
               {currentUsers.map((u) => (
                 <div
                   key={u._id}
-                  className="flex items-center justify-between p-3 border rounded-md cursor-pointer hover:bg-gray-50"
-                  onClick={() => {
-                    setSelectedUser(u);
-                    setDetailsOpen(true);
-                  }}
+                  className="flex items-center justify-between p-3 border rounded-md"
                 >
                   <div>
                     <div className="font-semibold">
+                      {(u as any).firstName || (u as any).firstName}{" "}
+                      {(u as any).lastName || (u as any).lastName}
                       {(u as any).firstName || (u as any).firstName}{" "}
                       {(u as any).lastName || (u as any).lastName}
                     </div>
@@ -276,7 +297,7 @@ Le motif doit être:
                       </div>
                       <div>
                         <span className="font-medium">Téléphone:</span>{" "}
-                        {(u as any).telephone || (u as any).phone || "N/A"}
+                        {(u as any).phoneNumber || (u as any).phone || "N/A"}
                       </div>
                       <div>
                         <span className="font-medium">Adresse:</span>{" "}
@@ -299,10 +320,7 @@ Le motif doit être:
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleApprove(u._id);
-                      }}
+                      onClick={() => handleApprove(u._id)}
                       disabled={actionLoading !== null}
                     >
                       {actionLoading === u._id ? "..." : "Approuver"}
@@ -327,37 +345,74 @@ Le motif doit être:
       </Card>
 
       {/* Détails utilisateur en attente */}
-      <Dialog open={detailsOpen} onOpenChange={(open) => {
-        setDetailsOpen(open);
-        if (!open) setSelectedUser(null);
-      }}>
+      <Dialog
+        open={detailsOpen}
+        onOpenChange={(open) => {
+          setDetailsOpen(open);
+          if (!open) setSelectedUser(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Détails de l'utilisateur en attente</DialogTitle>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-2 text-sm">
-              <p><span className="font-semibold">Nom complet :</span> {(selectedUser as any).firstname || (selectedUser as any).firstName} {(selectedUser as any).lastname || (selectedUser as any).lastName}</p>
-              <p><span className="font-semibold">CIN :</span> {(selectedUser as any).cin || "N/A"}</p>
-              <p><span className="font-semibold">Email :</span> {selectedUser.email || "N/A"}</p>
-              <p><span className="font-semibold">Téléphone :</span> {(selectedUser as any).telephone || (selectedUser as any).phone || "N/A"}</p>
-              <p><span className="font-semibold">Adresse :</span> {(selectedUser as any).address || (selectedUser as any).adresse || "N/A"}</p>
-              <p><span className="font-semibold">Rôle :</span> {getRoleLabel(selectedUser.role) || "Rôle non défini"}</p>
-              <p><span className="font-semibold">Statut :</span> {(selectedUser as any).status || "pending"}</p>
-              <p><span className="font-semibold">Créé le :</span> {getUserCreatedAtLabel(selectedUser)}</p>
+              <p>
+                <span className="font-semibold">Nom complet :</span>{" "}
+                {(selectedUser as any).firstname ||
+                  (selectedUser as any).firstName}{" "}
+                {(selectedUser as any).lastname ||
+                  (selectedUser as any).lastName}
+              </p>
+              <p>
+                <span className="font-semibold">CIN :</span>{" "}
+                {(selectedUser as any).cin || "N/A"}
+              </p>
+              <p>
+                <span className="font-semibold">Email :</span>{" "}
+                {selectedUser.email || "N/A"}
+              </p>
+              <p>
+                <span className="font-semibold">Téléphone :</span>{" "}
+                {(selectedUser as any).telephone ||
+                  (selectedUser as any).phone ||
+                  "N/A"}
+              </p>
+              <p>
+                <span className="font-semibold">Adresse :</span>{" "}
+                {(selectedUser as any).address ||
+                  (selectedUser as any).adresse ||
+                  "N/A"}
+              </p>
+              <p>
+                <span className="font-semibold">Rôle :</span>{" "}
+                {getRoleLabel(selectedUser.role) || "Rôle non défini"}
+              </p>
+              <p>
+                <span className="font-semibold">Statut :</span>{" "}
+                {(selectedUser as any).status || "pending"}
+              </p>
+              <p>
+                <span className="font-semibold">Créé le :</span>{" "}
+                {getUserCreatedAtLabel(selectedUser)}
+              </p>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
       {/* Dialogue de rejet */}
-      <Dialog open={rejectDialogOpen} onOpenChange={(open) => {
-        setRejectDialogOpen(open);
-        if (!open) {
-          setRejectReason("");
-          setSelectedUser(null);
-        }
-      }}>
+      <Dialog
+        open={rejectDialogOpen}
+        onOpenChange={(open) => {
+          setRejectDialogOpen(open);
+          if (!open) {
+            setRejectReason("");
+            setSelectedUser(null);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Rejeter l'utilisateur</DialogTitle>
@@ -365,9 +420,21 @@ Le motif doit être:
           {selectedUser && (
             <div className="space-y-4">
               <div className="text-sm">
-                <p><span className="font-semibold">Utilisateur :</span> {(selectedUser as any).firstname || (selectedUser as any).firstName} {(selectedUser as any).lastname || (selectedUser as any).lastName}</p>
-                <p><span className="font-semibold">Email :</span> {selectedUser.email || "N/A"}</p>
-                <p><span className="font-semibold">CIN :</span> {(selectedUser as any).cin || "N/A"}</p>
+                <p>
+                  <span className="font-semibold">Utilisateur :</span>{" "}
+                  {(selectedUser as any).firstname ||
+                    (selectedUser as any).firstName}{" "}
+                  {(selectedUser as any).lastname ||
+                    (selectedUser as any).lastName}
+                </p>
+                <p>
+                  <span className="font-semibold">Email :</span>{" "}
+                  {selectedUser.email || "N/A"}
+                </p>
+                <p>
+                  <span className="font-semibold">CIN :</span>{" "}
+                  {(selectedUser as any).cin || "N/A"}
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -387,9 +454,7 @@ Le motif doit être:
                         Génération...
                       </>
                     ) : (
-                      <>
-                        ✨ Générer avec IA
-                      </>
+                      <>✨ Générer avec IA</>
                     )}
                   </Button>
                 </div>
@@ -415,7 +480,9 @@ Le motif doit être:
                   onClick={() => selectedUser && handleReject(selectedUser._id)}
                   disabled={actionLoading !== null || !rejectReason.trim()}
                 >
-                  {actionLoading === selectedUser._id ? "Rejet en cours..." : "Rejeter et envoyer email"}
+                  {actionLoading === selectedUser._id
+                    ? "Rejet en cours..."
+                    : "Rejeter et envoyer email"}
                 </Button>
               </div>
             </div>
@@ -436,17 +503,19 @@ Le motif doit être:
           </Button>
 
           <div className="flex gap-1">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-              <Button
-                key={pageNum}
-                variant={currentPage === pageNum ? "default" : "outline"}
-                size="sm"
-                onClick={() => goToPage(pageNum)}
-                className="w-8 h-8 p-0"
-              >
-                {pageNum}
-              </Button>
-            ))}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+              (pageNum) => (
+                <Button
+                  key={pageNum}
+                  variant={currentPage === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => goToPage(pageNum)}
+                  className="w-8 h-8 p-0"
+                >
+                  {pageNum}
+                </Button>
+              ),
+            )}
           </div>
 
           <Button

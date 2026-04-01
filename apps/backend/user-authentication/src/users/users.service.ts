@@ -4,6 +4,12 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from './entities/user.entity';
@@ -18,7 +24,7 @@ export class UsersService {
     @InjectModel(User.name) private userModel: Model<User>,
     private emailService: EmailService,
     private rolesService: RolesService,
-  ) { }
+  ) {}
 
   async create(createUserDto: any) {
     console.log(' DEBUG: createUserDto:', createUserDto);
@@ -60,7 +66,6 @@ export class UsersService {
 
       const result = await createdUser.save();
       console.log(' DEBUG: Utilisateur créé:', result);
-      console.log(' DEBUG: Utilisateur sauvegardé avec ID:', result._id);
       return result;
     } catch (error: any) {
       console.error('❌ ERREUR SAVE:', error.message);
@@ -82,13 +87,8 @@ export class UsersService {
       .sort({ name: 1 })
       .exec();
 
-    if (!user) {
-      return { error: 'User not found' };
-    }
-
-    if (!user.role) {
-      return { error: 'Role not found' };
-    }
+    if (!user) return { error: 'User not found' };
+    if (!user.role) return { error: 'Role not found' };
 
     const role = user.role as any;
     console.log(
@@ -122,6 +122,10 @@ export class UsersService {
       console.error('❌ Erreur dans findByCin:', error);
       throw error;
     }
+  }
+
+  async findByEmail(email: string) {
+    return this.userModel.findOne({ email }).populate('role').exec();
   }
 
   async findById(id: string) {
@@ -175,6 +179,12 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: any) {
+    // ⚠️ hash si password modifié
+    if (updateUserDto.password) {
+      const salt = await bcrypt.genSalt(10);
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, salt);
+    }
+
     return this.userModel
       .findByIdAndUpdate(id, updateUserDto, { new: true })
       .exec();
@@ -184,10 +194,17 @@ export class UsersService {
     return this.userModel.findByIdAndDelete(id).exec();
   }
 
+  // Update password directly (used for password migration)
+  async updatePassword(id: string, newPassword: string) {
+    return this.userModel
+      .findByIdAndUpdate(id, { password: newPassword }, { new: true })
+      .exec();
+  }
+
   async handleBan(id: string) {
     const bannedUser = await this.userModel.findById(id).exec();
     if (!bannedUser) {
-      throw new NotFoundException(`Usser with id ${id} not exist`);
+      throw new NotFoundException(`User with id ${id} not exist`);
     }
     bannedUser.isActif = !bannedUser.isActif;
 

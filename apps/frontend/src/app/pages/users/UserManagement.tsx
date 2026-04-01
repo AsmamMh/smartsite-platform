@@ -167,6 +167,7 @@ export default function UserManagement() {
   const handleBanUser = async (userId: string, isActif: boolean) => {
     try {
       const response = await banUser(userId, isActif);
+      const response = await banUser(userId, isActif);
       if (response.status === 200) {
         toast.success(
           isActif ? "User unbanned successfully" : "User banned successfully",
