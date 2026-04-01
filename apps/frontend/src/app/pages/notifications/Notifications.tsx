@@ -6,6 +6,7 @@ import {
   X,
   CircleIcon,
 } from "lucide-react";
+import { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -23,13 +24,21 @@ import {
 
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { getCurrentUser } from "@/app/action/auth.action";
 import {
   deleteNotificationById,
   getMyNotifications,
+  getTeamNotifications,
   getUnreadNotifications,
+  getTeamUnreadNotifications,
+  getTeamUnreadNotificationCount,
+  getUnreadNotificationCount,
 } from "@/app/action/notification.action";
+import { useAuthStore } from "@/app/store/authStore";
 
 export default function Notifications() {
+  const authUser = useAuthStore((state) => state.user);
+
   const getIcon = (type: string) => {
     switch (type) {
       case "critical":
@@ -42,6 +51,34 @@ export default function Notifications() {
         return <Info className="h-5 w-5 text-blue-600" />;
     }
   };
+
+  const { data: currentUser } = useQuery({
+    queryKey: ["currentUser", authUser?.access_token],
+    queryFn: () => getCurrentUser(authUser),
+    enabled: Boolean(authUser?.access_token),
+  });
+  console.log("current user data in notifications page", currentUser);
+  const normalizedTeamId = useMemo(() => {
+    const assignedTeam = currentUser?.data?.assignedTeam;
+
+    if (!Array.isArray(assignedTeam) || assignedTeam.length === 0) {
+      return "";
+    }
+
+    const firstTeam = assignedTeam[0];
+
+    if (typeof firstTeam === "string") {
+      return firstTeam.trim();
+    }
+
+    if (firstTeam && typeof firstTeam === "object") {
+      return String(firstTeam._id ?? firstTeam.id ?? "").trim();
+    }
+
+    return "";
+  }, [currentUser]);
+
+  const hasTeamFilter = normalizedTeamId.length > 0;
 
   const getBackgroundColor = (type: string) => {
     switch (type) {
@@ -56,26 +93,9 @@ export default function Notifications() {
     }
   };
 
-  const getCircleVAriant = (type: string) => {
-    switch (type) {
-      case "critical":
-        return "bg-red-50 border-red-200";
-      case "warning":
-        return "bg-orange-50 border-orange-200";
-      case "success":
-        return "bg-green-50 border-green-200";
-      default:
-        return "bg-blue-50 border-blue-200";
-    }
-  };
   const handleMarkAllAsRead = () => {
     //console.log(res, "ressssssssssssssssssssssss");
     toast.success("All notifications marked as read");
-  };
-
-  const handleClearAll = () => {
-    //setNotifications([]);
-    toast.success("All notifications cleared");
   };
 
  
@@ -87,7 +107,7 @@ export default function Notifications() {
 
   const { data: UnreadNotifCount } = useQuery({
     queryKey: ["unreadNotificationsLength"],
-    queryFn: () => UnreadNotifCount(),
+    queryFn: () => getUnreadNotificationCount(),
   });
 
   const { data: unreadNotifs } = useQuery({
@@ -95,15 +115,31 @@ export default function Notifications() {
     queryFn: () => getUnreadNotifications(),
   });
 
+  const { data: teamNotifications } = useQuery({
+    queryKey: ["teamNotifications", normalizedTeamId],
+    queryFn: () => getTeamNotifications(normalizedTeamId),
+    enabled: hasTeamFilter,
+  });
+
+  const { data: teamUnreadCount } = useQuery({
+    queryKey: ["teamUnreadNotificationCount", normalizedTeamId],
+    queryFn: () => getTeamUnreadNotificationCount(normalizedTeamId),
+    enabled: hasTeamFilter,
+  });
+
   console.log("unread notif", unreadNotifs);
-   const handleDeleteNotification = async (id: string) => {
-    const res= await deleteNotificationById(id);
-    if(res.status === 200){
+  const handleDeleteNotification = async (id: string) => {
+    const res = await deleteNotificationById(id);
+    if (res.status === 200) {
       refetch();
-       toast.success("Notification removed");
+      toast.success("Notification removed");
     }
-   
   };
+
+  const teamAllNotifications = useMemo(
+    () => teamNotifications ?? [],
+    [teamNotifications],
+  );
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -132,16 +168,42 @@ export default function Notifications() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
+            Team Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {hasTeamFilter ? (
+            <div className="rounded-lg border bg-gray-50 p-4 text-sm text-gray-700">
+              <div className="font-medium">Your team id: {normalizedTeamId}</div>
+              <div className="mt-1">
+                Team unread count: {teamUnreadCount ?? 0}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-lg border bg-yellow-50 p-4 text-sm text-yellow-800">
+              No team assigned to the current user yet.
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
             Notification Center
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="unread" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="unread">
                 Unread ({UnreadNotifCount})
               </TabsTrigger>
               <TabsTrigger value="all">All Notifications</TabsTrigger>
+              <TabsTrigger value="team" disabled={!hasTeamFilter}>
+                Team {hasTeamFilter ? `(${teamAllNotifications.length})` : ""}
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="unread" className="space-y-3 mt-4">
@@ -296,6 +358,59 @@ export default function Notifications() {
                     </Button>
                   </div>
                 ))}
+            </TabsContent>
+
+            <TabsContent value="team" className="space-y-3 mt-4">
+              {!hasTeamFilter ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p>Enter a team id to load team notifications</p>
+                </div>
+              ) : teamAllNotifications.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Bell className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                  <p>No team notifications found</p>
+                </div>
+              ) : (
+                teamAllNotifications.map((notification) => (
+                  <div
+                    key={notification._id ?? notification.id}
+                    className={`flex items-start gap-4 p-4 border rounded-lg ${getBackgroundColor(notification.type)}`}
+                  >
+                    <div className="flex-shrink-0 mt-1">
+                      {getIcon(notification.type)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900">
+                            {notification.title}
+                          </h3>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-2">
+                            {new Date(notification.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={
+                            notification.type === "critical"
+                              ? "destructive"
+                              : notification.type === "warning"
+                                ? "destructive"
+                                : notification.type === "success"
+                                  ? "secondary"
+                                  : "default"
+                          }
+                        >
+                          {notification.type}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

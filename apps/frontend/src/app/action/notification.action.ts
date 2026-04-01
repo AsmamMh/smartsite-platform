@@ -1,50 +1,63 @@
-import { AuthState } from './../types/index';
-import { NotificationApi } from "@/lib/api-client"
+import { AuthState } from "./../types/index";
+import { NotificationApi } from "@/lib/api-client";
 import axios from "axios";
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from "../store/authStore";
 
+export const getMyNotifications = async () => {
+  const { data } = await NotificationApi.get("/mynotifications");
+  return data;
+};
 
+export const getTeamNotifications = async (teamId: string) => {
+  const { data } = await NotificationApi.get(`/team/${teamId}`);
+  return data || ([] as Notification[]);
+};
 
-export const getMyNotifications= async ()=>{
-    const {data} = await NotificationApi.get('/mynotifications')
-    return data;
-}
+export const getUnreadNotifications = async () => {
+  const token = useAuthStore.getState().user.access_token;
+  const { data } = await axios.get(
+    "http://localhost:3004/notification/unread",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  console.log("data unread================================", data);
+  return data || ([] as Notification[]);
+};
 
-export const getUnreadNotifications= async ()=>{
-    const token = useAuthStore.getState().user.access_token;
-    const {data} = await axios.get('http://localhost:3004/notification/unread',{
-        headers: {
-            Authorization: `Bearer ${token}`,
-        }
-    })
+export const getReadNotifications = async () => {
+  const { data } = await NotificationApi.get("/read");
+  return data || ([] as Notification[]);
+};
 
-    console.log("data unread================================",data);
-    return data || [] as Notification[];
-}
+export const getTeamUnreadNotifications = async (teamId: string) => {
+  const { data } = await NotificationApi.get(`/team/${teamId}/unread`);
+  return data || ([] as Notification[]);
+};
 
-export const getReadNotifications= async ()=>{
-    const {data} = await NotificationApi.get('/read')
-    return data || [] as Notification[];
-}
+export const getUnreadNotificationCount = async () => {
+  const { data } = await NotificationApi.get("/unread-count");
+  return data;
+};
 
-export const getUnreadNotificationCount= async ()=>{
-    const {data} = await NotificationApi.get('/unread-count')
-    return data;
-}
+export const getTeamUnreadNotificationCount = async (teamId: string) => {
+  const { data } = await NotificationApi.get(`/team/${teamId}/unread-count`);
+  return data;
+};
 
-export const deleteNotificationById =
-    async (id: string) => {
-        try {
-            const res = await NotificationApi.delete(`/${id}`);
-            if (res.status === 200) {
-                return Promise.resolve({ status: res.status, data: res.data });
-            }
-        }
-        catch (error: any) {
-            console.error("Delete notification error:", error?.response?.data?.message);
-            return Promise.resolve({
-                status: error?.response?.status,
-                data: error?.response?.data?.message,
-            });
-        }
-    };
+export const deleteNotificationById = async (id: string) => {
+  try {
+    const res = await NotificationApi.delete(`/${id}`);
+    if (res.status === 200) {
+      return Promise.resolve({ status: res.status, data: res.data });
+    }
+  } catch (error: any) {
+    console.error("Delete notification error:", error?.response?.data?.message);
+    return Promise.resolve({
+      status: error?.response?.status,
+      data: error?.response?.data?.message,
+    });
+  }
+};

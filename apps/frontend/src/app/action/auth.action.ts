@@ -1,4 +1,5 @@
 import axios from "axios";
+import { userApi } from "@/lib/api-client";
 export const LoginAction = async (cin: string, password: string) => {
   try {
     const res = await axios.post(`${process.env.LOGIN_API_URL}/login`, {
@@ -27,7 +28,7 @@ export const LoginAction = async (cin: string, password: string) => {
 
 export const getCurrentUser = async (authUser: any) => {
   try {
-    const res = await axios.get("https://smartsite-platform-auth.vercel.app/users/me", {
+    const res = await axios.get("http://localhost:3010/users/me", {
       headers: {
         Authorization: `Bearer ${authUser?.access_token}`,
       },

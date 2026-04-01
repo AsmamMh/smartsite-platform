@@ -13,8 +13,16 @@ export class NotificationService {
     return await this.notifModel.find().exec();
   }
 
+  async getNotificationsByRecipientId(recipientId: string) {
+    return await this.notifModel.find({ recipentId: recipientId }).exec();
+  }
+
   async getNotiFicationByUserId(userId: string) {
-    return await this.notifModel.find({ recipentId: userId }).exec();
+    return await this.getNotificationsByRecipientId(userId);
+  }
+
+  async getNotificationsByTeamId(teamId: string) {
+    return await this.getNotificationsByRecipientId(teamId);
   }
 
   async createNotification(notification: Partial<Notification>) {
@@ -38,15 +46,33 @@ export class NotificationService {
       .exec();
   }
 
+  async getUnreadNotificationsByTeamId(teamId: string) {
+    return await this.notifModel
+      .find({ recipentId: teamId, isRead: false })
+      .exec();
+  }
+
   async getReadNotificationsByUserId(userId: string) {
     return await this.notifModel
       .find({ recipentId: userId, isRead: true })
       .exec();
   }
 
+  async getReadNotificationsByTeamId(teamId: string) {
+    return await this.notifModel
+      .find({ recipentId: teamId, isRead: true })
+      .exec();
+  }
+
   async getUnreadNotificationLengthByserId(userId: string) {
     return await this.notifModel
       .countDocuments({ recipentId: userId, isRead: false })
+      .exec();
+  }
+
+  async getUnreadNotificationLengthByTeamId(teamId: string) {
+    return await this.notifModel
+      .countDocuments({ recipentId: teamId, isRead: false })
       .exec();
   }
 }

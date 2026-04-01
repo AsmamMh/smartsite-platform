@@ -32,6 +32,11 @@ export class NotificationController {
     return await this.notificationService.getNotiFicationByUserId(userId);
   }
 
+  @Get('team/:teamId')
+  async getNotificationsByTeamId(@Param('teamId') teamId: string) {
+    return await this.notificationService.getNotificationsByTeamId(teamId);
+  }
+
   @UseGuards(JwtGuard)
   @Get('mynotifications')
   async getMyNotifications(@GetUser() user: any) {
@@ -57,6 +62,14 @@ export class NotificationController {
   }
 
   @UseGuards(JwtGuard)
+  @Get('team/:teamId/unread')
+  async getUnreadNotificationsByTeamId(@Param('teamId') teamId: string) {
+    return await this.notificationService.getUnreadNotificationsByTeamId(
+      teamId,
+    );
+  }
+
+  @UseGuards(JwtGuard)
   @Get('read')
   async getReadNotificationsByUserId(@GetUser() user: any) {
     const userId = user?.sub || user?.userId || user?.id || user?._id;
@@ -65,6 +78,12 @@ export class NotificationController {
       throw new UnauthorizedException('User ID missing in token payload');
     }
     return await this.notificationService.getReadNotificationsByUserId(userId);
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('team/:teamId/read')
+  async getReadNotificationsByTeamId(@Param('teamId') teamId: string) {
+    return await this.notificationService.getReadNotificationsByTeamId(teamId);
   }
 
   @UseGuards(JwtGuard)
@@ -77,6 +96,14 @@ export class NotificationController {
     }
     return await this.notificationService.getUnreadNotificationLengthByserId(
       userId,
+    );
+  }
+
+  @UseGuards(JwtGuard)
+  @Get('team/:teamId/unread-count')
+  async getUnreadNotificationLengthByTeamId(@Param('teamId') teamId: string) {
+    return await this.notificationService.getUnreadNotificationLengthByTeamId(
+      teamId,
     );
   }
 

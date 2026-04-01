@@ -10,7 +10,7 @@ export const planingApi = axios.create({
 });
 
 export const userApi = axios.create({
-  baseURL: process.env.LOGIN_API_URL || "http://localhost:3001",
+  baseURL: process.env.LOGIN_API_URL || "http://localhost:3010",
   headers: { "Content-Type": "application/json" },
 });
 

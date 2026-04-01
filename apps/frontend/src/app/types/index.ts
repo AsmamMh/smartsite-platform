@@ -82,6 +82,7 @@ export interface User {
   departement?: string;
   status?: string;
   certifications?: string[];
+  assignedTeam?: string[];
 }
 
 export interface Permisssion {
