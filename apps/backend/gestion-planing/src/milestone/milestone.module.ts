@@ -15,5 +15,6 @@ import { Task, TaskSchema } from '@/task/entities/task.entity';
   ],
   controllers: [MilestoneController],
   providers: [MilestoneService],
+  exports: [MilestoneService],
 })
 export class MilestoneModule {}

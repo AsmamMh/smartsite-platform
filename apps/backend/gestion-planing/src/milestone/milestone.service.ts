@@ -26,6 +26,18 @@ export class MilestoneService {
     return milestones;
   }
 
+  /** Jalons avec tâches + colonne (TaskStage) pour agrégation dashboard super-admin */
+  async findAllForDashboard() {
+    return this.milestoneModel
+      .find()
+      .populate({
+        path: 'tasks',
+        populate: { path: 'status', model: 'TaskStage' },
+      })
+      .lean()
+      .exec();
+  }
+
   async findOne(id: number) {
     const milestone = await this.milestoneModel.findById(id).populate("tasks").exec();
     return milestone;

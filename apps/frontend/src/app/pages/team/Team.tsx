@@ -175,16 +175,17 @@ export default function Team() {
   const loadAvailableUsers = async () => {
     try {
       const response = await getAllUsers();
-      if (response && response.status === 200 && Array.isArray(response.data)) {
-        // Normalize user data to ensure consistent field names
+      if (response?.status === 200 && Array.isArray(response.data)) {
         const normalizedUsers = response.data.map((user: any) => ({
-          _id: user._id,
+          _id: String(user._id ?? user.id ?? ""),
           firstName: user.firstName || user.firstname || user.nom || "",
           lastName: user.lastName || user.lastname || user.prenom || "",
           email: user.email || "",
         }));
         setAvailableUsers(normalizedUsers);
-      } else {
+        return;
+      }
+      if (useMockData) {
         setAvailableUsers(
           mockTeamMembers.map((u) => ({
             _id: u._id,
@@ -193,17 +194,27 @@ export default function Team() {
             email: u.email,
           })),
         );
+      } else {
+        toast.error(
+          "Impossible de charger la liste des utilisateurs (vérifiez l’API auth sur le port 3000).",
+        );
+        setAvailableUsers([]);
       }
     } catch (err) {
       console.error("Error loading users:", err);
-      setAvailableUsers(
-        mockTeamMembers.map((u) => ({
-          _id: u._id,
-          firstName: u.firstName,
-          lastName: u.lastName,
-          email: u.email,
-        })),
-      );
+      if (useMockData) {
+        setAvailableUsers(
+          mockTeamMembers.map((u) => ({
+            _id: u._id,
+            firstName: u.firstName,
+            lastName: u.lastName,
+            email: u.email,
+          })),
+        );
+      } else {
+        toast.error("Erreur lors du chargement des utilisateurs.");
+        setAvailableUsers([]);
+      }
     }
   };
 

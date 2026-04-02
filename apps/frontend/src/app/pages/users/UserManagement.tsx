@@ -96,7 +96,13 @@ export default function UserManagement() {
   };
   const { data: users, isLoading: isUsersLoading } = useQuery({
     queryKey: ["users"],
-    queryFn: () => getAllUsers(),
+    queryFn: async () => {
+      const res = await getAllUsers();
+      if (res.status !== 200 || !Array.isArray(res.data)) {
+        throw new Error("Failed to load users");
+      }
+      return res.data;
+    },
   });
 
   const handleDeleteUser = async (userId: string) => {
@@ -166,7 +172,6 @@ export default function UserManagement() {
   });
   const handleBanUser = async (userId: string, isActif: boolean) => {
     try {
-      const response = await banUser(userId, isActif);
       const response = await banUser(userId, isActif);
       if (response.status === 200) {
         toast.success(

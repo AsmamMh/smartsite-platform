@@ -1,8 +1,9 @@
 import type { Site } from '../types';
 import axios from 'axios';
+import { GESTION_SITE_API_URL } from '@/lib/gestion-site-api-url';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3002/api', // Proxy to backend server
+  baseURL: GESTION_SITE_API_URL,
 });
 
 // Add auth token to requests

@@ -20,13 +20,13 @@ export default defineConfig({
   define: {
     "process.env": {},
   },
-  // API Proxy configuration for backend communication
+  // Dev : optionnel — si vous appelez des URLs relatives `/api/...`, elles sont proxifiées vers l’API locale (même port que VITE_AUTH_API_URL / PORT Nest).
   server: {
     proxy: {
       '/api': {
-        target: 'https://smartsite-platform-auth.vercel.app',
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

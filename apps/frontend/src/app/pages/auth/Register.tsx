@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type FieldErrors } from "react-hook-form";
 import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
@@ -76,11 +76,11 @@ const formSchema = z.object({
     .string()
     .min(5, "CIN est requis et doit contenir au moins 5 caractères.")
     .max(32, "CIN ne doit pas dépasser 32 caractères."),
-  firstname: z
+  firstName: z
     .string()
     .min(2, "Le prénom est requis et doit contenir au moins 2 caractères.")
     .max(50, "Le prénom ne doit pas dépasser 50 caractères."),
-  lastname: z
+  lastName: z
     .string()
     .min(2, "Le nom est requis et doit contenir au moins 2 caractères.")
     .max(50, "Le nom ne doit pas dépasser 50 caractères."),
@@ -159,8 +159,8 @@ export default function Register() {
       await register(
         data.cin,
         "", // mot de passe vide à l'inscription, généré à l'approbation
-        data.firstname,
-        data.lastname,
+        data.firstName,
+        data.lastName,
         data.email,
         fullPhone,
         "", // pas de département
@@ -182,6 +182,17 @@ export default function Register() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onInvalid = (errors: FieldErrors<RegisterFormData>) => {
+    const first = Object.values(errors)[0];
+    const msg =
+      first && typeof first === "object" && "message" in first
+        ? String(first.message)
+        : null;
+    toast.error(
+      msg ?? "Veuillez compléter tous les champs obligatoires et cocher les cases.",
+    );
   };
 
   return (
@@ -218,12 +229,9 @@ export default function Register() {
               </CardHeader>
               <CardContent>
                 <form
-                  onSubmit={form.handleSubmit(onSubmit)}
+                  onSubmit={form.handleSubmit(onSubmit, onInvalid)}
                   className="space-y-6"
-                >
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-6"
+                  noValidate
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FieldGroup>
@@ -474,7 +482,7 @@ export default function Register() {
 
                   <FieldGroup>
                     <Controller
-                      name="address"
+                      name="role"
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
@@ -483,7 +491,7 @@ export default function Register() {
                             onValueChange={field.onChange}
                             value={field.value}
                           >
-                            <SelectTrigger>
+                            <SelectTrigger id="role">
                               <SelectValue placeholder="Sélectionnez un rôle" />
                             </SelectTrigger>
                             <SelectContent>
@@ -647,7 +655,6 @@ export default function Register() {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                     className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                   >
                     {isLoading ? (

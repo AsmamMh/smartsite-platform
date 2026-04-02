@@ -3,9 +3,10 @@ import { persist } from "zustand/middleware";
 import type { AuthState, User, RegisterData } from "../types";
 import axios from "axios";
 import { trackLogout } from "../action/audit.action";
+import { AUTH_API_URL } from "@/lib/auth-api-url";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: AUTH_API_URL,
 });
 
 export const useAuthStore = create<AuthState>()(
@@ -31,8 +32,6 @@ export const useAuthStore = create<AuthState>()(
               access_token: res.data.access_token,
               id: res.data.id,
               cin: res.data.cin,
-              firstName: res.data.firstName,
-              lastName: res.data.lastName,
               firstName: res.data.firstName,
               lastName: res.data.lastName,
               role: res.data.role,
@@ -64,8 +63,6 @@ export const useAuthStore = create<AuthState>()(
         password: string,
         firstName: string,
         lastName: string,
-        firstName: string,
-        lastName: string,
         email: string,
         telephone?: string,
         departement?: string,
@@ -77,19 +74,14 @@ export const useAuthStore = create<AuthState>()(
       ) => {
         const res = await api.post("/auth/register", {
           cin,
-          password, // généralement vide, mot de passe généré à l'approbation
-          firstName,
-          lastName,
+          password,
           firstName,
           lastName,
           email,
-          phoneNumber,
+          phoneNumber: telephone,
           departement,
           address,
           role,
-          companyName,
-          preferredLanguage,
-          certifications,
           companyName,
           preferredLanguage,
           certifications,

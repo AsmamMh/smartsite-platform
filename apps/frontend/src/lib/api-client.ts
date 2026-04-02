@@ -1,21 +1,24 @@
 import { useAuthStore } from "@/app/store/authStore";
 import axios from "axios";
+import { AUTH_API_URL } from "@/lib/auth-api-url";
 
-const { } = useAuthStore;
 export const planingApi = axios.create({
-  baseURL: process.env.PLANNING_URL || "http://localhost:3002",
+  baseURL:
+    import.meta.env.VITE_PLANNING_URL || "http://localhost:3002",
   headers: {
     "Content-Type": "application/json",
   },
 });
 
 export const userApi = axios.create({
-  baseURL: process.env.LOGIN_API_URL || "http://localhost:3000",
+  baseURL: AUTH_API_URL,
   headers: { "Content-Type": "application/json" },
 });
 
 export const NotificationApi = axios.create({
-  baseURL: process.env.NOTIFICATION_URL || "http://localhost:3004/notification",
+  baseURL:
+    import.meta.env.VITE_NOTIFICATION_URL ||
+    "http://localhost:3004/notification",
   headers: {
     "Content-Type": "application/json",
   },

@@ -1985,10 +1985,9 @@ export default function Sites() {
                             {formatDate(issue.createdAt)}
                           </span>
                           {!issue.resolved && (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
+                            <Button
                               size="sm"
+                              variant="outline"
                               onClick={() => handleResolveIssue(issue.id)}
                               className="text-xs"
                             >

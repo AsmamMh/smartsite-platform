@@ -16,5 +16,6 @@ import { TaskStage, TaskStageSchema } from '@/task-stage/entities/TaskStage.enti
     ],
   controllers: [TaskController],
   providers: [TaskService],
+  exports: [TaskService],
 })
 export class TaskModule {}

@@ -1,15 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import * as bcrypt from 'bcrypt';
 import { Role } from '../../roles/entities/role.entity';
 
 @Schema({ timestamps: true })
 export class User extends Document {
   @Prop({ required: true, trim: true })
   firstName: string;
-  firstName: string;
 
   @Prop({ required: true, trim: true })
-  lastName: string;
   lastName: string;
 
   @Prop({ required: true, unique: true, trim: true })
@@ -37,16 +36,9 @@ export class User extends Document {
   projectsCount?: number;
 
   @Prop()
-  preferredLanguage?: string;
-
-  @Prop()
-  projectsCount?: number;
-
-  @Prop()
   address: string;
 
   @Prop({ default: true })
-  isActif: boolean;
   isActif: boolean;
 
   @Prop()
@@ -103,19 +95,20 @@ export class User extends Document {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// Pre-save hook to automatically hash password before saving
 UserSchema.pre('save', async function () {
-  // Only hash the password if it has been modified (or is new)
   if (!this.isModified('password')) {
     return;
   }
 
-  // Skip if password is already hashed (bcrypt hash starts with $2a$, $2b$, or $2y$)
-  if (this.password && this.password.startsWith('$2')) {
+  // Inscription en attente d'approbation : pas de mot de passe encore
+  if (this.password == null || this.password === '') {
     return;
   }
 
-  // Hash the password
+  if (this.password.startsWith('$2')) {
+    return;
+  }
+
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });

@@ -187,11 +187,6 @@ export class UsersController {
     return this.usersService.getAllclients();
   }
 
-  @Get('clients')
-  async getAllClients() {
-    return this.usersService.getAllclients();
-  }
-
   @Get(':id')
   async findById(@Param('id') id: string) {
     return this.usersService.findById(id);

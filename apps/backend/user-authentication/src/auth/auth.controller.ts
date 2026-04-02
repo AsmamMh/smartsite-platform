@@ -7,15 +7,6 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import {
-  Controller,
-  Post,
-  Body,
-  UnauthorizedException,
-  Param,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -30,12 +21,10 @@ export class AuthController {
 
   @Post('login')
   async login(@Body() loginDto: LoginDto, @Request() req: any) {
-    console.log('user:', loginDto);
     const user = await this.authService.validateUser(
       loginDto.cin,
       loginDto.password,
     );
-    console.log('valdiate user:', user);
     if (!user) {
       await this.auditLogsService.createLog({
         userCin: loginDto.cin,
@@ -107,27 +96,25 @@ export class AuthController {
       password,
       firstName,
       lastName,
-      firstName,
-      lastName,
-      role,
       email,
-
       telephone,
+      phoneNumber,
+      departement,
       address,
+      role,
       companyName,
     } = registerDto;
+
     const user = await this.authService.register(
       cin,
-      password,
+      password ?? '',
       firstName,
       lastName,
-      firstName,
-      lastName,
-      role,
       email,
-
-      telephone,
+      telephone ?? phoneNumber,
+      departement,
       address,
+      role,
       companyName,
     );
 
@@ -138,18 +125,14 @@ export class AuthController {
         cin: user.cin,
         firstName: user.firstName,
         lastName: user.lastName,
-        firstName: user.firstName,
-        lastName: user.lastName,
         email: user.email,
-
-        telephone: user.telephone,
-
+        telephone: user.phoneNumber,
         address: user.address,
         role: user.role,
         companyName: user.companyName,
-        companyName: user.companyName,
       },
     };
+
     await this.auditLogsService.createLog({
       userId: String(user._id),
       userCin: user.cin,

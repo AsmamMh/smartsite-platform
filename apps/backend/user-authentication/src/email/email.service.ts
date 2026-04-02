@@ -22,17 +22,13 @@ export class EmailService {
         },
       });
     } else {
-      // Development: Use Ethereal test account with valid credentials
       this.transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        host: 'smtp.gmail.com',
-        port: 587,
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: Number(process.env.SMTP_PORT) || 587,
         secure: false,
         auth: {
-          user: 'chedly.rebai123@gmail.com',
-          pass: process.env.EMAIL_PASS,
-          user: 'chedly.rebai123@gmail.com',
-          pass: process.env.EMAIL_PASS,
+          user: process.env.EMAIL_USER || '',
+          pass: process.env.EMAIL_PASS || process.env.EMAIL_PASSWORD || '',
         },
       });
     }

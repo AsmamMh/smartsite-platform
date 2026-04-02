@@ -26,6 +26,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getMynavigationAccess } from "../action/permission.action";
 import { Permission } from "../types";
 import { getUnreadNotificationCount } from "../action/notification.action";
+import ChatbotWidget from "../components/Chatbot";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -238,6 +239,8 @@ export default function DashboardLayout() {
           <Outlet />
         </main>
       </div>
+
+      <ChatbotWidget />
     </div>
   );
 }

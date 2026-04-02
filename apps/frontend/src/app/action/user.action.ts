@@ -1,10 +1,41 @@
 import axios from "axios";
+import { AUTH_API_URL } from "../../lib/auth-api-url";
 
-const API_URL = "https://smartsite-platform-auth.vercel.app/users";
+const API_URL = `${AUTH_API_URL}/users`;
 
-export const getAllUsers = async () => {
-  const { data } = await axios.get(`${API_URL}`);
-  return data;
+function getAuthHeaders(): { Authorization?: string } {
+  const authData = localStorage.getItem("smartsite-auth");
+  const token =
+    localStorage.getItem("access_token") ||
+    (authData
+      ? (() => {
+          try {
+            return JSON.parse(authData)?.state?.user?.access_token;
+          } catch {
+            return null;
+          }
+        })()
+      : null);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export const getAllUsers = async (): Promise<{
+  status: number;
+  data: unknown[];
+}> => {
+  try {
+    const res = await axios.get(API_URL, { headers: getAuthHeaders() });
+    const body = res.data;
+    const list = Array.isArray(body) ? body : body?.data ?? [];
+    return { status: res.status, data: list };
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number; data?: unknown } };
+    console.error("Get all users error:", err?.response?.data);
+    return {
+      status: err?.response?.status ?? 500,
+      data: [],
+    };
+  }
 };
 
 export const getUserById = async (id: string) => {
@@ -32,15 +63,8 @@ export const createUser = async (userData: {
   companyName?: string;
   departement?: string;
   role?: string;
-  companyName?: string;
-  departement?: string;
-  role?: string;
 }) => {
   try {
-    const res = await axios.post(
-      `${API_URL}/create-with-temp-password`,
-      userData,
-    );
     const res = await axios.post(
       `${API_URL}/create-with-temp-password`,
       userData,

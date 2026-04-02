@@ -41,18 +41,12 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
       .object({
         cin: z.string().min(8, "CIN must be at least 8 characters.").optional(),
         firstName: z
-        firstName: z
           .string()
-          .min(5, "firstName must be at least 5 characters.")
-          .max(32, "firstName must be at most 32 characters.")
           .min(5, "firstName must be at least 5 characters.")
           .max(32, "firstName must be at most 32 characters.")
           .optional(),
         lastName: z
-        lastName: z
           .string()
-          .min(5, "lastName must be at least 5 characters.")
-          .max(32, "lastName must be at most 32 characters.")
           .min(5, "lastName must be at least 5 characters.")
           .max(32, "lastName must be at most 32 characters.")
           .optional(),
@@ -81,23 +75,16 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
       .object({
         cin: z.string().min(8, "CIN must be at least 8 characters."),
         firstName: z
-        firstName: z
           .string()
           .min(5, "firstName must be at least 5 characters.")
           .max(32, "firstName must be at most 32 characters."),
         lastName: z
-          .min(5, "firstName must be at least 5 characters.")
-          .max(32, "firstName must be at most 32 characters."),
-        lastName: z
           .string()
-          .min(5, "lastName must be at least 5 characters.")
-          .max(32, "lastName must be at most 32 characters."),
           .min(5, "lastName must be at least 5 characters.")
           .max(32, "lastName must be at most 32 characters."),
         email: z.string().email("Invalid email address"),
-
-        telephone: z.string(),
-    companyName: z.string().optional(),
+        phoneNumber: z.string(),
+        companyName: z.string().optional(),
         departement: z.string().optional(),
         address: z.string().optional(),
         role: z.string().optional(),
@@ -110,16 +97,12 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
       cin: "",
       firstName: "",
       lastName: "",
-      firstName: "",
-      lastName: "",
       email: "",
       phoneNumber: "",
       password: "",
       address: "",
       confirmPassword: "",
       role: "",
-      companyName: "",
-      departement: "",
       companyName: "",
       departement: "",
     },
@@ -137,8 +120,6 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
       if (res.status === 200) {
         form.reset({
           cin: res.data.cin,
-          firstName: res.data.firstName,
-          lastName: res.data.lastName,
           firstName: res.data.firstName,
           lastName: res.data.lastName,
           email: res.data.email,
@@ -165,34 +146,20 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
     }
   };
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    // try {
-    //   const res = await createUser(data.firstName, data.lastName, data.email, data.telephone, data.password, data.address);
-    //   if (res.status === 201) {
-    //     toast.success("User created successfully");
-    //   }
-    // } catch (error: any) {
-    //   toast.error("Failed to create user. Please try again.");
-    // }
-    console.log(
-      data.address,
-      data.email,
-      data.firstName,
-      data.lastName,
-      data.telephone,
-      data,
-    );
     try {
       if (type === "add") {
-        const response = await createUser(data);
+        const response = await createUser(
+          data as Parameters<typeof createUser>[0],
+        );
         if (response.status === 201) {
           toast.success("User created successfully");
           form.reset();
           onClose();
           onUserChange();
         }
-      }else{
-        const response =await updateUser(id as string,data);
-        if(response.status === 200 || response.status === 204){
+      } else {
+        const response = await updateUser(id as string, data);
+        if (response.status === 200 || response.status === 204) {
           toast.success("User updated successfully");
           form.reset();
           onClose();
@@ -214,21 +181,16 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
           <div className="flex justify-between gap-x-3">
             <Controller
               name="firstName"
-              name="firstName"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-firstName">
-                    firstName
                   <FieldLabel htmlFor="form-rhf-demo-firstName">
                     firstName
                   </FieldLabel>
                   <Input
                     {...field}
                     id="form-rhf-demo-firstName"
-                    id="form-rhf-demo-firstName"
                     aria-invalid={fieldState.invalid}
-                    placeholder="Enter firstName"
                     placeholder="Enter firstName"
                     autoComplete="off"
                   />
@@ -240,21 +202,16 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
             />
             <Controller
               name="lastName"
-              name="lastName"
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-lastName">
-                    lastName
                   <FieldLabel htmlFor="form-rhf-demo-lastName">
                     lastName
                   </FieldLabel>
                   <Input
                     {...field}
                     id="form-rhf-demo-lastName"
-                    id="form-rhf-demo-lastName"
                     aria-invalid={fieldState.invalid}
-                    placeholder="Enter lastName"
                     placeholder="Enter lastName"
                     autoComplete="off"
                   />
@@ -362,7 +319,6 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
                     id="form-rhf-select-language"
                     aria-invalid={fieldState.invalid}
                     className="min-w-30"
-                    className="min-w-30"
                   >
                     <SelectValue placeholder="Select" />
                   </SelectTrigger>
@@ -378,110 +334,6 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
             )}
           />
 
-          <div className="flex justify-between gap-x-3">
-            <Controller
-              name="companyName"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-companyName">
-                    Company Name
-                  </FieldLabel>
-                  <Input
-                    {...field}
-                    id="form-rhf-demo-companyName"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="Enter company name"
-                    autoComplete="off"
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-            <Controller
-              name="departement"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-departement">
-                    Department
-                  </FieldLabel>
-                  <Input
-                    {...field}
-                    id="form-rhf-demo-departement"
-                    aria-invalid={fieldState.invalid}
-                    placeholder="Enter department"
-                    autoComplete="off"
-                  />
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-          </div>
-
-          {type === "edit" && (
-            <>
-              <div className="border-t pt-4 mt-4">
-                <h3 className="text-sm font-semibold mb-4">Change Password</h3>
-                <Controller
-                  name="password"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="form-rhf-demo-password">
-                        Password
-                      </FieldLabel>
-                      <Input
-                        type="password"
-                        {...field}
-                        id="form-rhf-demo-password"
-                        aria-invalid={fieldState.invalid}
-                        placeholder="Leave empty to keep current password"
-                        autoComplete="off"
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-                <Controller
-                  name="confirmPassword"
-                  control={form.control}
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="form-rhf-demo-confirm">
-                        Confirm Password
-                      </FieldLabel>
-                      <Input
-                        type="password"
-                        {...field}
-                        id="form-rhf-demo-confirm"
-                        aria-invalid={fieldState.invalid}
-                        placeholder="Confirm password"
-                        autoComplete="off"
-                      />
-                      {fieldState.invalid && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-              </div>
-            </>
-          )}
-
-          {type === "add" && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-              <p className="text-sm text-blue-800">
-                <strong>📧 Note:</strong> A temporary password will be automatically generated and sent to the user's email address.
-              </p>
-            </div>
-          )}
           <div className="flex justify-between gap-x-3">
             <Controller
               name="companyName"

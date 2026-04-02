@@ -4,12 +4,6 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-  BadRequestException,
-} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { User } from './entities/user.entity';

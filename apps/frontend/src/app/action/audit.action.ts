@@ -1,7 +1,8 @@
 import axios from "axios";
+import { AUTH_API_URL } from "@/lib/auth-api-url";
 
 const api = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: AUTH_API_URL,
 });
 
 function getAuthToken(): string | null {

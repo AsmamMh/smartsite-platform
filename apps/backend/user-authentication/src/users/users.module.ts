@@ -8,6 +8,7 @@ import { Role, RoleSchema } from 'src/roles/entities/role.entity';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 import { EmailModule } from '../email/email.module';
 import { RolesModule } from '../roles/roles.module';
+import { SuperAdminSeedService } from '../bootstrap/super-admin.seed.service';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { RolesModule } from '../roles/roles.module';
     EmailModule,
     RolesModule,
   ],
-  providers: [UsersService],
+  providers: [UsersService, SuperAdminSeedService],
   controllers: [UsersController],
   exports: [UsersService],
 })

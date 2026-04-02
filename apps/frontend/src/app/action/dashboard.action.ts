@@ -1,21 +1,21 @@
 import axios from "axios";
+import { GESTION_SITE_API_URL } from "../../lib/gestion-site-api-url";
+import { PLANNING_API_URL } from "../../lib/planning-api-url";
+import { INCIDENT_API_URL } from "../../lib/incident-api-url";
+import { AUTH_API_URL } from "../../lib/auth-api-url";
 
-// API pour les sites (port 3001)
 const sitesApi = axios.create({
-  baseURL: "http://localhost:3001/api",
+  baseURL: GESTION_SITE_API_URL,
 });
 
-// API pour les projets (port 3002)
 const projectsApi = axios.create({
-  baseURL: "http://localhost:3002",
+  baseURL: PLANNING_API_URL,
 });
 
-// API pour les incidents (port 3003)
 const incidentsApi = axios.create({
-  baseURL: "http://localhost:3003",
+  baseURL: INCIDENT_API_URL,
 });
 
-// Récupérer le token depuis le localStorage
 function getAuthToken(): string | null {
   const directToken = localStorage.getItem("access_token");
   if (directToken) return directToken;
@@ -29,8 +29,7 @@ function getAuthToken(): string | null {
   }
 }
 
-// Ajouter le token d'authentification à toutes les requêtes
-[sitesApi, projectsApi, incidentsApi].forEach(api => {
+[sitesApi, projectsApi, incidentsApi].forEach((api) => {
   api.interceptors.request.use((config) => {
     const token = getAuthToken();
     if (token) {
@@ -40,7 +39,6 @@ function getAuthToken(): string | null {
   });
 });
 
-// Types pour les données
 export interface Site {
   _id: string;
   name: string;
@@ -49,6 +47,7 @@ export interface Site {
   budget: number;
   createdAt: string;
   updatedAt: string;
+  projectId?: string;
 }
 
 export interface Project {
@@ -62,7 +61,7 @@ export interface Project {
   assignedTo: string;
   assignedToName: string;
   assignedToRole: string;
-  tasks: any[];
+  tasks: unknown[];
   createdAt: string;
   updatedAt: string;
   projectManagerName: string;
@@ -94,103 +93,195 @@ export interface TeamMember {
 export interface Incident {
   _id: string;
   type: string;
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  status: 'resolved' | 'open' | 'investigating';
+  severity: "critical" | "high" | "medium" | "low";
+  status: "resolved" | "open" | "investigating";
   description: string;
   createdAt: string;
   updatedAt: string;
 }
 
-// API pour les sites
+function normalizeSite(raw: Record<string, unknown>): Site {
+  const id = raw._id ?? raw.id;
+  return {
+    _id: String(id ?? ""),
+    name: String(raw.nom ?? raw.name ?? ""),
+    localisation: String(
+      raw.localisation ?? raw.adresse ?? raw.address ?? "",
+    ),
+    status: String(raw.status ?? (raw.isActif ? "in_progress" : "planning")),
+    budget: Number(raw.budget ?? 0),
+    createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    updatedAt: String(raw.updatedAt ?? new Date().toISOString()),
+    projectId: raw.projectId != null ? String(raw.projectId) : undefined,
+  };
+}
+
+function normalizeIncident(raw: Record<string, unknown>): Incident {
+  const id = raw._id ?? raw.id;
+  const sev = String(raw.severity ?? "medium").toLowerCase();
+  const severity =
+    sev === "critical" || sev === "high" || sev === "medium" || sev === "low"
+      ? sev
+      : "medium";
+  const st = String(raw.status ?? "open").toLowerCase();
+  const status =
+    st === "resolved" || st === "open" || st === "investigating"
+      ? st
+      : "open";
+  return {
+    _id: String(id ?? ""),
+    type: String(raw.type ?? raw.title ?? "other"),
+    severity,
+    status,
+    description: String(raw.description ?? raw.title ?? ""),
+    createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    updatedAt: String(raw.updatedAt ?? new Date().toISOString()),
+  };
+}
+
+function normalizeUser(raw: Record<string, unknown>): TeamMember {
+  const id = raw._id ?? raw.id ?? raw.cin;
+  const status = String(raw.status ?? "active");
+  return {
+    _id: String(id ?? ""),
+    firstName: String(raw.firstName ?? ""),
+    lastName: String(raw.lastName ?? ""),
+    email: String(raw.email ?? ""),
+    role: raw.role as TeamMember["role"],
+    isActive: status === "active" && raw.isActive !== false,
+    createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    updatedAt: String(raw.updatedAt ?? new Date().toISOString()),
+  };
+}
+
 export const getSites = async (): Promise<Site[]> => {
   try {
     const response = await sitesApi.get("/gestion-sites?limit=100");
-    return response.data.data || response.data || [];
+    const payload = response.data?.data ?? response.data;
+    const rows = Array.isArray(payload) ? payload : payload?.items ?? [];
+    return rows.map((r: Record<string, unknown>) => normalizeSite(r));
   } catch (error) {
     console.error("Error fetching sites:", error);
     return [];
   }
 };
 
-// API pour les projets
 export const getProjects = async (): Promise<Project[]> => {
   try {
     const response = await projectsApi.get("/projects/all");
-    return response.data || [];
+    const data = response.data;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error fetching projects:", error);
     return [];
   }
 };
 
-// API pour les tâches urgentes
 export const getUrgentTasks = async (): Promise<Task[]> => {
   try {
     const response = await projectsApi.get("/tasks/urgent");
-    return response.data || [];
+    const data = response.data;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error fetching urgent tasks:", error);
     return [];
   }
 };
 
-// API pour les incidents récents
-export const getRecentIncidents = async (limit: number = 5): Promise<Incident[]> => {
+export const getRecentIncidents = async (
+  limit: number = 5,
+): Promise<Incident[]> => {
   try {
-    const response = await incidentsApi.get(`/incidents?limit=${limit}`);
-    return response.data.data || response.data || [];
+    const response = await incidentsApi.get("/incidents");
+    const raw = response.data?.data ?? response.data;
+    const list = Array.isArray(raw) ? raw : [];
+    return list
+      .slice(0, limit)
+      .map((r: Record<string, unknown>) => normalizeIncident(r));
   } catch (error) {
     console.error("Error fetching incidents:", error);
     return [];
   }
 };
 
-// API pour les membres de l'équipe (utilise le service user-authentication)
 export const getTeamMembers = async (): Promise<TeamMember[]> => {
   try {
-    const response = await axios.get("http://localhost:3000/users", {
+    const response = await axios.get(`${AUTH_API_URL}/users`, {
       headers: {
-        Authorization: `Bearer ${getAuthToken()}`
-      }
+        Authorization: `Bearer ${getAuthToken()}`,
+      },
     });
-    return response.data.data || response.data || [];
+    const raw = response.data?.data ?? response.data;
+    const list = Array.isArray(raw) ? raw : [];
+    return list.map((u: Record<string, unknown>) => normalizeUser(u));
   } catch (error) {
     console.error("Error fetching team members:", error);
     return [];
   }
 };
 
-// Statistiques globales combinées
+function isSiteActive(s: Site): boolean {
+  return (
+    s.status === "in_progress" ||
+    s.status === "planning" ||
+    s.status === "on_hold"
+  );
+}
+
 export const getDashboardStats = async () => {
   try {
-    const [sites, projects, urgentTasks, incidents, teamMembers] = await Promise.allSettled([
-      getSites(),
-      getProjects(),
-      getUrgentTasks(),
-      getRecentIncidents(),
-      getTeamMembers()
-    ]);
+    const [sites, projects, urgentTasks, incidents, teamMembers] =
+      await Promise.allSettled([
+        getSites(),
+        getProjects(),
+        getUrgentTasks(),
+        getRecentIncidents(20),
+        getTeamMembers(),
+      ]);
+
+    const sitesList = sites.status === "fulfilled" ? sites.value : [];
+    const projectsList =
+      projects.status === "fulfilled" ? projects.value : [];
+    const urgentList =
+      urgentTasks.status === "fulfilled" ? urgentTasks.value : [];
+    const incidentsList =
+      incidents.status === "fulfilled" ? incidents.value : [];
+    const membersList =
+      teamMembers.status === "fulfilled" ? teamMembers.value : [];
+
+    const sitesBudget = sitesList.reduce((sum, s) => sum + (s.budget || 0), 0);
+    const projectsBudget = projectsList.reduce(
+      (sum, p) => sum + (p.budget || 0),
+      0,
+    );
 
     return {
-      sites: sites.status === 'fulfilled' ? sites.value : [],
-      projects: projects.status === 'fulfilled' ? projects.value : [],
-      urgentTasks: urgentTasks.status === 'fulfilled' ? urgentTasks.value : [],
-      incidents: incidents.status === 'fulfilled' ? incidents.value : [],
-      teamMembers: teamMembers.status === 'fulfilled' ? teamMembers.value : [],
+      sites: sitesList,
+      projects: projectsList,
+      urgentTasks: urgentList,
+      incidents: incidentsList,
+      teamMembers: membersList,
       stats: {
-        totalSites: sites.status === 'fulfilled' ? sites.value.length : 0,
-        activeSites: sites.status === 'fulfilled' ? sites.value.filter(s => s.status === 'active').length : 0,
-        totalProjects: projects.status === 'fulfilled' ? projects.value.length : 0,
-        activeProjects: projects.status === 'fulfilled' ? projects.value.filter(p => p.status === 'en_cours').length : 0,
-        urgentTasks: urgentTasks.status === 'fulfilled' ? urgentTasks.value.length : 0,
-        criticalIncidents: incidents.status === 'fulfilled' ? incidents.value.filter(i => i.severity === 'critical' || i.severity === 'high').length : 0,
-        totalTeamMembers: teamMembers.status === 'fulfilled' ? teamMembers.value.length : 0,
-        activeTeamMembers: teamMembers.status === 'fulfilled' ? teamMembers.value.filter(m => m.isActive).length : 0,
-        totalBudget: projects.status === 'fulfilled' ? projects.value.reduce((sum, p) => sum + (p.budget || 0), 0) : 0,
-        avgProgress: projects.status === 'fulfilled' && projects.value.length > 0
-          ? Math.round(projects.value.reduce((sum, p) => sum + p.progress, 0) / projects.value.length)
-          : 0
-      }
+        totalSites: sitesList.length,
+        activeSites: sitesList.filter(isSiteActive).length,
+        totalProjects: projectsList.length,
+        activeProjects: projectsList.filter((p) => p.status === "en_cours")
+          .length,
+        urgentTasks: urgentList.length,
+        criticalIncidents: incidentsList.filter(
+          (i) => i.severity === "critical" || i.severity === "high",
+        ).length,
+        totalTeamMembers: membersList.length,
+        activeTeamMembers: membersList.filter((m) => m.isActive).length,
+        totalBudget: sitesBudget + projectsBudget,
+        avgProgress:
+          projectsList.length > 0
+            ? Math.round(
+                projectsList.reduce((sum, p) => sum + (p.progress || 0), 0) /
+                  projectsList.length,
+              )
+            : 0,
+      },
     };
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
@@ -210,8 +301,8 @@ export const getDashboardStats = async () => {
         totalTeamMembers: 0,
         activeTeamMembers: 0,
         totalBudget: 0,
-        avgProgress: 0
-      }
+        avgProgress: 0,
+      },
     };
   }
 };

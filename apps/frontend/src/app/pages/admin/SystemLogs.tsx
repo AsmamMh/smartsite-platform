@@ -9,6 +9,7 @@ import { Badge } from "../../components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { useAuthStore } from "../../store/authStore";
 import { toast } from "sonner";
+import { AUTH_API_URL } from "@/lib/auth-api-url";
 
 type AuditLog = {
   _id: string;
@@ -29,7 +30,7 @@ type AuditLog = {
   createdAt: string;
 };
 
-const api = axios.create({ baseURL: "http://localhost:3000" });
+const api = axios.create({ baseURL: AUTH_API_URL });
 
 function getAuthToken(): string | null {
   const directToken = localStorage.getItem("access_token");

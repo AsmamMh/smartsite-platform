@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { AUTH_API_URL } from '@/lib/auth-api-url';
 
-const API_URL = 'http://localhost:3000/api/chatbot';
+const API_URL = `${AUTH_API_URL}/chatbot`;
 
 // Create axios instance with auth interceptor
 const api = axios.create({

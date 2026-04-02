@@ -141,8 +141,6 @@ export interface AuthState {
     cin: string;
     firstName: string;
     lastName: string;
-    firstName: string;
-    lastName: string;
     role: UserRole;
     firstLogin?: boolean;
   };

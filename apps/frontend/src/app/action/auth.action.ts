@@ -26,7 +26,6 @@ export const LoginAction = async (cin: string, password: string) => {
       status: error?.response.status,
       data: error?.response?.data?.message,
     });
-    });
   }
 };
 

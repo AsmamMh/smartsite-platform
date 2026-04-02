@@ -1,21 +1,20 @@
 import axios from "axios";
+import { GESTION_SITE_API_URL } from "../../lib/gestion-site-api-url";
+import { PLANNING_API_URL } from "../../lib/planning-api-url";
+import { AUTH_API_URL } from "../../lib/auth-api-url";
 
-// API pour les projets (port 3002)
 const projectsApi = axios.create({
-  baseURL: "http://localhost:3002",
+  baseURL: PLANNING_API_URL,
 });
 
-// API pour les sites (port 3001)
 const sitesApi = axios.create({
-  baseURL: "http://localhost:3001/api",
+  baseURL: GESTION_SITE_API_URL,
 });
 
-// API pour les utilisateurs (port 3000)
 const usersApi = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: AUTH_API_URL,
 });
 
-// Récupérer le token depuis le localStorage
 function getAuthToken(): string | null {
   const directToken = localStorage.getItem("access_token");
   if (directToken) return directToken;
@@ -29,8 +28,7 @@ function getAuthToken(): string | null {
   }
 }
 
-// Ajouter le token d'authentification à toutes les requêtes
-[projectsApi, sitesApi, usersApi].forEach(api => {
+[projectsApi, sitesApi, usersApi].forEach((api) => {
   api.interceptors.request.use((config) => {
     const token = getAuthToken();
     if (token) {
@@ -40,7 +38,6 @@ function getAuthToken(): string | null {
   });
 });
 
-// Types pour les données synchronisées
 export interface Site {
   _id: string;
   name: string;
@@ -49,6 +46,7 @@ export interface Site {
   budget: number;
   createdAt: string;
   updatedAt: string;
+  projectId?: string;
 }
 
 export interface TeamMember {
@@ -73,12 +71,11 @@ export interface SyncedProject {
   assignedTo: string;
   assignedToName: string;
   assignedToRole: string;
-  tasks: any[];
+  tasks: unknown[];
   createdAt: string;
   updatedAt: string;
   projectManagerName: string;
   budget?: number;
-  // Données synchronisées
   assignedTeam?: TeamMember[];
   assignedSites?: Site[];
   teamSize?: number;
@@ -98,87 +95,125 @@ export interface Task {
   updatedAt: string;
 }
 
-// API pour les projets
+function normalizeSite(raw: Record<string, unknown>): Site {
+  const id = raw._id ?? raw.id;
+  return {
+    _id: String(id ?? ""),
+    name: String(raw.nom ?? raw.name ?? ""),
+    localisation: String(
+      raw.localisation ?? raw.adresse ?? raw.address ?? "",
+    ),
+    status: String(raw.status ?? (raw.isActif ? "in_progress" : "planning")),
+    budget: Number(raw.budget ?? 0),
+    createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    updatedAt: String(raw.updatedAt ?? new Date().toISOString()),
+    projectId: raw.projectId != null ? String(raw.projectId) : undefined,
+  };
+}
+
+function normalizeUser(raw: Record<string, unknown>): TeamMember {
+  const id = raw._id ?? raw.id ?? raw.cin;
+  const status = String(raw.status ?? "active");
+  return {
+    _id: String(id ?? ""),
+    firstName: String(raw.firstName ?? ""),
+    lastName: String(raw.lastName ?? ""),
+    email: String(raw.email ?? ""),
+    role: raw.role as TeamMember["role"],
+    isActive: status === "active" && raw.isActive !== false,
+    createdAt: String(raw.createdAt ?? new Date().toISOString()),
+    updatedAt: String(raw.updatedAt ?? new Date().toISOString()),
+  };
+}
+
 export const getAllProjectsForSuperAdmin = async (): Promise<SyncedProject[]> => {
   try {
     const response = await projectsApi.get("/projects/all");
-    return response.data || [];
+    const data = response.data;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error fetching all projects for super admin:", error);
     return [];
   }
 };
 
-// API pour les tâches urgentes
 export const getUrgentTasks = async (): Promise<Task[]> => {
   try {
     const response = await projectsApi.get("/tasks/urgent");
-    return response.data || [];
+    const data = response.data;
+    return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error fetching urgent tasks:", error);
     return [];
   }
 };
 
-// API pour les sites
 export const getAllSites = async (): Promise<Site[]> => {
   try {
     const response = await sitesApi.get("/gestion-sites?limit=100");
-    return response.data.data || response.data || [];
+    const payload = response.data?.data ?? response.data;
+    const rows = Array.isArray(payload) ? payload : payload?.items ?? [];
+    return rows.map((r: Record<string, unknown>) => normalizeSite(r));
   } catch (error) {
     console.error("Error fetching sites:", error);
     return [];
   }
 };
 
-// API pour les membres de l'équipe
 export const getAllTeamMembers = async (): Promise<TeamMember[]> => {
   try {
     const response = await usersApi.get("/users");
-    return response.data.data || response.data || [];
+    const raw = response.data?.data ?? response.data;
+    const list = Array.isArray(raw) ? raw : [];
+    return list.map((u: Record<string, unknown>) => normalizeUser(u));
   } catch (error) {
     console.error("Error fetching team members:", error);
     return [];
   }
 };
 
-// Fonction de synchronisation principale
 export const getSyncedProjectsWithDetails = async (): Promise<SyncedProject[]> => {
   try {
-    // Charger toutes les données en parallèle
     const [projects, sites, teamMembers] = await Promise.allSettled([
       getAllProjectsForSuperAdmin(),
       getAllSites(),
-      getAllTeamMembers()
+      getAllTeamMembers(),
     ]);
 
-    const projectsData = projects.status === 'fulfilled' ? projects.value : [];
-    const sitesData = sites.status === 'fulfilled' ? sites.value : [];
-    const teamMembersData = teamMembers.status === 'fulfilled' ? teamMembers.value : [];
+    const projectsData = projects.status === "fulfilled" ? projects.value : [];
+    const sitesData = sites.status === "fulfilled" ? sites.value : [];
+    const teamMembersData =
+      teamMembers.status === "fulfilled" ? teamMembers.value : [];
 
-    // Synchroniser les projets avec les équipes et sites
-    const syncedProjects = projectsData.map(project => {
-      // Trouver les membres de l'équipe assignés à ce projet
-      const assignedTeam = teamMembersData.filter(member => {
+    const syncedProjects = projectsData.map((project) => {
+      const assignedTeam = teamMembersData.filter((member) => {
         const memberId = member._id;
         const projectAssignedTo = project.assignedTo;
-        return memberId === projectAssignedTo || 
-               (typeof member.role === 'object' && (member.role as any).name === 'project_manager' && 
-                member._id === projectAssignedTo);
+        return (
+          memberId === projectAssignedTo ||
+          (typeof member.role === "object" &&
+            (member.role as { name?: string }).name === "project_manager" &&
+            member._id === projectAssignedTo)
+        );
       });
 
-      // Trouver les sites assignés à ce projet (basé sur le nom ou une référence)
-      const assignedSites = sitesData.filter(site => {
-        // Logique d'association: sites dont le nom contient le nom du projet
-        return site.name.toLowerCase().includes(project.name.toLowerCase()) ||
-               site.localisation.toLowerCase().includes(project.name.toLowerCase());
+      const pid = String(project._id);
+      const assignedSites = sitesData.filter((site) => {
+        if (site.projectId && site.projectId === pid) return true;
+        const n = project.name.toLowerCase();
+        return (
+          site.name.toLowerCase().includes(n) ||
+          site.localisation.toLowerCase().includes(n)
+        );
       });
 
-      // Calculer les statistiques
       const teamSize = assignedTeam.length;
       const siteCount = assignedSites.length;
-      const totalTeamBudget = assignedTeam.reduce((sum, member) => sum + 0, 0); // Pas de budget membre pour l'instant
-      const totalSiteBudget = assignedSites.reduce((sum, site) => sum + (site.budget || 0), 0);
+      const totalTeamBudget = 0;
+      const totalSiteBudget = assignedSites.reduce(
+        (sum, site) => sum + (site.budget || 0),
+        0,
+      );
 
       return {
         ...project,
@@ -187,7 +222,7 @@ export const getSyncedProjectsWithDetails = async (): Promise<SyncedProject[]> =
         teamSize,
         siteCount,
         totalTeamBudget,
-        totalSiteBudget
+        totalSiteBudget,
       };
     });
 
@@ -198,25 +233,31 @@ export const getSyncedProjectsWithDetails = async (): Promise<SyncedProject[]> =
   }
 };
 
-// API pour les statistiques des projets synchronisés
 export const getSyncedProjectStats = async () => {
   try {
     const projects = await getSyncedProjectsWithDetails();
-    
+
     const stats = {
       totalProjects: projects.length,
-      activeProjects: projects.filter(p => p.status === 'en_cours').length,
-      completedProjects: projects.filter(p => p.status === 'terminé').length,
-      delayedProjects: projects.filter(p => p.status === 'en_retard').length,
+      activeProjects: projects.filter((p) => p.status === "en_cours").length,
+      completedProjects: projects.filter((p) => p.status === "terminé").length,
+      delayedProjects: projects.filter((p) => p.status === "en_retard").length,
       totalTeamMembers: projects.reduce((sum, p) => sum + (p.teamSize || 0), 0),
       totalSites: projects.reduce((sum, p) => sum + (p.siteCount || 0), 0),
       totalBudget: projects.reduce((sum, p) => sum + (p.budget || 0), 0),
-      totalSiteBudget: projects.reduce((sum, p) => sum + (p.totalSiteBudget || 0), 0),
-      avgProgress: projects.length > 0 
-        ? Math.round(projects.reduce((sum, p) => sum + p.progress, 0) / projects.length)
-        : 0,
-      urgentProjects: projects.filter(p => p.priority === 'urgent').length,
-      highPriorityProjects: projects.filter(p => p.priority === 'high').length
+      totalSiteBudget: projects.reduce(
+        (sum, p) => sum + (p.totalSiteBudget || 0),
+        0,
+      ),
+      avgProgress:
+        projects.length > 0
+          ? Math.round(
+              projects.reduce((sum, p) => sum + p.progress, 0) /
+                projects.length,
+            )
+          : 0,
+      urgentProjects: projects.filter((p) => p.priority === "urgent").length,
+      highPriorityProjects: projects.filter((p) => p.priority === "high").length,
     };
 
     return stats;
@@ -233,7 +274,7 @@ export const getSyncedProjectStats = async () => {
       totalSiteBudget: 0,
       avgProgress: 0,
       urgentProjects: 0,
-      highPriorityProjects: 0
+      highPriorityProjects: 0,
     };
   }
 };

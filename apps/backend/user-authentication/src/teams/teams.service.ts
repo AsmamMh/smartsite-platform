@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Team } from './entities/team.entity';
 
 @Injectable()
@@ -67,60 +67,98 @@ export class TeamsService {
   }
 
   async addMemberToTeam(teamId: string, memberId: string) {
-    return this.teamModel.findByIdAndUpdate(
-      teamId,
-      { $addToSet: { members: memberId } },
-      { new: true },
-    )
+    if (!Types.ObjectId.isValid(teamId)) {
+      throw new BadRequestException('Identifiant d’équipe invalide');
+    }
+    if (!Types.ObjectId.isValid(memberId)) {
+      throw new BadRequestException(
+        'Identifiant utilisateur invalide — utilisez l’ID MongoDB du compte (24 caractères hexadécimaux), pas un identifiant de démo.',
+      );
+    }
+    const memberObjectId = new Types.ObjectId(memberId);
+    const updated = await this.teamModel
+      .findByIdAndUpdate(
+        teamId,
+        { $addToSet: { members: memberObjectId } },
+        { new: true },
+      )
       .populate({
         path: 'members',
         select: '-role -password -emailVerificationOtp -otpExpiresAt -passwordResetCode -passwordResetCodeExpiresAt'
       })
       .populate('manager', '-role -password -emailVerificationOtp -otpExpiresAt -passwordResetCode -passwordResetCodeExpiresAt')
       .exec();
+    if (!updated) {
+      throw new NotFoundException('Équipe introuvable');
+    }
+    return updated;
   }
 
   async removeMemberFromTeam(teamId: string, memberId: string) {
-    return this.teamModel.findByIdAndUpdate(
-      teamId,
-      { $pull: { members: memberId } },
-      { new: true },
-    )
+    if (!Types.ObjectId.isValid(teamId) || !Types.ObjectId.isValid(memberId)) {
+      throw new BadRequestException('Identifiant invalide');
+    }
+    const updated = await this.teamModel
+      .findByIdAndUpdate(
+        teamId,
+        { $pull: { members: new Types.ObjectId(memberId) } },
+        { new: true },
+      )
       .populate({
         path: 'members',
         select: '-role -password -emailVerificationOtp -otpExpiresAt -passwordResetCode -passwordResetCodeExpiresAt'
       })
       .populate('manager', '-role -password -emailVerificationOtp -otpExpiresAt -passwordResetCode -passwordResetCodeExpiresAt')
       .exec();
+    if (!updated) {
+      throw new NotFoundException('Équipe introuvable');
+    }
+    return updated;
   }
 
   async setManager(teamId: string, managerId: string) {
-    return this.teamModel.findByIdAndUpdate(
-      teamId,
-      { manager: managerId },
-      { new: true },
-    )
+    if (!Types.ObjectId.isValid(teamId) || !Types.ObjectId.isValid(managerId)) {
+      throw new BadRequestException('Identifiant invalide');
+    }
+    const updated = await this.teamModel
+      .findByIdAndUpdate(
+        teamId,
+        { manager: new Types.ObjectId(managerId) },
+        { new: true },
+      )
       .populate({
         path: 'members',
         select: '-role -password -emailVerificationOtp -otpExpiresAt -passwordResetCode -passwordResetCodeExpiresAt'
       })
       .populate('manager', '-role -password -emailVerificationOtp -otpExpiresAt -passwordResetCode -passwordResetCodeExpiresAt')
       .exec();
+    if (!updated) {
+      throw new NotFoundException('Équipe introuvable');
+    }
+    return updated;
   }
 
   // Note: assignSite method - updates the Team document with the assigned site
   async assignSite(teamId: string, siteId: string) {
-    return this.teamModel.findByIdAndUpdate(
-      teamId,
-      { site: siteId },
-      { new: true }
-    )
+    if (!Types.ObjectId.isValid(teamId) || !Types.ObjectId.isValid(siteId)) {
+      throw new BadRequestException('Identifiant invalide');
+    }
+    const updated = await this.teamModel
+      .findByIdAndUpdate(
+        teamId,
+        { site: new Types.ObjectId(siteId) },
+        { new: true }
+      )
       .populate({
         path: 'members',
         select: '-role -password -emailVerificationOtp -otpExpiresAt -passwordResetCode -passwordResetCodeExpiresAt'
       })
       .populate('manager', '-role -password -emailVerificationOtp -otpExpiresAt -passwordResetCode -passwordResetCodeExpiresAt')
       .exec();
+    if (!updated) {
+      throw new NotFoundException('Équipe introuvable');
+    }
+    return updated;
   }
 
   // Remove site assignment from team
