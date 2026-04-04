@@ -82,6 +82,7 @@ import {
 } from "@/app/action/planing.action";
 import { useParams } from "react-router";
 import useTaskModal from "@/app/hooks/use-task-modal";
+import useTaskDetailsModal from "@/app/hooks/use-task-details-modal";
 import { getTaskSTagesByMilestoneId } from "@/app/action/task.actions";
 import useTaskStageModal from "@/app/hooks/use-task-stage-modal";
 import { removeTaskStage } from "@/app/action/taskStage.action";
@@ -880,7 +881,12 @@ function MyKanbanBoardCard({
     handleBlur();
   }
 
-  const { setId:setTaskId,isOpen,setMilestoneid, onOpen, onClose, setType,  id } = useTaskModal();
+  const { setId: setTaskId, setMilestoneid, onOpen, setType } = useTaskModal();
+  const {
+    setId: setDetailsTaskId,
+    setTask: setDetailsTask,
+    onOpen: onOpenTaskDetails,
+  } = useTaskDetailsModal();
   const { milestoneId } = useParams();
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   return isEditingTitle ? (
@@ -918,6 +924,7 @@ function MyKanbanBoardCard({
     </form>
   ) : (
     <KanbanBoardCard
+      className="group rounded-xl border border-slate-200/90 bg-gradient-to-b from-white to-slate-50/60 p-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md"
       color={bordercolor}
       data={card}
       isActive={isActive}
@@ -940,39 +947,49 @@ function MyKanbanBoardCard({
       }}
       ref={kanbanBoardCardReference}
     >
-      <KanbanBoardCardDescription
-        className="cursor-pointer hover:underline  w-fit"
-        onClick={() => {
-          setMilestoneid(milestoneId);
-          setTaskId(card._id);
-          console.log("card id===================", card._id);
-          (setType("edit"), onOpen());
-        }}
-      >
-        {card.title}
-      </KanbanBoardCardDescription>
-      <div className="mt-2">
+      <div className="flex items-start justify-between gap-2">
+        <KanbanBoardCardDescription
+          className="line-clamp-2 w-fit cursor-pointer text-sm font-semibold leading-5 text-slate-800 transition group-hover:text-sky-700"
+          onClick={() => {
+            setMilestoneid(milestoneId);
+            setTaskId(card._id);
+            setDetailsTaskId(card._id);
+            setDetailsTask(card);
+            onOpenTaskDetails();
+          }}
+        >
+          {card.title}
+        </KanbanBoardCardDescription>
+
         <Badge
-          className={`border text-xs font-medium ${getPriorityStyles(card.priority)}`}
+          className={`shrink-0 border text-[10px] font-semibold tracking-wide ${getPriorityStyles(card.priority)}`}
           variant="outline"
         >
-          Priority: {card.priority ?? TaskPriorityEnum.MEDIUM}
+          {card.priority ?? TaskPriorityEnum.MEDIUM}
         </Badge>
       </div>
-      {card.description}
+
+      {card.description ? (
+        <p className="mt-2 line-clamp-3 text-xs leading-5 text-slate-600">
+          {card.description}
+        </p>
+      ) : (
+        <p className="mt-2 text-xs italic text-slate-400">No description</p>
+      )}
 
       {/* and start and end date */}
       {card.startDate && card.endDate && (
-        <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
-          <span>
+        <div className="mt-3 inline-flex items-center rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-medium text-slate-600">
+          <span className="tabular-nums">
             {new Date(card.startDate).toLocaleDateString()} -{" "}
             {new Date(card.endDate).toLocaleDateString()}
           </span>
         </div>
       )}
-      <KanbanBoardCardButtonGroup disabled={isActive}>
+
+      <KanbanBoardCardButtonGroup className="mt-3 border-t border-slate-200/80 pt-2" disabled={isActive}>
         <KanbanBoardCardButton
-          className="text-destructive cursor-pointer w-full size-5"
+          className="h-8 w-8 cursor-pointer rounded-full border border-red-100 bg-red-50 p-0 text-red-600 transition hover:bg-red-100"
           // onClick={() => {
           //   ( setOpenDeleteModal(true));
           // }}
@@ -980,8 +997,8 @@ function MyKanbanBoardCard({
         >
           <AlertDialog open={openDeleteModal} onOpenChange={setOpenDeleteModal}>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="rounded-full my-auto ">
-                <Trash2Icon />
+              <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
+                <Trash2Icon className="h-4 w-4" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent size="sm">
