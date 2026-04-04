@@ -110,7 +110,7 @@ export default function MyTask() {
     <div className="space-y-6">
       <div className="flex taskssetType-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Milestone</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white dark:text-white">Milestone</h1>
           <p className="text-gray-500 mt-1">
             Manage site relationships and orders
           </p>

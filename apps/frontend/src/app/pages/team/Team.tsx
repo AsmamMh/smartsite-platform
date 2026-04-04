@@ -606,7 +606,7 @@ export default function Team() {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Teams
           </h1>
           <p className="text-sm sm:text-base text-gray-500 mt-1">
@@ -964,7 +964,7 @@ export default function Team() {
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className="font-semibold text-gray-900 dark:text-white">
                               {team.name}
                             </h3>
                             {team.teamCode && (

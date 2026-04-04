@@ -237,7 +237,7 @@ export default function UserManagement() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Role Management
             </h1>
             <p className="text-gray-500 mt-1">
@@ -249,7 +249,7 @@ export default function UserManagement() {
           <CardContent className="pt-6">
             <div className="text-center py-12">
               <Shield className="h-12 w-12 mx-auto mb-4 text-red-500" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                 Access Denied
               </h3>
               <p className="text-gray-600 mb-6">
@@ -271,7 +271,7 @@ export default function UserManagement() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white dark:text-white">User Management</h1>
         <p className="text-gray-500 mt-1">
           Manage user roles, permissions, and access control settings to ensure
           secure
@@ -287,8 +287,8 @@ export default function UserManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold text-gray-900">
-              {/* {statics.totalUsers || 0} */}
+            <p className="text-4xl font-bold text-gray-900 dark:text-white dark:text-white">
+               {statics.totalUsers || 0} 
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Users assigned to roles
@@ -303,8 +303,8 @@ export default function UserManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold text-gray-900">
-              {/* {statics.totalRoles || 0} */}
+            <p className="text-4xl font-bold text-gray-900 dark:text-white dark:text-white">
+              {statics.totalRoles || 0}
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Active roles in the system
@@ -320,8 +320,8 @@ export default function UserManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold text-gray-900">
-              {/* {statics.totalPermissions || 0} */}
+            <p className="text-4xl font-bold text-gray-900 dark:text-white dark:text-white">
+               {statics.totalPermissions || 0}
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Total permissions available

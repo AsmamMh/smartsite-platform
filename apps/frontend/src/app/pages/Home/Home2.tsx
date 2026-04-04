@@ -6,6 +6,7 @@ import {
   Menu,
   Twitter,
 } from "lucide-react";
+import { SmartSiteLogo } from "@/app/components/branding/SmartSiteLogo";
 
 const navigation = [
   { name: "Product", href: "#" },
@@ -176,13 +177,9 @@ export default function Home2() {
           aria-label="Global"
         >
           <div className="flex lg:flex-1">
-            <a href="#" className="-m-1.5 p-1.5">
+            <a href="/" className="-m-1.5 p-1.5 flex items-center gap-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600">
               <span className="sr-only">SmartSite</span>
-              <img
-                className="h-8 w-auto"
-                src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-                alt=""
-              />
+              <SmartSiteLogo size="md" className="drop-shadow-sm" />
             </a>
           </div>
           <div className="flex lg:hidden">
@@ -199,7 +196,7 @@ export default function Home2() {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-sm font-semibold leading-6 text-gray-900"
+                className="text-sm font-semibold leading-6 text-gray-900 dark:text-white"
               >
                 {item.name}
               </a>
@@ -208,7 +205,7 @@ export default function Home2() {
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
             <a
               href="/login"
-              className="text-sm font-semibold leading-6 text-gray-900"
+              className="text-sm font-semibold leading-6 text-gray-900 dark:text-white"
             >
               Log in <span aria-hidden="true">&rarr;</span>
             </a>
@@ -265,7 +262,13 @@ export default function Home2() {
             <div className="mx-auto max-w-7xl px-6 pb-32 pt-36 sm:pt-60 lg:px-8 lg:pt-32">
               <div className="mx-auto max-w-2xl gap-x-14 lg:mx-0 lg:flex lg:max-w-none lg:items-center">
                 <div className="w-full max-w-xl lg:shrink-0 xl:max-w-2xl">
-                  <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+                  <div className="mb-8">
+                    <SmartSiteLogo size="lg" className="mx-auto lg:mx-0" />
+                    <p className="mt-3 text-center text-xs font-semibold tracking-[0.2em] text-slate-600 uppercase lg:text-left">
+                      Intelligent construction platform
+                    </p>
+                  </div>
+                  <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-6xl">
                     SmartSite: Manage your construction sites with artificial
                     intelligence
                   </h1>
@@ -335,7 +338,7 @@ export default function Home2() {
         {/* Content section */}
         <div className="mx-auto mb-30 mt-12 max-w-7xl px-6 sm:mt-0 lg:px-8 xl:-mt-8">
           <div className="mx-auto max-w-2xl lg:mx-0 lg:max-w-none">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
               Our Mission
             </h2>
             <div className="mt-6 flex flex-col gap-x-8 gap-y-20 lg:flex-row">
@@ -369,7 +372,7 @@ export default function Home2() {
                       <dt className="text-base leading-7 text-gray-600">
                         {stat.label}
                       </dt>
-                      <dd className="text-5xl font-semibold tracking-tight text-gray-900">
+                      <dd className="text-5xl font-semibold tracking-tight text-gray-900 dark:text-white">
                         {stat.value}
                       </dd>
                     </div>
@@ -447,7 +450,7 @@ export default function Home2() {
         {/* Values section */}
         <div className="mx-auto mb-32 mt-32 max-w-7xl px-6 sm:mt-40 lg:px-8">
           <div className="mx-auto max-w-2xl lg:mx-0">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
               Our Values
             </h2>
             <p className="mt-6 text-lg leading-8 text-gray-600">
@@ -458,7 +461,7 @@ export default function Home2() {
           <dl className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 text-base leading-7 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:grid-cols-3">
             {values.map((value) => (
               <div key={value.name}>
-                <dt className="font-semibold text-gray-900">{value.name}</dt>
+                <dt className="font-semibold text-gray-900 dark:text-white">{value.name}</dt>
                 <dd className="mt-1 text-gray-600">{value.description}</dd>
               </div>
             ))}
@@ -491,7 +494,7 @@ export default function Home2() {
                   Start Free Trial
                 </button>
 
-                <button className="border border-white text-white hover:bg-white hover:text-gray-900 px-6 py-3 rounded-lg transition">
+                <button className="border border-white text-white hover:bg-white hover:text-gray-900 dark:text-white px-6 py-3 rounded-lg transition">
                   Request Demo
                 </button>
               </div>
@@ -548,7 +551,7 @@ export default function Home2() {
                     Smart Construction Management
                   </h2>
 
-                  <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                  <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl">
                     Manage Your Construction Sites Efficiently
                   </p>
 
@@ -561,7 +564,7 @@ export default function Home2() {
                   <dl className="mt-10 space-y-8 text-base leading-7 text-gray-600">
                     {/* Feature 1 */}
                     <div className="relative pl-9">
-                      <dt className="inline font-semibold text-gray-900">
+                      <dt className="inline font-semibold text-gray-900 dark:text-white">
                         <span className="absolute left-1 top-1 text-indigo-500">
                           ✔
                         </span>
@@ -576,7 +579,7 @@ export default function Home2() {
 
                     {/* Feature 2 */}
                     <div className="relative pl-9">
-                      <dt className="inline font-semibold text-gray-900">
+                      <dt className="inline font-semibold text-gray-900 dark:text-white">
                         <span className="absolute left-1 top-1 text-indigo-500">
                           ✔
                         </span>
@@ -591,7 +594,7 @@ export default function Home2() {
 
                     {/* Feature 3 */}
                     <div className="relative pl-9">
-                      <dt className="inline font-semibold text-gray-900">
+                      <dt className="inline font-semibold text-gray-900 dark:text-white">
                         <span className="absolute left-1 top-1 text-indigo-500">
                           ✔
                         </span>
@@ -715,7 +718,7 @@ export default function Home2() {
                     id="email-address"
                     autoComplete="email"
                     required
-                    className="appearance-none min-w-0 w-full bg-white border border-transparent rounded-md py-2 px-4 text-base text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white focus:border-white focus:placeholder-gray-400"
+                    className="appearance-none min-w-0 w-full bg-white border border-transparent rounded-md py-2 px-4 text-base text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white focus:border-white focus:placeholder-gray-400"
                     placeholder="Enter your email"
                   />
                   <div className="mt-3 rounded-md sm:mt-0 sm:ml-3 sm:flex-shrink-0">

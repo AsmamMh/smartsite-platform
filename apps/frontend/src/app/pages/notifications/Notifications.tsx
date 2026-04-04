@@ -189,7 +189,7 @@ export default function Notifications() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Notifications</h1>
           <p className="text-gray-500 mt-1">
             Stay updated with alerts and announcements
           </p>
@@ -243,7 +243,7 @@ export default function Notifications() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <h3 className={notification.read ? "font-semibold text-gray-900" : "font-extrabold text-gray-900"}>
+                          <h3 className={notification.read ? "font-semibold text-gray-900 dark:text-white" : "font-extrabold text-gray-900 dark:text-white"}>
                             {notification.title}
                           </h3>
                           <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
@@ -299,7 +299,7 @@ export default function Notifications() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <h3 className={notification.read ? "font-semibold text-gray-900" : "font-extrabold text-gray-900"}>
+                          <h3 className={notification.read ? "font-semibold text-gray-900 dark:text-white" : "font-extrabold text-gray-900 dark:text-white"}>
                             {notification.title}
                           </h3>
                           <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
@@ -362,7 +362,7 @@ export default function Notifications() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">{notification.title}</h3>
+                          <h3 className="font-semibold text-gray-900 dark:text-white">{notification.title}</h3>
                           <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                           <p className="text-xs text-gray-400 mt-2">{new Date(notification.createdAt).toLocaleString()}</p>
                         </div>

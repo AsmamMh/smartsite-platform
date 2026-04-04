@@ -43,7 +43,7 @@ const MySItes = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Planing</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Planing</h1>
           <p className="text-gray-500 mt-1">
             Manage site relationships and order
           </p>
@@ -63,7 +63,7 @@ const MySItes = () => {
                 <div key={site.id} className="p-4 border rounded-lg">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
                         {site.nom}
                       </h3>
                       <p className="text-sm text-gray-500 mt-1">

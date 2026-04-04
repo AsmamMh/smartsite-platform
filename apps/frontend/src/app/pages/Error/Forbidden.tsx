@@ -19,7 +19,7 @@ export default function Forbidden() {
                 <p className="text-sm font-semibold text-indigo-600 uppercase tracking-wide">
                   404 error
                 </p>
-                <h1 className="mt-2 text-4xl font-extrabold text-gray-900 tracking-tight sm:text-5xl">
+                <h1 className="mt-2 text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight sm:text-5xl">
                   Forbidden
                 </h1>
                 <p className="mt-2 text-base text-gray-500">

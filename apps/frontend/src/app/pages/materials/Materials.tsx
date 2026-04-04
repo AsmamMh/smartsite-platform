@@ -128,7 +128,7 @@ export default function Materials() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Materials Inventory
           </h1>
           <p className="text-gray-500 mt-1">
@@ -218,7 +218,7 @@ export default function Materials() {
                 className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold text-gray-900 dark:text-white">
                     {material.name}
                   </h3>
                   <p className="text-sm text-gray-500 mt-1">

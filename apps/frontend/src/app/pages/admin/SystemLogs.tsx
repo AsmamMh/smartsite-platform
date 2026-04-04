@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "../../components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog";
 import { useAuthStore } from "../../store/authStore";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 import { AUTH_API_URL } from "@/lib/auth-api-url";
 
 type AuditLog = {
@@ -66,9 +66,13 @@ export default function SystemLogs() {
   const [loading, setLoading] = useState(false);
   const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
   const [retentionDays, setRetentionDays] = useState<number>(365);
+  const [archivedLogs, setArchivedLogs] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [logsPerPage] = useState(10);
 
   const [filters, setFilters] = useState({
     userId: "all",
+    userCin: "",
     actionType: "all",
     severity: "all",
     keyword: "",
@@ -83,16 +87,15 @@ export default function SystemLogs() {
   );
   const actionTypes = useMemo(() => Array.from(new Set(logs.map((l) => l.actionType))), [logs]);
 
-  const loadLogs = async (
-    filtersOverride?: {
-      userId: string;
-      actionType: string;
-      severity: string;
-      keyword: string;
-      startDate: string;
-      endDate: string;
-    },
-  ) => {
+  // Pagination logic
+  const indexOfLastLog = currentPage * logsPerPage;
+  const indexOfFirstLog = indexOfLastLog - logsPerPage;
+  const currentLogs = logs.slice(indexOfFirstLog, indexOfLastLog);
+  const totalPages = Math.ceil(logs.length / logsPerPage);
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
+  const loadLogs = async () => {
     setLoading(true);
     try {
       const token = getAuthToken();
@@ -100,27 +103,28 @@ export default function SystemLogs() {
         toast.error("Token manquant, veuillez vous reconnecter.");
         return;
       }
-      const effectiveFilters = filtersOverride ?? filters;
       const params: Record<string, string> = {};
-      if (effectiveFilters.userId !== "all") params.userId = effectiveFilters.userId;
-      if (effectiveFilters.actionType !== "all") params.actionType = effectiveFilters.actionType;
-      if (effectiveFilters.severity !== "all") params.severity = effectiveFilters.severity;
-      if (effectiveFilters.keyword.trim()) params.keyword = effectiveFilters.keyword.trim();
-      if (effectiveFilters.startDate) params.startDate = effectiveFilters.startDate;
-      if (effectiveFilters.endDate) params.endDate = effectiveFilters.endDate;
+      if (filters.userId !== "all") params.userId = filters.userId;
+      if (filters.userCin.trim()) params.userCin = filters.userCin.trim();
+      if (filters.actionType !== "all") params.actionType = filters.actionType;
+      if (filters.severity !== "all") params.severity = filters.severity;
+      if (filters.keyword.trim()) params.keyword = filters.keyword.trim();
+      if (filters.startDate) params.startDate = filters.startDate;
+      if (filters.endDate) params.endDate = filters.endDate;
 
       const res = await api.get("/audit-logs", {
         params,
         headers: { Authorization: `Bearer ${token}` },
       });
       setLogs(res.data || []);
+      setCurrentPage(1); // Reset to first page when loading new logs
 
       const retention = await api.get("/audit-logs/retention", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setRetentionDays(retention?.data?.retentionDays || 365);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || "Erreur de chargement des logs");
+      toast.error(err?.response?.data?.message || "Erreur lors du chargement des logs");
     } finally {
       setLoading(false);
     }
@@ -139,10 +143,10 @@ export default function SystemLogs() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">System Logs & Audit Trail</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Journaux système et traçabilité d'audit</h1>
         <p className="text-gray-500 mt-1">Surveillance des actions et détection d'anomalies</p>
         <p className="text-xs text-gray-500 mt-1">
-          Rétention automatique: {retentionDays} jours. Suppression manuelle désactivée.
+          Rétention automatique : {retentionDays} jours. Suppression manuelle désactivée.
         </p>
       </div>
 
@@ -151,13 +155,13 @@ export default function SystemLogs() {
           <CardTitle>Filtres</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-3">
             <div>
-              <Label>Utilisateur</Label>
+              <Label>User</Label>
               <Select value={filters.userId} onValueChange={(v) => setFilters((f) => ({ ...f, userId: v }))}>
-                <SelectTrigger><SelectValue placeholder="Tous" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   {users.map((u) => (
                     <SelectItem key={u._id} value={u.userId || ""}>
                       {u.userName || u.userCin || u.userId}
@@ -167,46 +171,60 @@ export default function SystemLogs() {
               </Select>
             </div>
             <div>
+              <Label>CIN</Label>
+              <Input
+                placeholder="Search by CIN..."
+                value={filters.userCin}
+                onChange={(e) => setFilters((f) => ({ ...f, userCin: e.target.value }))}
+              />
+            </div>
+            <div>
               <Label>Action</Label>
               <Select value={filters.actionType} onValueChange={(v) => setFilters((f) => ({ ...f, actionType: v }))}>
-                <SelectTrigger><SelectValue placeholder="Toutes" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   {actionTypes.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Sévérité</Label>
+              <Label>Severity</Label>
               <Select value={filters.severity} onValueChange={(v) => setFilters((f) => ({ ...f, severity: v }))}>
-                <SelectTrigger><SelectValue placeholder="Toutes" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="normal">Normal</SelectItem>
                   <SelectItem value="important">Important</SelectItem>
-                  <SelectItem value="critical">Critique</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>Début</Label>
+              <Label>Start</Label>
               <Input type="date" value={filters.startDate} onChange={(e) => setFilters((f) => ({ ...f, startDate: e.target.value }))} />
             </div>
             <div>
-              <Label>Fin</Label>
+              <Label>End</Label>
               <Input type="date" value={filters.endDate} onChange={(e) => setFilters((f) => ({ ...f, endDate: e.target.value }))} />
             </div>
             <div>
-              <Label>Recherche</Label>
-              <Input placeholder="mot-clé..." value={filters.keyword} onChange={(e) => setFilters((f) => ({ ...f, keyword: e.target.value }))} />
+              <Label>Search</Label>
+              <Input placeholder="keyword..." value={filters.keyword} onChange={(e) => setFilters((f) => ({ ...f, keyword: e.target.value }))} />
             </div>
           </div>
           <div className="flex gap-2 mt-4">
-            <Button onClick={loadLogs}>Filtrer</Button>
+            <Button onClick={loadLogs}>Filter</Button>
             <Button
               variant="outline"
               onClick={() => {
-                const blob = new Blob([JSON.stringify(logs, null, 2)], { type: "application/json;charset=utf-8" });
+                const logsToArchive = logs.filter(log => !archivedLogs.has(log._id));
+                if (logsToArchive.length === 0) {
+                  toast.error("Aucun nouveau log à archiver");
+                  return;
+                }
+
+                const blob = new Blob([JSON.stringify(logsToArchive, null, 2)], { type: "application/json;charset=utf-8" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
                 a.href = url;
@@ -215,15 +233,28 @@ export default function SystemLogs() {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+
+                // Marquer les logs comme archivés
+                const newArchivedLogs = new Set(archivedLogs);
+                logsToArchive.forEach(log => newArchivedLogs.add(log._id));
+                setArchivedLogs(newArchivedLogs);
+
+                toast.success(`${logsToArchive.length} logs archivés avec succès`);
               }}
             >
-              Archiver JSON
+              Archive JSON
             </Button>
             <Button
               variant="outline"
               onClick={() => {
+                const logsToArchive = logs.filter(log => !archivedLogs.has(log._id));
+                if (logsToArchive.length === 0) {
+                  toast.error("Aucun nouveau log à archiver");
+                  return;
+                }
+
                 const header = "date,user,actionType,actionLabel,severity,status,resourceType,resourceId,ip,details,sessionDurationSec";
-                const rows = logs.map((l) =>
+                const rows = logsToArchive.map((l) =>
                   [
                     new Date(l.createdAt).toISOString(),
                     `"${(l.userName || l.userCin || "").replace(/"/g, '""')}"`,
@@ -248,19 +279,26 @@ export default function SystemLogs() {
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
+
+                // Marquer les logs comme archivés
+                const newArchivedLogs = new Set(archivedLogs);
+                logsToArchive.forEach(log => newArchivedLogs.add(log._id));
+                setArchivedLogs(newArchivedLogs);
+
+                toast.success(`${logsToArchive.length} logs archivés avec succès`);
               }}
             >
-              Archiver CSV
+              Archive CSV
             </Button>
             <Button
               variant="outline"
               onClick={() => {
-                const resetFilters = { userId: "all", actionType: "all", severity: "all", keyword: "", startDate: "", endDate: "" };
+                const resetFilters = { userId: "all", userCin: "", actionType: "all", severity: "all", keyword: "", startDate: "", endDate: "" };
                 setFilters(resetFilters);
-                loadLogs(resetFilters);
+                loadLogs();
               }}
             >
-              Réinitialiser
+              Reset
             </Button>
           </div>
         </CardContent>
@@ -272,29 +310,30 @@ export default function SystemLogs() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-gray-500">Chargement...</p>
+            <p className="text-sm text-gray-500">Loading...</p>
           ) : logs.length === 0 ? (
-            <p className="text-sm text-gray-500">Aucun log trouvé.</p>
+            <p className="text-sm text-gray-500">No logs found.</p>
           ) : (
             <div className="space-y-2">
-              {logs.map((log) => (
-                <div key={log._id} className="p-3 border rounded-md flex items-center justify-between">
+              {currentLogs.map((log) => (
+                <div key={log._id} className={`p-3 border rounded-md flex items-center justify-between ${archivedLogs.has(log._id) ? 'bg-gray-50 opacity-75' : ''}`}>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{log.actionLabel}</span>
+                      {archivedLogs.has(log._id) && <Badge variant="secondary">Archived</Badge>}
                       <Badge variant={severityVariant(log.severity)}>{log.severity || "normal"}</Badge>
                       <Badge variant={log.status === "failed" ? "destructive" : "secondary"}>{log.status || "success"}</Badge>
                     </div>
                     <p className="text-xs text-gray-500">
-                      {new Date(log.createdAt).toLocaleString("fr-FR")} • {log.userName || log.userCin || "Système"} • {log.actionType}
+                      {new Date(log.createdAt).toLocaleString("en-US")} • {log.userName || log.userCin || "System"} • {log.actionType}
                     </p>
                     {log.sessionDurationSec != null && (
                       <p className="text-xs text-gray-500">
-                        Durée session: {formatSessionDuration(log.sessionDurationSec)}
+                        Session duration: {formatSessionDuration(log.sessionDurationSec)}
                       </p>
                     )}
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => setSelectedLog(log)}>Voir détails</Button>
+                  <Button size="sm" variant="outline" onClick={() => setSelectedLog(log)}>View Details</Button>
                 </div>
               ))}
             </div>
@@ -302,23 +341,63 @@ export default function SystemLogs() {
         </CardContent>
       </Card>
 
+      {/* Pagination */}
+      {logs.length > logsPerPage && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Affichage de {indexOfFirstLog + 1} à {Math.min(indexOfLastLog, logs.length)} sur {logs.length} logs
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => paginate(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Précédent
+            </Button>
+            <div className="flex space-x-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => paginate(page)}
+                  className="w-8 h-8 p-0"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => paginate(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Suivant
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Dialog open={!!selectedLog} onOpenChange={(o) => !o && setSelectedLog(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Détail du log</DialogTitle>
+            <DialogTitle>Détails du log</DialogTitle>
           </DialogHeader>
           {selectedLog && (
             <div className="space-y-2 text-sm">
               <p><strong>Action:</strong> {selectedLog.actionLabel}</p>
               <p><strong>Type:</strong> {selectedLog.actionType}</p>
-              <p><strong>Utilisateur:</strong> {selectedLog.userName || selectedLog.userCin || "Système"}</p>
-              <p><strong>Rôle:</strong> {selectedLog.userRole || "N/A"}</p>
-              <p><strong>Ressource:</strong> {selectedLog.resourceType || "N/A"} {selectedLog.resourceId ? `(${selectedLog.resourceId})` : ""}</p>
+              <p><strong>User:</strong> {selectedLog.userName || selectedLog.userCin || "System"}</p>
+              <p><strong>Role:</strong> {selectedLog.userRole || "N/A"}</p>
+              <p><strong>Resource:</strong> {selectedLog.resourceType || "N/A"} {selectedLog.resourceId ? `(${selectedLog.resourceId})` : ""}</p>
               <p><strong>IP:</strong> {selectedLog.ipAddress || "N/A"}</p>
-              <p><strong>Date:</strong> {new Date(selectedLog.createdAt).toLocaleString("fr-FR")}</p>
+              <p><strong>Date:</strong> {new Date(selectedLog.createdAt).toLocaleString("en-US")}</p>
               <p><strong>Session ID:</strong> {selectedLog.sessionId || "N/A"}</p>
-              <p><strong>Durée session:</strong> {formatSessionDuration(selectedLog.sessionDurationSec)}</p>
-              <p><strong>Détails:</strong> {selectedLog.details || "N/A"}</p>
+              <p><strong>Session duration:</strong> {formatSessionDuration(selectedLog.sessionDurationSec)}</p>
+              <p><strong>Details:</strong> {selectedLog.details || "N/A"}</p>
             </div>
           )}
         </DialogContent>

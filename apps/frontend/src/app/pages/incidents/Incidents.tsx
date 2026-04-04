@@ -44,10 +44,11 @@ import { mockIncidents } from "../../utils/mockData";
 import { toast } from "sonner";
 import axios from "axios";
 import { trackAuditEvent } from "../../action/audit.action";
+import { incidentMatchesSearch } from "../../utils/incidentSearchFilter";
 
 // API pour rechercher des utilisateurs
 const api = axios.create({
-  baseURL: "http://localhost:3003",
+  baseURL: "http://localhost:3000",
   timeout: 10000, // 10 secondes timeout
 });
 
@@ -200,13 +201,10 @@ export default function Incidents() {
     allUsers.length,
   );
 
-  // Filtrer les incidents par recherche
+  // Filtrer les incidents par recherche (dont nom d'incident : title, incidentName, etc.)
   useEffect(() => {
-    const filtered = incidents.filter(
-      (incident) =>
-        incident.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        incident.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        incident.reportedBy?.toLowerCase().includes(searchTerm.toLowerCase()),
+    const filtered = incidents.filter((incident) =>
+      incidentMatchesSearch(incident, searchTerm),
     );
     setFilteredIncidents(filtered);
     setCurrentPage(1); // Réinitialiser à la première page lors de la recherche
@@ -651,7 +649,7 @@ export default function Incidents() {
 
       const generatedDescription =
         descriptions[newIncident.type as keyof typeof descriptions]?.[
-          newIncident.severity as keyof typeof descriptions.safety
+        newIncident.severity as keyof typeof descriptions.safety
         ] ||
         "Description générée automatiquement pour cet incident. Veuillez compléter avec les détails spécifiques.";
 
@@ -747,7 +745,7 @@ Pour toute question, veuillez contacter l'administrateur système.
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Incident Management
           </h1>
           <p className="text-gray-500 mt-1">
@@ -864,22 +862,29 @@ Pour toute question, veuillez contacter l'administrateur système.
                       onValueChange={setAssignRoleFilter}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Filtrer par rôle" />
+                        <SelectValue placeholder="🎭 Filtrer par rôle" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">Tous les rôles</SelectItem>
-                        {assignableRoles.map((role) => (
-                          <SelectItem key={role} value={role}>
-                            {role}
-                          </SelectItem>
-                        ))}
+                        <SelectItem value="all">🎭 Tous les rôles ({assignableUsers.length})</SelectItem>
+                        {assignableRoles.map((role) => {
+                          const count = assignableUsers.filter(u => u.role?.name === role).length;
+                          return (
+                            <SelectItem key={role} value={role}>
+                              🎭 {role} ({count})
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
-                    <Input
-                      placeholder="Rechercher nom ou CIN"
-                      value={assignCinSearch}
-                      onChange={(e) => setAssignCinSearch(e.target.value)}
-                    />
+                    <div className="relative">
+                      <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                      <Input
+                        placeholder="🔍 Rechercher nom ou CIN"
+                        value={assignCinSearch}
+                        onChange={(e) => setAssignCinSearch(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
                   </div>
                   <Select
                     value={newIncident.assignedUserCin || "none"}
@@ -891,19 +896,25 @@ Pour toute question, veuillez contacter l'administrateur système.
                           value === "none"
                             ? "all"
                             : assignableUsers.find((u) => u.cin === value)?.role
-                                ?.name || "all",
+                              ?.name || "all",
                       })
                     }
                   >
                     <SelectTrigger id="assignedUserCin">
-                      <SelectValue placeholder="Sélectionner un utilisateur" />
+                      <SelectValue placeholder="👤 Sélectionner un utilisateur" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Non assigné</SelectItem>
+                      <SelectItem value="none">🚫 Non assigné</SelectItem>
                       {filteredAssignableUsers.map((u) => (
                         <SelectItem key={u._id} value={u.cin}>
-                          {u.firstname || u.firstName || ""}{" "}
-                          {u.lastname || u.lastName || ""} - CIN: {u.cin}
+                          <div className="flex flex-col items-start">
+                            <span className="font-medium">
+                              {(u.firstname || u.firstName || "") + " " + (u.lastname || u.lastName || "")}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              CIN: {u.cin} • {u.role?.name || "No role"} • {u.email || "No email"}
+                            </span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -922,10 +933,24 @@ Pour toute question, veuillez contacter l'administrateur système.
                       })
                     }
                   />
-                  <p className="text-xs text-gray-500">
-                    Choisir depuis la base, filtrer par rôle, ou saisir
-                    directement le CIN.
-                  </p>
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <p>
+                      💡 <strong>Utilisateurs disponibles:</strong> {filteredAssignableUsers.length} sur {assignableUsers.length}
+                    </p>
+                    <p>
+                      Choisir depuis la base, filtrer par rôle, ou saisir directement le CIN.
+                    </p>
+                    {assignCinSearch && (
+                      <p>
+                        🔍 Recherche: "{assignCinSearch}" - {filteredAssignableUsers.length} résultat(s)
+                      </p>
+                    )}
+                    {assignRoleFilter !== "all" && (
+                      <p>
+                        🎭 Filtre rôle: {assignRoleFilter} - {filteredAssignableUsers.length} utilisateur(s)
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="severity">Severity</Label>
@@ -1020,7 +1045,7 @@ Pour toute question, veuillez contacter l'administrateur système.
               <div className="relative">
                 <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
                 <Input
-                  placeholder="Rechercher un incident..."
+                  placeholder="Rechercher par nom d'incident, type..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 w-64"
@@ -1046,7 +1071,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
                         {(incident as any).title?.toUpperCase() ||
                           (incident as any).incidentName?.toUpperCase() ||
                           incident.type.toUpperCase()}
@@ -1097,7 +1122,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                       <Badge
                         variant={
                           incident.severity === "critical" ||
-                          incident.severity === "high"
+                            incident.severity === "high"
                             ? "destructive"
                             : incident.severity === "medium"
                               ? "default"
@@ -1109,7 +1134,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                       <Badge
                         variant={
                           incident.status === "resolved" ||
-                          incident.status === "closed"
+                            incident.status === "closed"
                             ? "secondary"
                             : "destructive"
                         }
@@ -1511,7 +1536,7 @@ Pour toute question, veuillez contacter l'administrateur système.
               {/* En-tête avec statut et sévérité */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     {(selectedIncidentDetails as any).title?.toUpperCase() ||
                       (
                         selectedIncidentDetails as any
@@ -1526,7 +1551,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                   <Badge
                     variant={
                       selectedIncidentDetails.severity === "critical" ||
-                      selectedIncidentDetails.severity === "high"
+                        selectedIncidentDetails.severity === "high"
                         ? "destructive"
                         : selectedIncidentDetails.severity === "medium"
                           ? "default"
@@ -1539,7 +1564,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                   <Badge
                     variant={
                       selectedIncidentDetails.status === "resolved" ||
-                      selectedIncidentDetails.status === "closed"
+                        selectedIncidentDetails.status === "closed"
                         ? "secondary"
                         : "destructive"
                     }
@@ -1557,7 +1582,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                     <Label className="text-sm font-medium text-gray-700">
                       Type d'incident
                     </Label>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 dark:text-white">
                       {selectedIncidentDetails.type.toUpperCase()}
                     </p>
                   </div>
@@ -1565,7 +1590,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                     <Label className="text-sm font-medium text-gray-700">
                       Signalé par
                     </Label>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 dark:text-white">
                       {selectedIncidentDetails.reportedBy}
                     </p>
                   </div>
@@ -1573,7 +1598,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                     <Label className="text-sm font-medium text-gray-700">
                       Date de création
                     </Label>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 dark:text-white">
                       {new Date(
                         selectedIncidentDetails.createdAt,
                       ).toLocaleString("fr-FR")}
@@ -1583,11 +1608,11 @@ Pour toute question, veuillez contacter l'administrateur système.
                     <Label className="text-sm font-medium text-gray-700">
                       Dernière mise à jour
                     </Label>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 dark:text-white">
                       {selectedIncidentDetails.updatedAt
                         ? new Date(
-                            selectedIncidentDetails.updatedAt,
-                          ).toLocaleString("fr-FR")
+                          selectedIncidentDetails.updatedAt,
+                        ).toLocaleString("fr-FR")
                         : "N/A"}
                     </p>
                   </div>
@@ -1597,7 +1622,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                     <Label className="text-sm font-medium text-gray-700">
                       Site
                     </Label>
-                    <p className="text-sm text-gray-900">
+                    <p className="text-sm text-gray-900 dark:text-white">
                       {(selectedIncidentDetails as any).siteId || "N/A"}
                     </p>
                   </div>
@@ -1608,7 +1633,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                       </Label>
                       <div className="flex items-center gap-2 mt-1">
                         <User className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm text-gray-900">
+                        <span className="text-sm text-gray-900 dark:text-white">
                           {(selectedIncidentDetails as any).assignedTo}
                         </span>
                         {(selectedIncidentDetails as any).assignedUserRole && (
@@ -1628,7 +1653,7 @@ Pour toute question, veuillez contacter l'administrateur système.
                   Description
                 </Label>
                 <div className="mt-1 p-3 bg-gray-50 rounded-md">
-                  <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                  <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
                     {selectedIncidentDetails.description ||
                       "Aucune description fournie"}
                   </p>

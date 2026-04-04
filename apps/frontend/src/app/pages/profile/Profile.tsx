@@ -214,7 +214,7 @@ export default function Profile() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto p-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Mon Profil</h1>
         <p className="text-gray-500 mt-1">
           Gérez vos informations personnelles
         </p>
@@ -273,7 +273,7 @@ export default function Profile() {
             {!isEditing ? (
               <div className="flex-1 space-y-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                     {user.firstName} {user.lastName}
                   </h2>
                   <p className="text-gray-500">CIN: {user.cin}</p>

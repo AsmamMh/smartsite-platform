@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 
@@ -20,6 +20,8 @@ import { useAuthStore } from "@/app/store/authStore";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { SmartSiteLogo } from "@/app/components/branding/SmartSiteLogo";
+import WelcomeModal from "./WelcomeModalSimple";
 
 const formSchema = z.object({
   cin: z
@@ -35,8 +37,17 @@ const formSchema = z.object({
 export default function Login() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
-  const [isLoading, setIsLoading] = useState(false);
   const [logoAvailable, setLogoAvailable] = useState(true);
+  const { user, isFirstLogin } = useAuthStore((state) => state);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  // Debug logging
+  useEffect(() => {
+    console.log("Login component - user:", user);
+    console.log("Login component - isFirstLogin:", isFirstLogin);
+    console.log("Login component - showWelcome:", showWelcome);
+  }, [user, isFirstLogin, showWelcome]);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -73,6 +84,23 @@ export default function Login() {
       //   } else {
       //     navigate("/dashboard");
       //   }
+
+      console.log("Login - Starting login with CIN:", data.cin);
+      const userData = await login(data.cin, data.password);
+      console.log("Login - Login successful!", userData);
+
+      toast.success("Login successful!");
+
+      // Check if this is the first login - show welcome modal directly
+      if (userData.firstLogin) {
+        console.log("Login - First login, showing welcome modal");
+        setShowWelcome(true);
+      } else {
+        // Not first login - navigate directly to dashboard
+        console.log("Login - Not first login, navigating to dashboard");
+        navigate("/dashboard");
+      }
+
     } catch (error: any) {
       const message =
         error?.message ||
@@ -90,21 +118,22 @@ export default function Login() {
         <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
           <div className="mx-auto w-full  lg:w-96">
             <div>
-              <img
-                src="/logo.png"
-                alt="SmartSite"
-                className="h-16 w-16 object-contain"
-              />
-              <h2 className="mt-8 text-2xl font-bold leading-9 tracking-tight text-gray-900">
-                Connectez-vous à votre compte
+              <a href="/" className="inline-block focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-md">
+                <SmartSiteLogo size="sm" />
+              </a>
+              <p className="mt-2 text-xs font-semibold tracking-[0.2em] text-slate-600 uppercase">
+                Intelligent construction platform
+              </p>
+              <h2 className="mt-6 text-2xl font-bold leading-9 tracking-tight text-gray-900 dark:text-white">
+                Sign in to your account
               </h2>
               <p className="mt-2 text-sm leading-6 text-gray-500">
-                Pas encore de compte?{" "}
+                Don't have an account?{" "}
                 <a
                   href="/register"
                   className="font-semibold text-indigo-600 hover:text-indigo-500"
                 >
-                  S'inscrire
+                  Sign up
                 </a>
               </p>
             </div>
@@ -180,14 +209,14 @@ export default function Login() {
                   form="form-rhf-demo"
                   className="flex w-full mt-4 justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                 >
-                  Se connecter
+                  Sign in
                 </Button>
                 <p className="mt-4 text-center text-sm text-gray-500">
                   <a
                     href="/forgot-password"
                     className="font-semibold text-indigo-600 hover:text-indigo-500"
                   >
-                    Mot de passe oublié?
+                    Forgot password?
                   </a>
                 </p>
               </div>
@@ -202,6 +231,14 @@ export default function Login() {
           />
         </div>
       </div>
+
+      {/* Welcome Modal */}
+      <WelcomeModal
+        isOpen={showWelcome}
+        onClose={() => setShowWelcome(false)}
+        userRole={typeof user?.role === "string" ? user.role : "user"}
+        userName={`${user?.firstName} ${user?.lastName}`}
+      />
     </>
   );
 }
