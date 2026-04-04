@@ -173,6 +173,34 @@ export class TaskService implements OnModuleInit {
     }
   }
 
+  /**
+   * Tâches à afficher comme « urgentes » (priorité élevée ou échéance dépassée / proche).
+   */
+  async findUrgentForDashboard() {
+    const now = new Date();
+    const soon = new Date(now);
+    soon.setDate(soon.getDate() + 7);
+
+    const tasks = await this.taskModel
+      .find({
+        $or: [
+          {
+            priority: {
+              $in: ['urgent', 'high', 'Urgent', 'High', 'URGENT', 'HIGH'],
+            },
+          },
+          { endDate: { $lte: soon } },
+        ],
+      })
+      .populate('status')
+      .sort({ endDate: 1 })
+      .limit(80)
+      .lean()
+      .exec();
+
+    return tasks;
+  }
+
   async findOne(id: number) {
     try {
       const response = await this.taskModel.findById(id).exec();

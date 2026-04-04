@@ -72,6 +72,7 @@ export interface User {
   cin: string;
   profilePicture?: string;
   isActive: boolean;
+  
   preferredLanguage?: string;
   projectsCount?: number;
   companyName?: string;
@@ -161,9 +162,7 @@ export interface AuthState {
   getPendingUsers?: () => Promise<User[]>;
   approveUser?: (userId: string, password: string) => Promise<User>;
   rejectUser?: (userId: string) => Promise<void>;
-  getCurrentUser?: () => Promise<any>;
-  updateProfile?: (data: any) => Promise<any>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 export interface RegisterData {
@@ -352,17 +351,16 @@ export interface DashboardStats {
   pendingTasks: number;
 }
 
-
 export const KANBAN_BOARD_CIRCLE_COLORS_MAP = {
-  primary: 'bg-kanban-board-circle-primary',
-  gray: 'bg-kanban-board-circle-gray',
-  red: 'bg-kanban-board-circle-red',
-  yellow: 'bg-kanban-board-circle-yellow',
-  green: 'bg-kanban-board-circle-green',
-  cyan: 'bg-kanban-board-circle-cyan',
-  blue: 'bg-kanban-board-circle-blue',
-  indigo: 'bg-kanban-board-circle-indigo',
-  violet: 'bg-kanban-board-circle-violet',
-  purple: 'bg-kanban-board-circle-purple',
-  pink: 'bg-kanban-board-circle-pink',
+  primary: "bg-kanban-board-circle-primary",
+  gray: "bg-kanban-board-circle-gray",
+  red: "bg-kanban-board-circle-red",
+  yellow: "bg-kanban-board-circle-yellow",
+  green: "bg-kanban-board-circle-green",
+  cyan: "bg-kanban-board-circle-cyan",
+  blue: "bg-kanban-board-circle-blue",
+  indigo: "bg-kanban-board-circle-indigo",
+  violet: "bg-kanban-board-circle-violet",
+  purple: "bg-kanban-board-circle-purple",
+  pink: "bg-kanban-board-circle-pink",
 };

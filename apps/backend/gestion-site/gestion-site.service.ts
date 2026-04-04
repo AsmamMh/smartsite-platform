@@ -4,13 +4,13 @@ import {
   BadRequestException,
   InternalServerErrorException,
   Logger,
-} from "@nestjs/common";
-import { InjectModel, InjectConnection } from "@nestjs/mongoose";
-import { Model, Connection, Types } from "mongoose";
-import { Site } from "./entities/site.entity";
-import { Team } from "./entities/team.entity";
-import { CreateSiteDto, UpdateSiteDto } from "./dto";
-import { HttpException, HttpStatus } from "@nestjs/common";
+} from '@nestjs/common';
+import { InjectModel, InjectConnection } from '@nestjs/mongoose';
+import { Model, Connection, Types } from 'mongoose';
+import { Site } from './entities/site.entity';
+import { Team } from './entities/team.entity';
+import { CreateSiteDto, UpdateSiteDto } from './dto';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 export interface SiteFilters {
   nom?: string;
@@ -273,6 +273,7 @@ export class GestionSiteService {
       // Auto-complete: If progress is 100%, set status to 'completed'
       if (updateData.progress !== undefined && updateData.progress >= 100) {
         updateData.status = "completed";
+
       }
 
       const updatedSite = await this.siteModel
@@ -658,6 +659,126 @@ export class GestionSiteService {
       throw new InternalServerErrorException(
         "Erreur lors de la récupération des sites avec équipes",
       );
+    }
+  }
+
+  // ============ TEAM ASSIGNMENT METHODS ============
+
+  /**
+   * Assign a MongoDB Team to a site (chantier)
+   */
+  async assignTeamToSites(siteId: string, teamId: string): Promise<Site> {
+    try {
+      // Verify site exists
+      const site = await this.siteModel.findById(siteId).exec();
+      if (!site) {
+        throw new NotFoundException(`Site avec l'ID "${siteId}" non trouvé`);
+      }
+
+      // Check if team is already assigned to this site
+      if (site.teamIds && site.teamIds.some(t => t.toString() === teamId)) {
+        throw new BadRequestException('Cette équipe est déjà affectée à ce site');
+      }
+
+      // Add team to site's teamIds
+      const updatedSite = await this.siteModel
+        .findByIdAndUpdate(
+          siteId,
+          { $addToSet: { teamIds: new Types.ObjectId(teamId) } },
+          { new: true },
+        )
+        .exec();
+
+      this.logger.log(`Équipe MongoDB affectée au site: ${siteId}, équipe: ${teamId}`);
+      return updatedSite;
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error(`Erreur lors de l'affectation de l'équipe: ${error.message}`);
+      throw new InternalServerErrorException('Erreur lors de l\'affectation de l\'équipe au site');
+    }
+  }
+
+  /**
+   * Remove a team from a site
+   */
+  async removeTeamFromSites(siteId: string, teamId: string): Promise<Site> {
+    try {
+      const site = await this.siteModel.findById(siteId).exec();
+      if (!site) {
+        throw new NotFoundException(`Site avec l'ID "${siteId}" non trouvé`);
+      }
+
+      // Check if team is assigned to this site
+      if (!site.teamIds || !site.teamIds.some(t => t.toString() === teamId)) {
+        throw new BadRequestException('Cette équipe n\'est pas affectée à ce site');
+      }
+
+      const updatedSite = await this.siteModel
+        .findByIdAndUpdate(
+          siteId,
+          { $pull: { teamIds: new Types.ObjectId(teamId) } },
+          { new: true },
+        )
+        .exec();
+
+      this.logger.log(`Équipe retirée du site: ${siteId}, équipe: ${teamId}`);
+      return updatedSite;
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error(`Erreur lors du retrait de l'équipe: ${error.message}`);
+      throw new InternalServerErrorException('Erreur lors du retrait de l\'équipe du site');
+    }
+  }
+
+  /**
+   * View teams assigned to a site
+   */
+  async getTeamsAssignedToSites(siteId: string): Promise<any[]> {
+    try {
+      const site = await this.siteModel.findById(siteId)
+        .populate({
+          path: 'teamIds',
+          select: 'name description teamCode isActive members manager site'
+        })
+        .exec();
+
+      if (!site) {
+        throw new NotFoundException(`Site avec l'ID "${siteId}" non trouvé`);
+      }
+
+      // Return the populated teamIds (renamed to teams for frontend compatibility)
+      return site.teamIds ? site.teamIds.map((team: any) => ({
+        ...team.toObject(),
+        _id: team._id,
+        id: team._id
+      })) : [];
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(`Erreur lors de la récupération des équipes: ${error.message}`);
+      throw new InternalServerErrorException('Erreur lors de la récupération des équipes du site');
+    }
+  }
+
+  /**
+   * Get all sites with their assigned teams
+   */
+  async getAllSitesWithTeamss(): Promise<Site[]> {
+    try {
+      return await this.siteModel.find()
+        .populate({
+          path: 'teamIds',
+          select: 'name description teamCode'
+        })
+        .exec();
+    } catch (error) {
+      this.logger.error(`Erreur lors de la récupération des sites avec équipes: ${error.message}`);
+      throw new InternalServerErrorException('Erreur lors de la récupération des sites avec équipes');
     }
   }
 }

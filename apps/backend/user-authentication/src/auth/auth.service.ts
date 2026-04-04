@@ -8,7 +8,7 @@ import { UsersService } from '../users/users.service';
 import { EmailService } from '../email/email.service';
 import { RolesService } from '../roles/roles.service';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from './dto';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -19,32 +19,30 @@ export class AuthService {
     private rolesService: RolesService,
   ) {}
 
-  // ✅ FIXED VALIDATE USER
+  
   async validateUser(cin: string, password: string): Promise<any> {
     if (!cin || !password) {
       return null;
     }
 
-    console.log('🔍 validateUser:', cin);
-
     const user = await this.usersService.findByCin(cin);
-
     if (!user) {
       console.log('❌ User not found');
       return null;
     }
 
-    const storedHash = (user as any).password || (user as any).password;
-    if (!storedHash) {
-      console.log('No stored password hash for user', cin);
+    if ((user as any).status && (user as any).status !== 'approved') {
       return null;
     }
 
-    console.log('finding user', user);
-    console.log('find by cin');
+    const storedHash = (user as any).password;
+    if (!storedHash) {
+      return null;
+    }
+
     if (await bcrypt.compare(password, storedHash)) {
       const userObj = user.toObject ? user.toObject() : user;
-      const { password: _p, password: _m, ...result } = userObj as any;
+      const { password: _p, ...result } = userObj as any;
       return result;
     }
 
@@ -88,15 +86,16 @@ export class AuthService {
     };
 
     const userData = user.toObject ? user.toObject() : user;
-
+    const sessionId = randomUUID();
     return {
       access_token: this.jwtService.sign(payload),
       id: userData._id,
       cin: userData.cin,
-      lastName: userData.lastName,
       firstName: userData.firstName,
+      lastName: userData.lastName,
       role: userData.role || null,
-      firstLogin: userData.firstLogin || false,
+      firstLogin: userData.firstLogin,
+      session_id: sessionId,
     };
   }
 
@@ -106,73 +105,58 @@ export class AuthService {
     password: string,
     firstName: string,
     lastName: string,
-    role: string,
-    email?: string,
+    email: string,
     telephone?: string,
-
+    departement?: string,
     address?: string,
+    role?: string,
     companyName?: string,
   ) {
-    console.log('🔍 DEBUG register appelé avec:', {
-      cin,
-      password,
-      firstName,
-      lastName,
-      role,
-      email,
-      telephone,
-
-      address,
-      companyName,
-    });
-
     const existingUser = await this.usersService.findByCin(cin);
     if (existingUser) {
       throw new BadRequestException('User already exists');
-    }
-
-    // Find default "client" role if no role provided
-    let roleId = role;
-    if (!roleId) {
-      const clientRole = await this.rolesService.findByName('client');
-      if (!clientRole) {
-        throw new BadRequestException(
-          'Default client role not found. Please create a "client" role first.',
-        );
-      }
-      roleId = clientRole._id.toString();
-      console.log('🔍 DEBUG: Using default client role:', roleId);
     }
 
     const hashedPassword = password
       ? await bcrypt.hash(password, 10)
       : undefined;
 
-    // Generate 6-digit OTP
+    const normalizedRole = (role || 'user').trim();
+    const roleDoc = await this.rolesService.findByName(normalizedRole);
+    const fallbackRoleDoc = roleDoc
+      ? null
+      : await this.rolesService.findByName('user');
+    const resolvedRole = roleDoc || fallbackRoleDoc;
+    if (!resolvedRole) {
+      throw new BadRequestException(
+        'Aucun rôle valide trouvé en base (seed roles manquant)',
+      );
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP valid for 10 minutes
+    const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    const userData = {
+    const userData: Record<string, unknown> = {
       cin,
-      password: hashedPassword,
-      lastName,
       firstName,
-      role: roleId,
-      email: email || address,
-      telephone,
-
-      address: address,
-      status: 'pending',
+      lastName,
+      role: resolvedRole._id,
+      email: email || '',
+      phoneNumber: telephone,
+      departement,
+      address: address || '',
       companyName,
+      status: 'pending',
       emailVerified: false,
       emailVerificationOtp: otp,
-      otpExpiresAt: otpExpiresAt,
+      otpExpiresAt,
     };
+    if (hashedPassword) {
+      userData.password = hashedPassword;
+    }
 
     const result = await this.usersService.create(userData);
-    console.log('🔍 DEBUG utilisateur créé:', result);
 
-    // Send OTP email
     if (result && result.email) {
       try {
         await this.emailService.sendOTPEmail(
@@ -180,10 +164,8 @@ export class AuthService {
           result.firstName,
           otp,
         );
-        console.log('✅ OTP envoyé avec succès à', result.email);
       } catch (error) {
-        console.error("❌ Erreur lors de l'envoi de l'OTP:", error);
-        // Don't fail registration if email sending fails
+        console.error("Erreur lors de l'envoi de l'OTP:", error);
       }
     }
 
@@ -212,7 +194,6 @@ export class AuthService {
       throw new BadRequestException('Invalid OTP');
     }
 
-    // Update user to mark email as verified
     const updatedUser = await this.usersService.update(user._id.toString(), {
       emailVerified: true,
       emailVerificationOtp: null,
@@ -223,7 +204,6 @@ export class AuthService {
       throw new BadRequestException('Failed to update user');
     }
 
-    console.log('✅ Email verified for user:', user.cin);
     return {
       success: true,
       message: 'Email verified successfully',
@@ -248,23 +228,19 @@ export class AuthService {
       throw new BadRequestException('Email already verified');
     }
 
-    // Generate new OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    // Update user with new OTP
     await this.usersService.update(user._id.toString(), {
       emailVerificationOtp: otp,
-      otpExpiresAt: otpExpiresAt,
+      otpExpiresAt,
     });
 
-    // Send OTP email
     if (user.email) {
       try {
         await this.emailService.sendOTPEmail(user.email, user.firstName, otp);
-        console.log('✅ OTP renvoyé avec succès à', user.email);
       } catch (error) {
-        console.error("❌ Erreur lors du renvoi de l'OTP:", error);
+        console.error('Erreur lors du renvoi de l OTP:', error);
         throw new BadRequestException('Failed to send OTP email');
       }
     } else {
@@ -283,7 +259,6 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    // Hash the password if provided
     let hashedPassword = user.password;
     if (password) {
       hashedPassword = await bcrypt.hash(password, 10);
@@ -297,147 +272,68 @@ export class AuthService {
       //password: hashedPassword,
     });
 
-    console.log('🔍 DEBUG: Vérification email pour utilisateur approuvé...');
-    console.log('🔍 DEBUG: updatedUser:', updatedUser);
-    console.log('🔍 DEBUG: updatedUser.email:', updatedUser?.email);
-
-    if (updatedUser && updatedUser.email) {
-      console.log('📧 ENVOI EMAIL: Envoi en cours à', updatedUser.email);
-      try {
-        await this.emailService.sendApprovalEmail(
-          updatedUser.email,
-          updatedUser.firstName,
-          updatedUser.lastName,
-          updatedUser.cin,
-          password,
-        );
-        console.log('✅ EMAIL ENVOYÉ avec succès à', updatedUser.email);
-      } catch (error) {
-        console.error('❌ Failed to send approval email:', error);
-      }
-    } else {
-      console.log("⚠️ PAS D'EMAIL: Utilisateur sans adresse email");
-    }
-
     return updatedUser;
   }
 
   async forgotPassword(email: string) {
     const user = await this.usersService.findByEmail(email);
-
     if (!user) {
-      throw new NotFoundException('User not found');
+      return { message: 'If the email exists, a reset code will be sent' };
     }
 
-    // Generate 6-digit reset code
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const resetCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // Valid for 15 minutes
+    const resetCodeExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-    // Update user with reset code
     await this.usersService.update(user._id.toString(), {
       passwordResetCode: resetCode,
       passwordResetCodeExpiresAt: resetCodeExpiresAt,
     });
 
-    // Send reset code email
     if (user.email) {
       try {
-        await this.emailService.sendPasswordResetEmail(
+        await this.emailService.sendOTPEmail(
           user.email,
-          user.firstName,
+          user.firstName || 'Utilisateur',
           resetCode,
         );
-        console.log('✅ Reset code sent to', user.email);
       } catch (error) {
-        console.error('❌ Failed to send reset code email:', error);
-        throw new BadRequestException('Failed to send reset code email');
+        console.error('Failed to send reset email:', error);
       }
     }
 
-    return {
-      success: true,
-      message: 'Reset code sent to your email',
-    };
+    return { message: 'If the email exists, a reset code will be sent' };
   }
 
-  async resetPassword(email: string, resetCode: string, newPassword: string) {
-    const user = await this.usersService.findByEmail(email);
-
+  async rejectUser(userId: string, reason?: string) {
+    const user = await this.usersService.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    if (!user.passwordResetCode) {
-      throw new BadRequestException('No reset code found for this user');
+    if (user.status !== 'pending') {
+      throw new BadRequestException('User is not in pending status');
     }
 
-    if (
-      user.passwordResetCodeExpiresAt &&
-      new Date() > user.passwordResetCodeExpiresAt
-    ) {
-      throw new BadRequestException('Reset code has expired');
-    }
-
-    if (user.passwordResetCode !== resetCode) {
-      throw new BadRequestException('Invalid reset code');
-    }
-
-    // Hash new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update user password and clear reset code
-    const updatedUser = await this.usersService.update(user._id.toString(), {
-      password: hashedPassword,
-      passwordResetCode: null,
-      passwordResetCodeExpiresAt: null,
+    const updatedUser = await this.usersService.update(userId, {
+      status: 'rejected',
+      rejectedAt: new Date(),
+      rejectReason: reason || 'Aucun motif spécifié',
     });
 
-    if (!updatedUser) {
-      throw new BadRequestException('Failed to reset password');
-    }
-
-    console.log('✅ Password reset for user:', user.cin);
-    return {
-      success: true,
-      message: 'Password reset successfully',
-    };
-  }
-
-  async resendResetCode(email: string) {
-    const user = await this.usersService.findByEmail(email);
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // Generate new reset code
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const resetCodeExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
-
-    // Update user with new reset code
-    await this.usersService.update(user._id.toString(), {
-      passwordResetCode: resetCode,
-      passwordResetCodeExpiresAt: resetCodeExpiresAt,
-    });
-
-    // Send reset code email
-    if (user.email) {
+    if (updatedUser?.email) {
       try {
-        await this.emailService.sendPasswordResetEmail(
-          user.email,
-          user.firstName,
-          resetCode,
+        await this.emailService.sendRejectionEmail(
+          updatedUser.email,
+          updatedUser.firstName,
+          updatedUser.lastName,
+          updatedUser.cin,
+          reason || 'Aucun motif spécifié',
         );
-        console.log('✅ Reset code resent to', user.email);
       } catch (error) {
-        console.error('❌ Failed to resend reset code email:', error);
-        throw new BadRequestException('Failed to send reset code email');
+        console.error('Failed to send rejection email:', error);
       }
     }
 
-    return {
-      success: true,
-      message: 'Reset code sent to your email',
-    };
+    return updatedUser;
   }
 }

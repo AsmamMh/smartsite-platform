@@ -28,7 +28,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
 
     volumes:
-      - ./kafka1/data:/var/lib/kafka/data
+      - kafka1-data:/var/lib/kafka/data
     networks:
       - kafka-net
 
@@ -49,3 +49,6 @@ services:
 networks:
   kafka-net:
     driver: bridge
+
+volumes:
+  kafka1-data:

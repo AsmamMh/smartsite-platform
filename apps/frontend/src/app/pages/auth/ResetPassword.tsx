@@ -16,16 +16,15 @@ import { useNavigate, useLocation } from "react-router";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { ArrowLeft, Eye, EyeOff, Lock } from "lucide-react";
+import { AUTH_API_URL } from "@/lib/auth-api-url";
 
 const formSchema = z
   .object({
     email: z.string().email("Email invalide"),
-    resetCode: z
-      .string()
-      .length(6, "Le code doit être composé de 6 chiffres"),
+    resetCode: z.string().length(6, "Le code doit être composé de 6 chiffres"),
     newPassword: z
       .string()
-      .min(8, "Le mot de passe doit contenir au least 8 caractères"),
+      .min(8, "Le mot de passe doit contenir au moins 8 caractères"),
     confirmPassword: z.string().min(1, "Confirmation requise"),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
@@ -66,14 +65,11 @@ export default function ResetPassword() {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      const response = await axios.post(
-        "https://smartsite-platform-auth.vercel.app/auth/reset-password",
-        {
-          email: data.email,
-          resetCode: data.resetCode,
-          newPassword: data.newPassword,
-        }
-      );
+      await axios.post(`${AUTH_API_URL}/auth/reset-password`, {
+        email: data.email,
+        resetCode: data.resetCode,
+        newPassword: data.newPassword,
+      });
 
       toast.success("Mot de passe réinitialisé avec succès!");
       navigate("/login");
@@ -89,15 +85,14 @@ export default function ResetPassword() {
 
   const handleResendCode = async () => {
     try {
-      await axios.post("https://smartsite-platform-auth.vercel.app/auth/resend-reset-code", {
+      await axios.post(`${AUTH_API_URL}/auth/resend-reset-code`, {
         email: form.getValues("email"),
       });
       toast.success("Code de réinitialisation renvoyé!");
       setResendCountdown(60);
     } catch (error: any) {
       const message =
-        error?.response?.data?.message ||
-        "Erreur lors de renvoi du code";
+        error?.response?.data?.message || "Erreur lors de renvoi du code";
       toast.error(message);
     }
   };
@@ -123,7 +118,8 @@ export default function ResetPassword() {
               Réinitialiser votre mot de passe
             </h2>
             <p className="mt-2 text-sm leading-6 text-gray-500">
-              Entrez le code reçu par email et choisissez un nouveau mot de passe.
+              Entrez le code reçu par email et choisissez un nouveau mot de
+              passe.
             </p>
           </div>
 
@@ -157,7 +153,9 @@ export default function ResetPassword() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="resetCode">Code de réinitialisation (6 chiffres)</FieldLabel>
+                      <FieldLabel htmlFor="resetCode">
+                        Code de réinitialisation (6 chiffres)
+                      </FieldLabel>
                       <Input
                         {...field}
                         id="resetCode"
@@ -180,7 +178,9 @@ export default function ResetPassword() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="newPassword">Nouveau mot de passe</FieldLabel>
+                      <FieldLabel htmlFor="newPassword">
+                        Nouveau mot de passe
+                      </FieldLabel>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <Input
@@ -217,7 +217,9 @@ export default function ResetPassword() {
                   control={form.control}
                   render={({ field, fieldState }) => (
                     <Field data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor="confirmPassword">Confirmer le mot de passe</FieldLabel>
+                      <FieldLabel htmlFor="confirmPassword">
+                        Confirmer le mot de passe
+                      </FieldLabel>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                         <Input
@@ -230,7 +232,9 @@ export default function ResetPassword() {
                         />
                         <button
                           type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                         >
                           {showConfirmPassword ? (
@@ -253,7 +257,9 @@ export default function ResetPassword() {
                 disabled={isLoading}
                 className="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white"
               >
-                {isLoading ? "Réinitialisation en cours..." : "Réinitialiser le mot de passe"}
+                {isLoading
+                  ? "Réinitialisation en cours..."
+                  : "Réinitialiser le mot de passe"}
               </Button>
             </form>
 

@@ -11,6 +11,10 @@ export const LoginAction = async (cin: string, password: string) => {
       `${process.env.LOGIN_API_URL}/login`,
       "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
     );
+    console.log(
+      `${process.env.LOGIN_API_URL}/login`,
+      "ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+    );
     if (res.status === 200) {
       const expires = new Date(Date.now() + 1000 * 1000 * 1000);
 

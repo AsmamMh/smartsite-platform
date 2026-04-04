@@ -1,0 +1,21 @@
+# Port d’écoute de l’API — le frontend utilise VITE_AUTH_API_URL avec la même valeur (ex. http://localhost:3000)
+PORT=3000
+
+# Origines autorisées pour CORS (navigateur). Par défaut le code inclut http://localhost:5173 (Vite).
+# CORS_ORIGIN=http://localhost:5173,http://127.0.0.1:5173
+
+# Compte super admin recréé / resynchronisé au démarrage (approuvé + actif)
+# SUPER_ADMIN_SEED=false pour désactiver
+SUPER_ADMIN_CIN=00000001
+SUPER_ADMIN_PASSWORD=Admin@2024!
+SUPER_ADMIN_EMAIL=superadmin@smartsite.local
+# SUPER_ADMIN_FORCE_PASSWORD=true  # réapplique le hash du mot de passe à chaque démarrage (dev uniquement)
+
+# Google Cloud Vision API - pour l'analyse d'images de chantier
+# Obtenez votre clé API depuis https://console.cloud.google.com/apicredentials
+GOOGLE_CLOUD_VISION_API_KEY=your_google_vision_api_key_here
+
+# Imagga API - Alternative gratuite pour l'analyse d'images
+# Obtenez vos clés gratuites depuis https://imagga.com/
+IMAGGA_API_KEY=acc_89651fa8f8d5da8
+IMAGGA_API_SECRET=96109d49e4896b5278ca8372809b1a6b

@@ -1,8 +1,9 @@
 import type { Site } from '../types';
 import axios from 'axios';
+import { GESTION_SITE_API_URL } from '@/lib/gestion-site-api-url';
 
 const api = axios.create({
-  baseURL: 'http://localhost:3001/api', // Proxy to backend server
+  baseURL: GESTION_SITE_API_URL,
 });
 
 // Add auth token to requests
@@ -96,7 +97,7 @@ export interface PaginatedSitesResponse {
 export const fetchSites = async (filters?: SiteFilters): Promise<PaginatedSitesResponse> => {
   try {
     const params: Record<string, string> = {};
-    
+
     if (filters?.page) params.page = filters.page.toString();
     if (filters?.limit) params.limit = filters.limit.toString();
     if (filters?.nom) params.nom = filters.nom;
@@ -107,7 +108,7 @@ export const fetchSites = async (filters?: SiteFilters): Promise<PaginatedSitesR
     if (filters?.budgetMax) params.budgetMax = filters.budgetMax.toString();
 
     const response = await api.get('/gestion-sites', { params });
-    
+
     // Map backend data to frontend format
     return {
       ...response.data,

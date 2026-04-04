@@ -48,15 +48,31 @@ export default function Login() {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      await login(data.cin, data.password).then((data: any) => {
-        console.log("Login successful!", data);
-        toast.success("Login successful!");
-        if (data.firstLogin) {
-          navigate("/change-password-first-login");
+      const res = await login(data.cin, data.password).then((userData: any) => {
+        console.log("Login successful!", userData);
+
+        // Redirection selon le rôle de l'utilisateur
+        const userRole = userData.user?.role?.name || userData.user?.role;
+        if (userRole === "project_manager") {
+          console.log("Redirection vers dashboard Project Manager");
+          navigate("/project-manager-dashboard");
+        } else if (userRole === "super_admin") {
+          console.log("Redirection vers dashboard Super Admin");
+          navigate("/super-admin-projects");
         } else {
+          console.log("Redirection vers dashboard général");
           navigate("/dashboard");
         }
+        toast.success("Login successful!");
+
+        // Check if this is the first login
       });
+
+      //  if (res.firstLogin) {
+      //     navigate("/change-password-first-login");
+      //   } else {
+      //     navigate("/dashboard");
+      //   }
     } catch (error: any) {
       const message =
         error?.message ||

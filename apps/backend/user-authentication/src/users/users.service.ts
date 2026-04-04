@@ -20,43 +20,14 @@ export class UsersService {
     private rolesService: RolesService,
   ) {}
 
-  async accestOthisSite(userId: string, url: string) {
-    const user = await this.userModel
-      .findById(userId)
-      .select('role') // fetch only role
-      .populate({
-        path: 'role',
-        select: 'permissions',
-        populate: {
-          path: 'permissions',
-          match: { href: url },
-          select: 'name access href create update delete',
-        },
-      })
-      .lean() // ⚡ performance boost
-      .exec();
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (!user.role) {
-      throw new NotFoundException('Role not found');
-    }
-    const role = user.role as any;
-
-    return role.permissions ?? [];
-  }
-
-  // ✅ CREATE USER (CORRIGÉ AVEC HASH PASSWORD)
-  async create(createUserDto: any) {
+  async addingUser(createUserDto: any) {
     console.log(' DEBUG: createUserDto:', createUserDto);
 
     // Handle role - accept either role ID or role name
     if (createUserDto.role && typeof createUserDto.role === 'string') {
       // Check if it's a valid ObjectId (24 hex characters)
       const isValidObjectId = /^[0-9a-fA-F]{24}$/.test(createUserDto.role);
-      
+
       if (isValidObjectId) {
         // It's a valid ObjectId, use it directly
         createUserDto.role = new Types.ObjectId(createUserDto.role);
@@ -72,7 +43,9 @@ export class UsersService {
             if (defaultRole) {
               createUserDto.role = defaultRole._id;
             } else {
-              throw new BadRequestException('Invalid role. Please provide a valid role ID or create roles first.');
+              throw new BadRequestException(
+                'Invalid role. Please provide a valid role ID or create roles first.',
+              );
             }
           }
         } catch (err) {
@@ -84,10 +57,55 @@ export class UsersService {
     // ✅ HASH PASSWORD
     if (createUserDto.password) {
       const salt = await bcrypt.genSalt(10);
-      createUserDto.password = await bcrypt.hash(
-        createUserDto.password,
-        salt,
-      );
+      createUserDto.password = await bcrypt.hash(createUserDto.password, salt);
+    }
+
+    try {
+      const createdUser = new this.userModel(createUserDto);
+      console.log(' DEBUG: createdUser avant save:', createdUser);
+
+      const result = await createdUser.save();
+      console.log(' DEBUG: Utilisateur créé:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ ERREUR SAVE:', error.message);
+      console.error('❌ ERREUR DETAILS:', error);
+      throw error;
+    }
+  }
+
+  async create(createUserDto: any) {
+    console.log(' DEBUG: createUserDto:', createUserDto);
+
+    // Gérer le rôle correctement
+    if (createUserDto.role) {
+      if (typeof createUserDto.role === 'string') {
+        // Si c'est une chaîne, chercher l'ObjectId correspondant
+        const roleMap: { [key: string]: Types.ObjectId } = {
+          super_admin: new Types.ObjectId('699e1c79ccc723bcf4a61cad'),
+          director: new Types.ObjectId('699e1c79ccc723bcf4a61cae'),
+          project_manager: new Types.ObjectId('699e1c79ccc723bcf4a61caf'),
+          site_manager: new Types.ObjectId('699e1c79ccc723bcf4a61cb0'),
+          works_manager: new Types.ObjectId('699e1c79ccc723bcf4a61cb1'),
+          accountant: new Types.ObjectId('699e1c79ccc723bcf4a61cb2'),
+          procurement_manager: new Types.ObjectId('699e1c79ccc723bcf4a61cb3'),
+          qhse_manager: new Types.ObjectId('699e1c79ccc723bcf4a61cb4'),
+          client: new Types.ObjectId('699e1c79ccc723bcf4a61cb5'),
+          subcontractor: new Types.ObjectId('699e1c79ccc723bcf4a61cb6'),
+          user: new Types.ObjectId('699e1c79ccc723bcf4a61cb7'),
+        };
+
+        createUserDto.role = roleMap[createUserDto.role] || createUserDto.role;
+        console.log(
+          ' DEBUG: Role mappé (chaîne -> ObjectId):',
+          createUserDto.role,
+          '->',
+          roleMap[createUserDto.role],
+        );
+      } else if (createUserDto.role instanceof Types.ObjectId) {
+        // Si c'est déjà un ObjectId, le garder tel quel
+        console.log(' DEBUG: Role déjà ObjectId:', createUserDto.role);
+      }
     }
 
     try {
@@ -129,7 +147,29 @@ export class UsersService {
   }
 
   async findByCin(cin: string) {
-    return this.userModel.findOne({ cin }).populate('role').exec();
+    console.log('🔍 DEBUG: findByCin appelé pour:', cin);
+    try {
+      const result = await this.userModel
+        .findOne({ cin })
+        .populate('role')
+        .exec();
+      console.log(
+        '🔍 DEBUG: findByCin résultat:',
+        result ? 'trouvé' : 'non trouvé',
+      );
+      if (result) {
+        console.log('🔍 DEBUG: Utilisateur trouvé:', {
+          cin: result.cin,
+          role: result.role,
+          roleType: typeof result.role,
+          roleName: (result.role as any)?.name,
+        });
+      }
+      return result;
+    } catch (error) {
+      console.error('❌ Erreur dans findByCin:', error);
+      throw error;
+    }
   }
 
   async findByEmail(email: string) {
@@ -141,29 +181,64 @@ export class UsersService {
   }
 
   async findAll() {
-    return this.userModel
-      .find()
-      .select('name email address firstName lastName cin isActive createdAt')
-      .populate({
-        path: 'role',
-        select: 'name',
-      })
-      .lean()
-      .exec();
+    console.log('🔍 DEBUG: findAll appelé');
+    try {
+      const result = await this.userModel.find().populate('role').exec();
+      console.log('🔍 DEBUG: findAll résultat:', result.length, 'utilisateurs');
+      if (result.length > 0) {
+        console.log('🔍 DEBUG: Premier utilisateur:', {
+          cin: result[0].cin,
+          role: result[0].role,
+          roleType: typeof result[0].role,
+          roleName: (result[0].role as any)?.name,
+        });
+      }
+      return result;
+    } catch (error) {
+      console.error('❌ Erreur dans findAll:', error);
+      // Fallback: find without populate if populate causes error
+      const fallbackResult = await this.userModel.find().exec();
+      console.log(
+        '🔍 DEBUG: findAll fallback:',
+        fallbackResult.length,
+        'utilisateurs',
+      );
+      return fallbackResult;
+    }
   }
 
   async findPending() {
-    return this.userModel.find({ status: 'pending' }).populate('role').exec();
+    console.log('🔍 DEBUG: findPending appelé');
+    const result = await this.userModel
+      .find({ status: 'pending' })
+      .populate({
+        path: 'role',
+        model: 'Role',
+        select: 'name description',
+      })
+      .exec();
+    console.log(
+      '🔍 DEBUG: findPending résultat:',
+      result.length,
+      'utilisateurs',
+    );
+    if (result.length > 0) {
+      console.log('🔍 DEBUG: Premier utilisateur:', {
+        cin: result[0].cin,
+        role: result[0].role,
+        roleType: typeof result[0].role,
+        roleName: (result[0].role as any)?.name,
+      });
+    }
+    return result;
   }
 
   async update(id: string, updateUserDto: any) {
-    // ⚠️ hash si password modifié
     if (updateUserDto.password) {
       const salt = await bcrypt.genSalt(10);
-      updateUserDto.password = await bcrypt.hash(
-        updateUserDto.password,
-        salt,
-      );
+      updateUserDto.password = await bcrypt.hash(updateUserDto.password, salt);
+
+      // updateUserDto.password = await bcrypt.hash(updateUserDto.password, salt);
     }
 
     return this.userModel
@@ -349,7 +424,6 @@ export class UsersService {
       throw new NotFoundException('Gestionnaire non trouvé');
     }
 
-
     // Update user's manager
     user.manager = new Types.ObjectId(managerId);
     await user.save();
@@ -361,8 +435,8 @@ export class UsersService {
         firstName: user.firstName,
         lastName: user.lastName,
         manager: manager._id,
-        managerName: `${manager.firstName} ${manager.lastName}`
-      }
+        managerName: `${manager.firstName} ${manager.lastName}`,
+      },
     };
   }
 
@@ -390,8 +464,8 @@ export class UsersService {
         firstName: user.firstName,
         lastName: user.lastName,
         manager: newManager._id,
-        managerName: `${newManager.firstName} ${newManager.lastName}`
-      }
+        managerName: `${newManager.firstName} ${newManager.lastName}`,
+      },
     };
   }
 
@@ -399,7 +473,8 @@ export class UsersService {
    * View a user's manager
    */
   async getManager(userId: string): Promise<any> {
-    const user = await this.userModel.findById(userId)
+    const user = await this.userModel
+      .findById(userId)
       .populate('manager', 'firstName lastName email cin phoneNumber')
       .exec();
 
@@ -412,14 +487,17 @@ export class UsersService {
     }
 
     return {
-      manager: user.manager
+      manager: user.manager,
     };
   }
 
   /**
    * Set responsibilities for a user
    */
-  async setResponsibilities(userId: string, responsibilities: string): Promise<any> {
+  async setResponsibilities(
+    userId: string,
+    responsibilities: string,
+  ): Promise<any> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('Utilisateur non trouvé');
@@ -434,8 +512,8 @@ export class UsersService {
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
-        responsibilities: user.responsibilities
-      }
+        responsibilities: user.responsibilities,
+      },
     };
   }
 
@@ -443,7 +521,8 @@ export class UsersService {
    * Get users by site (team members assigned to a site)
    */
   async getUsersBySite(siteId: string): Promise<any[]> {
-    return this.userModel.find({ assignedSite: siteId })
+    return this.userModel
+      .find({ assignedSite: siteId })
       .populate('manager', 'firstName lastName email')
       .populate('role', 'name')
       .exec();
@@ -467,13 +546,11 @@ export class UsersService {
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
-        assignedSite: user.assignedSite
-      }
+        assignedSite: user.assignedSite,
+      },
     };
   }
 
-  
-  
   /**
    * Remove user from a site
    */
@@ -492,8 +569,29 @@ export class UsersService {
         id: user._id,
         firstName: user.firstName,
         lastName: user.lastName,
-        assignedSite: null
-      }
+        assignedSite: null,
+      },
+    };
+  }
+  //   return { message: 'Password changed successfully' };
+  // }
+  async accestOthisSite(userId: string, url: string) {
+    // This method should check if user has access to specific URL
+    // For now, return basic access structure
+    const user = await this.userModel.findById(userId).populate('role').exec();
+
+    if (!user) {
+      return { access: false, message: 'User not found' };
+    }
+
+    // Simple access check - in real implementation, check permissions
+    const hasAccess = user.status === 'approved' && user.isActif;
+
+    return {
+      access: hasAccess,
+      userId: userId,
+      url: url,
+      role: user.role,
     };
   }
 }

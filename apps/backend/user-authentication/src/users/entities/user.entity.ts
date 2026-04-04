@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import * as bcrypt from 'bcrypt';
 import { Role } from '../../roles/entities/role.entity';
 
 @Schema({ timestamps: true })
@@ -41,7 +42,7 @@ export class User extends Document {
   isActif: boolean;
 
   @Prop()
-  telephone?: string;
+  phoneNumber?: string;
 
   @Prop()
   departement?: string;
@@ -54,6 +55,16 @@ export class User extends Document {
 
   @Prop()
   approvedAt?: Date;
+
+
+  @Prop()
+  rejectedAt?: Date;
+
+  @Prop()
+  rejectReason?: string;
+
+  @Prop()
+  motDePasse?: string;
 
   @Prop([String])
   certifications?: string[];
@@ -98,19 +109,21 @@ export class User extends Document {
 
 export const UserSchema = SchemaFactory.createForClass(User);
 
-// Pre-save hook to automatically hash password before saving
-// UserSchema.pre('save', async function () {
-//   // Only hash the password if it has been modified (or is new)
-//   if (!this.isModified('password')) {
-//     return;
-//   }
 
-//   // Skip if password is already hashed (bcrypt hash starts with $2a$, $2b$, or $2y$)
-//   if (this.password && this.password.startsWith('$2')) {
-//     return;
-//   }
+UserSchema.pre('save', async function () {
+  if (!this.isModified('password')) {
+    return;
+  }
 
-//   // Hash the password
-//   const salt = await bcrypt.genSalt(10);
-//   this.password = await bcrypt.hash(this.password, salt);
-// });
+  // Inscription en attente d'approbation : pas de mot de passe encore
+  if (this.password == null || this.password === '') {
+    return;
+  }
+
+  if (this.password.startsWith('$2')) {
+    return;
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
+});

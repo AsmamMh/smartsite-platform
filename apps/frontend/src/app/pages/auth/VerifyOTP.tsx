@@ -22,6 +22,7 @@ import {
 import { useNavigate, useLocation } from "react-router";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { AUTH_API_URL } from "@/lib/auth-api-url";
 
 const formSchema = z.object({
   otp: z
@@ -68,7 +69,7 @@ export default function VerifyOTP() {
   const onSubmit = async (data: OTPFormData) => {
     setIsLoading(true);
     try {
-      const res = await axios.post("https://smartsite-platform-auth.vercel.app/auth/verify-otp", {
+      const res = await axios.post(`${AUTH_API_URL}/auth/verify-otp`, {
         cin: cin,
         otp: data.otp,
       });
@@ -92,7 +93,7 @@ export default function VerifyOTP() {
   const handleResendOTP = async () => {
     setIsResending(true);
     try {
-      const res = await axios.post("https://smartsite-platform-auth.vercel.app/auth/resend-otp", {
+      const res = await axios.post(`${AUTH_API_URL}/auth/resend-otp`, {
         cin: cin,
       });
 

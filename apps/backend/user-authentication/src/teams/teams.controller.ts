@@ -1,15 +1,7 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Put,
-  Delete,
-  UseGuards,
-} from '@nestjs/common';
+
 import { TeamsService } from './teams.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 
 @Controller('teams')
 // @UseGuards(JwtAuthGuard)

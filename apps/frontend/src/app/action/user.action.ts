@@ -1,12 +1,51 @@
 import { userApi } from "@/lib/api-client";
 import axios from "axios";
+import { AUTH_API_URL } from "../../lib/auth-api-url";
 
-const API_URL = "http://localhost:3010/users";
 
-export const getAllUsers = async () => {
-    const {data} = await axios.get(`${API_URL}`);
-    console.log("Fetched users in getAllUsers function:==================================================================================================", data);
-    return data;
+//const API_URL = "http://localhost:3010/users";
+const API_URL = `${AUTH_API_URL}/users`;
+
+// export const getAllUsers = async () => {
+//     const {data} = await axios.get(`${API_URL}`);
+//     console.log("Fetched users in getAllUsers function:==================================================================================================", data);
+//     return data;
+//   };
+
+
+function getAuthHeaders(): { Authorization?: string } {
+  const authData = localStorage.getItem("smartsite-auth");
+  const token =
+    localStorage.getItem("access_token") ||
+    (authData
+      ? (() => {
+          try {
+            return JSON.parse(authData)?.state?.user?.access_token;
+          } catch {
+            return null;
+          }
+        })()
+      : null);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export const getAllUsers = async (): Promise<{
+  status: number;
+  data: unknown[];
+}> => {
+  try {
+    const res = await axios.get(API_URL, { headers: getAuthHeaders() });
+    const body = res.data;
+    const list = Array.isArray(body) ? body : body?.data ?? [];
+    return { status: res.status, data: list };
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number; data?: unknown } };
+    console.error("Get all users error:", err?.response?.data);
+    return {
+      status: err?.response?.status ?? 500,
+      data: [],
+    };
+  }
 };
 
 export const getUserById = async (id: string) => {
@@ -36,7 +75,10 @@ export const createUser = async (userData: {
   role?: string;
 }) => {
   try {
-    const res = await axios.post(`${API_URL}/create-with-temp-password`, userData);
+    const res = await axios.post(
+      `${API_URL}/create-with-temp-password`,
+      userData,
+    );
     if (res.status === 201) {
       return Promise.resolve({ status: res.status, data: res.data });
     }
@@ -135,42 +177,52 @@ export const banUser = async (userId: string, data: boolean) => {
   }
 };
 
+
 export const getCuureentUser = async () => {
   const {data} = await userApi.get(`${API_URL}/me`);
   return data;
 }
 
-export const getAllClients = async (token?: string) =>{
+
+export const getAllClients = async (token?: string) => {
+
   try {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const res = await axios.get(`${API_URL}/clients`, { headers });
-    if(res.status === 200){
-      return Promise.resolve({status: res.status, data: res.data})
+    if (res.status === 200) {
+      return Promise.resolve({ status: res.status, data: res.data });
     }
   } catch (error: any) {
     console.error("Get clients error:", error?.response?.data?.message);
     return Promise.resolve({
       status: error?.response?.status,
       data: error?.response?.data?.message,
-    })
+    });
   }
-}
+};
 
-export const createClient = async (clientData: {
-  cin: string;
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  telephone?: string;
-  address?: string;
-  companyName?: string;
-}, token?: string) => {
+export const createClient = async (
+  clientData: {
+    cin: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    telephone?: string;
+    address?: string;
+    companyName?: string;
+  },
+  token?: string,
+) => {
   try {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const res = await axios.post(`${API_URL}/create-with-temp-password`, {
-      ...clientData,
-      role: 'client' // Set role as client
-    }, { headers });
+    const res = await axios.post(
+      `${API_URL}/create-with-temp-password`,
+      {
+        ...clientData,
+        role: "client", // Set role as client
+      },
+      { headers },
+    );
     if (res.status === 201) {
       return Promise.resolve({ status: res.status, data: res.data });
     }
@@ -227,7 +279,7 @@ export const updateClient = async (
     address?: string;
     companyName?: string;
   },
-  token?: string
+  token?: string,
 ) => {
   try {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};

@@ -1,4 +1,4 @@
-import type { Project, Site, Client, Supplier, Notification, Incident, Task, User } from '../types';
+import type { Project, Site, Client, Supplier, Notification, Incident, Task, User, RoleType } from '../types';
 
 export const mockProjects: Project[] = [
   {

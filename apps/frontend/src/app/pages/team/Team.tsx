@@ -34,7 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
-
+import { mockTeamMembers } from "../../utils/mockData";
 import { toast } from "sonner";
 import {
   getAllTeams,
@@ -74,12 +74,12 @@ export default function Team() {
   const [teams, setTeams] = useState<TeamData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  //const [useMockData, setUseMockData] = useState(false);
+  const [useMockData, setUseMockData] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Track which teams are assigned to sites: teamId -> { siteId, siteName }
+  // Track which teams are assigned to sites: teamId -> { siteId, siteName, status }
   const [teamSiteAssignments, setTeamSiteAssignments] = useState<
-    Record<string, { siteId: string; siteName: string }>
+    Record<string, { siteId: string; siteName: string; status: string }>
   >({});
 
   // Dialog states
@@ -104,6 +104,7 @@ export default function Team() {
   const [availableUsers, setAvailableUsers] = useState<UserData[]>([]);
   const [memberDialogOpen, setMemberDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
+  const [userLoadingError, setUserLoadingError] = useState(false);
 
   // Statistics
   const totalTeams = teams.length;
@@ -134,12 +135,31 @@ export default function Team() {
       console.log("Site assignments:", siteAssignments);
 
       setTeams(teamsResponse.data);
-      setTeamSiteAssignments(siteAssignments);
-      //setUseMockData(false);
+     // setTeamSiteAssignments(siteAssignments);
+      setUseMockData(false);
     } catch (err) {
       console.error("Error loading teams, using mock data:", err);
-
-      //setUseMockData(true);
+      setError("Backend not available, using mock data");
+      // Create mock teams for demo
+      setTeams([
+        {
+          _id: "1",
+          name: "Team A",
+          description: "Main construction team",
+          members: mockTeamMembers.slice(0, 3),
+          isActive: true,
+          teamCode: "TEAM-A",
+        },
+        {
+          _id: "2",
+          name: "Team B",
+          description: "Maintenance team",
+          members: mockTeamMembers.slice(3, 5),
+          isActive: true,
+          teamCode: "TEAM-B",
+        },
+      ]);
+      setUseMockData(true);
       toast.warning("Offline mode - demo data");
     } finally {
       setLoading(false);
@@ -155,21 +175,40 @@ export default function Team() {
 
   const loadAvailableUsers = async () => {
     try {
-      const data = await getAllUsers();
-      console.log(data, "usersssssssssssssssssssssssssssssssssss");
-      if (data && Array.isArray(data)) {
-        // Normalize user data to ensure consistent field names
-        const normalizedUsers = data.map((user: any) => ({
-          _id: user._id,
+      const response = await getAllUsers();
+      if (response?.status === 200 && Array.isArray(response.data)) {
+        const normalizedUsers = response.data.map((user: any) => ({
+          _id: String(user._id ?? user.id ?? ""),
           firstName: user.firstName || user.firstname || user.nom || "",
           lastName: user.lastName || user.lastname || user.prenom || "",
           email: user.email || "",
         }));
         setAvailableUsers(normalizedUsers);
-      } else {
+        setUserLoadingError(false);
+        return;
       }
+      // API response not valid, use mock data
+      setAvailableUsers(
+        mockTeamMembers.map((u) => ({
+          _id: u._id,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          email: u.email,
+        })),
+      );
+      setUserLoadingError(true);
     } catch (err) {
       console.error("Error loading users:", err);
+      // Use mock data when API fails
+      setAvailableUsers(
+        mockTeamMembers.map((u) => ({
+          _id: u._id,
+          firstName: u.firstName,
+          lastName: u.lastName,
+          email: u.email,
+        })),
+      );
+      setUserLoadingError(true);
     }
   };
 
@@ -183,6 +222,17 @@ export default function Team() {
   // Helper function to check if a team is assigned to a site
   const isTeamAssignedToSite = (teamId: string) => {
     return !!teamSiteAssignments[teamId];
+  };
+
+  // Get all member IDs from all teams (for filtering available users in new team creation)
+  const getAllTeamMemberIds = () => {
+    const memberIds = new Set<string>();
+    teams.forEach((team) => {
+      team.members?.forEach((m: any) => {
+        if (m._id) memberIds.add(m._id);
+      });
+    });
+    return memberIds;
   };
 
   const getInitials = (name: string) => {
@@ -241,15 +291,28 @@ export default function Team() {
     }
 
     try {
-      const response = await createTeam({
-        name: trimmedName,
-        description: trimmedDescription,
-        teamCode: trimmedCode,
-        isActive: true,
-      });
-      setTeams([...teams, response.data]);
-      toast.success("Team created successfully!");
-
+      if (useMockData) {
+        const team: TeamData = {
+          _id: String(teams.length + 1),
+          name: trimmedName,
+          description: trimmedDescription,
+          teamCode: trimmedCode,
+          members: [],
+          isActive: true,
+          createdAt: new Date().toISOString(),
+        };
+        setTeams([...teams, team]);
+        toast.success("Team added successfully!");
+      } else {
+        const response = await createTeam({
+          name: trimmedName,
+          description: trimmedDescription,
+          teamCode: trimmedCode,
+          isActive: true,
+        });
+        setTeams([...teams, response.data]);
+        toast.success("Team created successfully!");
+      }
       setNewTeam({ name: "", description: "", teamCode: "" });
       setAddDialogOpen(false);
     } catch (error) {
@@ -316,15 +379,27 @@ export default function Team() {
     }
 
     try {
-      const response = await updateTeam(editTeam._id, {
-        name: trimmedName,
-        description: trimmedDescription,
-        teamCode: trimmedCode,
-        isActive: editTeam.isActive,
-      });
-      setTeams(teams.map((t) => (t._id === editTeam._id ? response.data : t)));
-      toast.success("Team updated successfully!");
-
+      if (useMockData) {
+        const updatedTeam = {
+          ...editTeam,
+          name: trimmedName,
+          description: trimmedDescription,
+          teamCode: trimmedCode,
+        };
+        setTeams(teams.map((t) => (t._id === editTeam._id ? updatedTeam : t)));
+        toast.success("Team updated successfully!");
+      } else {
+        const response = await updateTeam(editTeam._id, {
+          name: trimmedName,
+          description: trimmedDescription,
+          teamCode: trimmedCode,
+          isActive: editTeam.isActive,
+        });
+        setTeams(
+          teams.map((t) => (t._id === editTeam._id ? response.data : t)),
+        );
+        toast.success("Team updated successfully!");
+      }
       setEditDialogOpen(false);
       setEditTeam(null);
     } catch (error) {
@@ -342,9 +417,14 @@ export default function Team() {
     if (!teamToDelete) return;
 
     try {
-      await deleteTeam(teamToDelete._id);
-      setTeams(teams.filter((t) => t._id !== teamToDelete._id));
-      toast.success("Team deleted successfully!");
+      if (useMockData) {
+        setTeams(teams.filter((t) => t._id !== teamToDelete._id));
+        toast.success("Team deleted successfully!");
+      } else {
+        await deleteTeam(teamToDelete._id);
+        setTeams(teams.filter((t) => t._id !== teamToDelete._id));
+        toast.success("Team deleted successfully!");
+      }
     } catch (error) {
       console.error("Error deleting team:", error);
       toast.error("Error deleting team");
@@ -365,7 +445,7 @@ export default function Team() {
       return;
     }
 
-    // Check if user is already a member
+    // Check if user is already a member of this team
     const isAlreadyMember = selectedTeamView.members?.some(
       (m: any) => m._id === selectedUserId,
     );
@@ -374,17 +454,51 @@ export default function Team() {
       return;
     }
 
-    try {
-      const response = await addMemberToTeam(
-        selectedTeamView._id,
-        selectedUserId,
-      );
-      setTeams(
-        teams.map((t) => (t._id === selectedTeamView._id ? response.data : t)),
-      );
-      setSelectedTeamView(response.data);
-      toast.success("Member added successfully!");
+    // Check if user is already in a team assigned to an active site (not completed)
+    const userTeamAssignment = Object.entries(teamSiteAssignments).find(
+      ([teamId, assignment]) => {
+        const team = teams.find(t => t._id === teamId);
+        const isMemberOfTeam = team?.members?.some((m: any) => m._id === selectedUserId);
+        const isSiteCompleted = assignment.status === 'completed';
+        return isMemberOfTeam && !isSiteCompleted;
+      }
+    );
+    if (userTeamAssignment) {
+      const [teamId, assignment] = userTeamAssignment;
+      const team = teams.find(t => t._id === teamId);
+      toast.error(`Ce membre est déjà dans l'équipe "${team?.name}" assignée au site "${assignment.siteName}". Vous ne pouvez pas l'ajouter à une autre équipe.`);
+      return;
+    }
 
+    try {
+      if (useMockData) {
+        const userToAdd = availableUsers.find((u) => u._id === selectedUserId);
+        if (userToAdd) {
+          const updatedTeam = {
+            ...selectedTeamView,
+            members: [...selectedTeamView.members, userToAdd],
+          };
+          setTeams(
+            teams.map((t) =>
+              t._id === selectedTeamView._id ? updatedTeam : t,
+            ),
+          );
+          setSelectedTeamView(updatedTeam);
+        }
+        toast.success("Member added successfully!");
+      } else {
+        const response = await addMemberToTeam(
+          selectedTeamView._id,
+          selectedUserId,
+        );
+        setTeams(
+          teams.map((t) =>
+            t._id === selectedTeamView._id ? response.data : t,
+          ),
+        );
+        setSelectedTeamView(response.data);
+        toast.success("Member added successfully!");
+      }
       setSelectedUserId("");
       setMemberDialogOpen(false);
     } catch (error) {
@@ -397,15 +511,31 @@ export default function Team() {
     if (!selectedTeamView) return;
 
     try {
-      const response = await removeMemberFromTeam(
-        selectedTeamView._id,
-        memberId,
-      );
-      setTeams(
-        teams.map((t) => (t._id === selectedTeamView._id ? response.data : t)),
-      );
-      setSelectedTeamView(response.data);
-      toast.success("Member removed successfully!");
+      if (useMockData) {
+        const updatedTeam = {
+          ...selectedTeamView,
+          members: selectedTeamView.members.filter(
+            (m: any) => m._id !== memberId,
+          ),
+        };
+        setTeams(
+          teams.map((t) => (t._id === selectedTeamView._id ? updatedTeam : t)),
+        );
+        setSelectedTeamView(updatedTeam);
+        toast.success("Member removed successfully!");
+      } else {
+        const response = await removeMemberFromTeam(
+          selectedTeamView._id,
+          memberId,
+        );
+        setTeams(
+          teams.map((t) =>
+            t._id === selectedTeamView._id ? response.data : t,
+          ),
+        );
+        setSelectedTeamView(response.data);
+        toast.success("Member removed successfully!");
+      }
     } catch (error) {
       console.error("Error removing member:", error);
       toast.error("Error removing member");
@@ -700,19 +830,39 @@ export default function Team() {
                             <SelectValue placeholder="Select a member" />
                           </SelectTrigger>
                           <SelectContent>
-                            {availableUsers
-                              .filter(
-                                (u) =>
-                                  !selectedTeamView?.members?.some(
-                                    (m: any) => m._id === u._id,
-                                  ),
-                              )
-                              .map((user) => (
+                            {(() => {
+                              // Filter users: not in current team, not in team assigned to active site (not completed)
+                              const availableForSelection = availableUsers
+                                .filter((u) => {
+                                  // Not already in this team
+                                  if (selectedTeamView?.members?.some((m: any) => m._id === u._id)) {
+                                    return false;
+                                  }
+                                  // Check if user is in a team assigned to a site that's NOT completed
+                                  const userInActiveAssignedTeam = Object.entries(teamSiteAssignments).find(
+                                    ([teamId, assignment]) => {
+                                      const team = teams.find(t => t._id === teamId);
+                                      const isMemberOfTeam = team?.members?.some((m: any) => m._id === u._id);
+                                      const isSiteCompleted = assignment.status === 'completed';
+                                      return isMemberOfTeam && !isSiteCompleted;
+                                    }
+                                  );
+                                  // Allow if not in any active assigned team (site not completed)
+                                  return !userInActiveAssignedTeam;
+                                });
+                              if (availableForSelection.length === 0) {
+                                return (
+                                  <div className="py-4 px-2 text-sm text-gray-500 text-center">
+                                    Aucun utilisateur disponible
+                                  </div>
+                                );
+                              }
+                              return availableForSelection.map((user) => (
                                 <SelectItem key={user._id} value={user._id}>
-                                  {user.firstName} {user.lastName} ({user.email}
-                                  )
+                                  {user.firstName} {user.lastName} ({user.email})
                                 </SelectItem>
-                              ))}
+                              ));
+                            })()}
                           </SelectContent>
                         </Select>
                         <Button

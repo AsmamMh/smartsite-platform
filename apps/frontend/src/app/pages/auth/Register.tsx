@@ -2,17 +2,26 @@
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type FieldErrors } from "react-hook-form";
 import * as z from "zod";
-
 import { Button } from "@/components/ui/button";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldDescription,
 } from "@/components/ui/field";
+
 import { Input } from "@/components/ui/input";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import {
   Card,
@@ -24,52 +33,99 @@ import {
 import { useAuthStore } from "@/app/store/authStore";
 import { useNavigate } from "react-router";
 import toast from "react-hot-toast";
+import { roleLabels } from "@/app/utils/roleConfig";
+import type { RoleType } from "@/app/types";
 
-const formSchema = z
-  .object({
-    cin: z
-      .string()
-      .min(5, "CIN est requis et doit contenir au moins 5 caractères.")
-      .max(32, "CIN ne doit pas dépasser 32 caractères."),
-    firstName: z
-      .string()
-      .min(2, "Le prénom est requis et doit contenir au moins 2 caractères.")
-      .max(50, "Le prénom ne doit pas dépasser 50 caractères."),
-    lastName: z
-      .string()
-      .min(2, "Le nom est requis et doit contenir au moins 2 caractères.")
-      .max(50, "Le nom ne doit pas dépasser 50 caractères."),
-    email: z
-      .string()
-      .email("Veuillez entrer une adresse email valide.")
-      .min(5, "L'email est requis."),
-    telephone: z
-      .string()
-      .min(8, "Le téléphone doit contenir au moins 8 caractères.")
-      .max(20, "Le téléphone ne doit pas dépasser 20 caractères.")
-      .optional()
-      .or(z.literal("")),
-    address: z
-      .string()
-      .min(5, "L'adresse doit contenir au moins 5 caractères.")
-      .max(200, "L'adresse ne doit pas dépasser 200 caractères.")
-      .optional()
-      .or(z.literal("")),
+// Liste des roles disponibles (sauf super_admin)
 
-    companyName: z
-      .string()
-      .max(200, "Le nom de l'entreprise ne doit pas dépasser 200 caractères.")
-      .optional()
-      .or(z.literal("")),
-    password: z
-      .string()
-      .min(6, "Password must be at least 8 characters")
-      .max(100, "Password must be less than 100 characters"),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Les mots de passe ne correspondent pas.",
-  });
+const availableRoles: RoleType[] = [
+  "director",
+  "project_manager",
+  "site_manager",
+  "works_manager",
+  "accountant",
+  "procurement_manager",
+  "qhse_manager",
+  "client",
+  "subcontractor",
+  "user",
+];
+
+const phoneCountryCodes = [
+  { label: "Tunisie (+216)", value: "+216" },
+  { label: "France (+33)", value: "+33" },
+  { label: "Maroc (+212)", value: "+212" },
+  { label: "Algérie (+213)", value: "+213" },
+  { label: "Belgique (+32)", value: "+32" },
+  { label: "Suisse (+41)", value: "+41" },
+  { label: "Canada (+1)", value: "+1-ca" },
+  { label: "USA (+1)", value: "+1-us" },
+];
+
+// Helper function to convert phone code values back to proper format
+const getPhoneCode = (value: string): string => {
+  switch (value) {
+    case "+1-ca":
+    case "+1-us":
+      return "+1";
+    default:
+      return value;
+  }
+};
+
+const formSchema = z.object({
+  cin: z
+    .string()
+    .min(5, "CIN est requis et doit contenir au moins 5 caractères.")
+    .max(32, "CIN ne doit pas dépasser 32 caractères."),
+  firstName: z
+    .string()
+    .min(2, "Le prénom est requis et doit contenir au moins 2 caractères.")
+    .max(50, "Le prénom ne doit pas dépasser 50 caractères."),
+  lastName: z
+    .string()
+    .min(2, "Le nom est requis et doit contenir au moins 2 caractères.")
+    .max(50, "Le nom ne doit pas dépasser 50 caractères."),
+  email: z
+    .string()
+    .email("Veuillez entrer une adresse email valide.")
+    .min(5, "L'email est requis."),
+  telephone: z
+    .string()
+    .regex(/^\d{6,14}$/, "Numéro invalide (6 à 14 chiffres)."),
+  phoneCountryCode: z.string().min(2, "Veuillez choisir un indicatif pays."),
+  country: z
+    .string()
+    .min(2, "Le pays est requis.")
+    .max(56, "Le pays est trop long."),
+  city: z
+    .string()
+    .min(2, "La ville est requise.")
+    .max(80, "Le nom de la ville est trop long.")
+    .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ' -]+$/, "Ville invalide."),
+  postalCode: z
+    .string()
+    .min(3, "Le code postal est requis.")
+    .max(12, "Le code postal est invalide.")
+    .regex(/^[A-Za-z0-9 -]+$/, "Code postal invalide."),
+  addressLine: z
+    .string()
+    .min(5, "L'adresse est requise et doit contenir au moins 5 caractères.")
+    .max(200, "L'adresse ne doit pas dépasser 200 caractères."),
+  role: z.string().min(1, "Le rôle est requis."),
+  acceptTerms: z
+    .boolean()
+    .refine(
+      (val) => val === true,
+      "Vous devez accepter les critères d'acceptation pour continuer.",
+    ),
+  acceptReglement: z
+    .boolean()
+    .refine(
+      (val) => val === true,
+      "Vous devez accepter le règlement pour continuer.",
+    ),
+});
 
 type RegisterFormData = z.infer<typeof formSchema>;
 
@@ -85,37 +141,39 @@ export default function Register() {
       firstName: "",
       lastName: "",
       email: "",
-      password: "",
-      confirmPassword: "",
       telephone: "",
-      address: "",
-      companyName: "",
+      phoneCountryCode: "+216",
+      country: "",
+      city: "",
+      postalCode: "",
+      addressLine: "",
+      role: "",
+      acceptTerms: false,
+      acceptReglement: false,
     },
   });
 
   const onSubmit = async (data: RegisterFormData) => {
     setIsLoading(true);
     try {
+      const fullAddress = `${data.addressLine}, ${data.city}, ${data.postalCode}, ${data.country}`;
+      const fullPhone = `${getPhoneCode(data.phoneCountryCode)} ${data.telephone}`;
       await register(
         data.cin,
-        data.password, // mot de passe vide à l'inscription, généré à l'approbation
+        "", // mot de passe vide à l'inscription, généré à l'approbation
         data.firstName,
         data.lastName,
         data.email,
-        data.telephone || "",
-        data.address || "",
-        data.companyName || "",
+        fullPhone,
+        "", // pas de département
+        fullAddress,
+        data.role,
       );
       toast.success(
-        "Inscription réussie! Un code de vérification a été envoyé à votre email.",
+        "Inscription réussie! Votre compte est en attente d'approbation.",
       );
-      // Redirect to OTP verification page with user data
-      navigate("/verify-otp", {
-        state: {
-          cin: data.cin,
-          email: data.email,
-        },
-      });
+      // Redirect to login page
+      navigate("/login");
     } catch (error: any) {
       console.error("Erreur inscription:", error);
       const message =
@@ -126,6 +184,18 @@ export default function Register() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onInvalid = (errors: FieldErrors<RegisterFormData>) => {
+    const first = Object.values(errors)[0];
+    const msg =
+      first && typeof first === "object" && "message" in first
+        ? String(first.message)
+        : null;
+    toast.error(
+      msg ??
+        "Veuillez compléter tous les champs obligatoires et cocher les cases.",
+    );
   };
 
   return (
@@ -162,8 +232,9 @@ export default function Register() {
               </CardHeader>
               <CardContent>
                 <form
-                  onSubmit={form.handleSubmit(onSubmit)}
+                  onSubmit={form.handleSubmit(onSubmit, onInvalid)}
                   className="space-y-6"
+                  noValidate
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <FieldGroup>
@@ -217,7 +288,7 @@ export default function Register() {
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="firstName">
+                            <FieldLabel htmlFor="firstname">
                               Prénom *
                             </FieldLabel>
                             <Input
@@ -256,23 +327,34 @@ export default function Register() {
                     </FieldGroup>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FieldGroup>
                       <Controller
-                        name="password"
+                        name="phoneCountryCode"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="password">
-                              Password *
+                            <FieldLabel htmlFor="phoneCountryCode">
+                              Pays (indicatif) *
                             </FieldLabel>
-                            <Input
-                              {...field}
-                              id="password"
-                              type="password"
-                              placeholder="Entrez votre prénom"
-                              aria-invalid={fieldState.invalid}
-                            />
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger id="phoneCountryCode">
+                                <SelectValue placeholder="Indicatif" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {phoneCountryCodes.map((item) => (
+                                  <SelectItem
+                                    key={`${item.label}-${item.value}`}
+                                    value={item.value}
+                                  >
+                                    {item.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                             {fieldState.invalid && (
                               <FieldError errors={[fieldState.error]} />
                             )}
@@ -281,45 +363,48 @@ export default function Register() {
                       />
                     </FieldGroup>
 
-                    <FieldGroup>
-                      <Controller
-                        name="confirmPassword"
-                        control={form.control}
-                        render={({ field, fieldState }) => (
-                          <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="confirmPassword">
-                              Confirmez le mot de passe *
-                            </FieldLabel>
-                            <Input
-                              type="password"
-                              {...field}
-                              id="confirmPassword"
-                              placeholder="Confirmez votre mot de passe"
-                              aria-invalid={fieldState.invalid}
-                            />
-                            {fieldState.invalid && (
-                              <FieldError errors={[fieldState.error]} />
-                            )}
-                          </Field>
-                        )}
-                      />
-                    </FieldGroup>
+                    <div className="md:col-span-2">
+                      <FieldGroup>
+                        <Controller
+                          name="telephone"
+                          control={form.control}
+                          render={({ field, fieldState }) => (
+                            <Field data-invalid={fieldState.invalid}>
+                              <FieldLabel htmlFor="telephone">
+                                Téléphone *
+                              </FieldLabel>
+                              <Input
+                                {...field}
+                                id="telephone"
+                                placeholder="12345678"
+                                aria-invalid={fieldState.invalid}
+                              />
+                              <FieldDescription>
+                                Saisir uniquement les chiffres, l'indicatif est
+                                choisi à gauche.
+                              </FieldDescription>
+                              {fieldState.invalid && (
+                                <FieldError errors={[fieldState.error]} />
+                              )}
+                            </Field>
+                          )}
+                        />
+                      </FieldGroup>
+                    </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <FieldGroup>
                       <Controller
-                        name="telephone"
+                        name="country"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="telephone">
-                              Téléphone
-                            </FieldLabel>
+                            <FieldLabel htmlFor="country">Pays *</FieldLabel>
                             <Input
                               {...field}
-                              id="telephone"
-                              placeholder="Entrez votre téléphone"
+                              id="country"
+                              placeholder="Tunisie"
                               aria-invalid={fieldState.invalid}
                             />
                             {fieldState.invalid && (
@@ -329,19 +414,41 @@ export default function Register() {
                         )}
                       />
                     </FieldGroup>
+
                     <FieldGroup>
                       <Controller
-                        name="companyName"
+                        name="city"
                         control={form.control}
                         render={({ field, fieldState }) => (
                           <Field data-invalid={fieldState.invalid}>
-                            <FieldLabel htmlFor="companyName">
-                              Entreprise
+                            <FieldLabel htmlFor="city">Ville *</FieldLabel>
+                            <Input
+                              {...field}
+                              id="city"
+                              placeholder="Tunis"
+                              aria-invalid={fieldState.invalid}
+                            />
+                            {fieldState.invalid && (
+                              <FieldError errors={[fieldState.error]} />
+                            )}
+                          </Field>
+                        )}
+                      />
+                    </FieldGroup>
+
+                    <FieldGroup>
+                      <Controller
+                        name="postalCode"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <FieldLabel htmlFor="postalCode">
+                              Code postal *
                             </FieldLabel>
                             <Input
                               {...field}
-                              id="companyName"
-                              placeholder="Nom de votre entreprise"
+                              id="postalCode"
+                              placeholder="1000"
                               aria-invalid={fieldState.invalid}
                             />
                             {fieldState.invalid && (
@@ -355,15 +462,17 @@ export default function Register() {
 
                   <FieldGroup>
                     <Controller
-                      name="address"
+                      name="addressLine"
                       control={form.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="address">Adresse</FieldLabel>
+                          <FieldLabel htmlFor="addressLine">
+                            Adresse (rue / numéro) *
+                          </FieldLabel>
                           <Input
                             {...field}
-                            id="address"
-                            placeholder="Entrez votre adresse"
+                            id="addressLine"
+                            placeholder="Rue de ..., N 15"
                             aria-invalid={fieldState.invalid}
                           />
                           {fieldState.invalid && (
@@ -372,6 +481,178 @@ export default function Register() {
                         </Field>
                       )}
                     />
+                  </FieldGroup>
+
+                  <FieldGroup>
+                    <Controller
+                      name="role"
+                      control={form.control}
+                      render={({ field, fieldState }) => (
+                        <Field data-invalid={fieldState.invalid}>
+                          <FieldLabel htmlFor="role">Rôle *</FieldLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <SelectTrigger id="role">
+                              <SelectValue placeholder="Sélectionnez un rôle" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableRoles.map((roleName) => (
+                                <SelectItem key={roleName} value={roleName}>
+                                  {roleLabels[roleName] || roleName}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {fieldState.invalid && (
+                            <FieldError errors={[fieldState.error]} />
+                          )}
+                        </Field>
+                      )}
+                    />
+                  </FieldGroup>
+
+                  {/* Critères d'acceptation */}
+                  <FieldGroup>
+                    <div className="space-y-3 p-4 bg-gray-50 rounded-lg border">
+                      <h4 className="font-semibold text-sm text-gray-900">
+                        📋 Critères d'acceptation
+                      </h4>
+                      <div className="text-xs text-gray-600 space-y-2">
+                        <p>
+                          Avant de soumettre votre demande d'inscription,
+                          veuillez noter que :
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>
+                            Les informations fournies doivent être exactes et
+                            vérifiables
+                          </li>
+                          <li>
+                            Le profil doit correspondre aux exigences du rôle
+                            demandé
+                          </li>
+                          <li>
+                            Une vérification sera effectuée par notre équipe
+                            administrative
+                          </li>
+                          <li>
+                            Le processus d'approbation peut prendre 24-48 heures
+                          </li>
+                          <li>
+                            Un email de confirmation sera envoyé après
+                            validation
+                          </li>
+                        </ul>
+                      </div>
+
+                      <Controller
+                        name="acceptTerms"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <div className="flex items-start space-x-2">
+                              <input
+                                type="checkbox"
+                                id="acceptTerms"
+                                checked={field.value}
+                                onChange={(e) =>
+                                  field.onChange(e.target.checked)
+                                }
+                                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              <div className="space-y-1">
+                                <FieldLabel
+                                  htmlFor="acceptTerms"
+                                  className="text-sm font-normal"
+                                >
+                                  J'ai lu et j'accepte les critères
+                                  d'acceptation ci-dessus
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </div>
+                            </div>
+                          </Field>
+                        )}
+                      />
+                    </div>
+                  </FieldGroup>
+
+                  {/* Règlement */}
+                  <FieldGroup>
+                    <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h4 className="font-semibold text-sm text-blue-900">
+                        📜 Règlement de la plateforme
+                      </h4>
+                      <div className="text-xs text-blue-800 space-y-2">
+                        <p>
+                          En utilisant la plateforme SmartSite, vous vous
+                          engagez à respecter :
+                        </p>
+                        <ul className="list-disc list-inside space-y-1 ml-2">
+                          <li>
+                            Respecter les politiques de confidentialité et de
+                            sécurité
+                          </li>
+                          <li>Fournir des informations exactes et à jour</li>
+                          <li>
+                            Utiliser la plateforme à des fins professionnelles
+                            uniquement
+                          </li>
+                          <li>
+                            Ne pas partager vos identifiants avec des tiers
+                          </li>
+                          <li>
+                            Respecter les autres utilisateurs et collaborateurs
+                          </li>
+                          <li>
+                            Signalier tout problème ou anomalie rapidement
+                          </li>
+                          <li>
+                            Accepter les décisions administratives finales
+                          </li>
+                        </ul>
+                        <p className="font-medium text-blue-900">
+                          Toute violation du règlement peut entraîner la
+                          suspension ou la suppression de votre compte.
+                        </p>
+                      </div>
+
+                      <Controller
+                        name="acceptReglement"
+                        control={form.control}
+                        render={({ field, fieldState }) => (
+                          <Field data-invalid={fieldState.invalid}>
+                            <div className="flex items-start space-x-2">
+                              <input
+                                type="checkbox"
+                                id="acceptReglement"
+                                checked={field.value}
+                                onChange={(e) =>
+                                  field.onChange(e.target.checked)
+                                }
+                                className="mt-0.5 h-4 w-4 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div className="space-y-1">
+                                <FieldLabel
+                                  htmlFor="acceptReglement"
+                                  className="text-sm font-normal text-blue-900"
+                                >
+                                  J'ai lu et j'accepte le règlement de la
+                                  plateforme
+                                </FieldLabel>
+                                {fieldState.invalid && (
+                                  <FieldError errors={[fieldState.error]} />
+                                )}
+                              </div>
+                            </div>
+                          </Field>
+                        )}
+                      />
+                    </div>
                   </FieldGroup>
 
                   <Button

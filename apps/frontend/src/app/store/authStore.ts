@@ -2,10 +2,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { AuthState, User, RegisterData } from "../types";
 import axios from "axios";
+import { trackLogout } from "../action/audit.action";
+import { AUTH_API_URL } from "@/lib/auth-api-url";
 
 const api = axios.create({
-  // baseURL: "https://smartsite-platform-auth.vercel.app",
-  baseURL: "http://localhost:3010",
+  baseURL: AUTH_API_URL,
 });
 
 export const useAuthStore = create<AuthState>()(
@@ -38,6 +39,9 @@ export const useAuthStore = create<AuthState>()(
             },
             isAuthenticated: true,
           });
+          if (res.data.session_id) {
+            localStorage.setItem("session_id", res.data.session_id);
+          }
 
           return res.data;
         } catch (error: any) {
@@ -70,13 +74,13 @@ export const useAuthStore = create<AuthState>()(
       ) => {
         const res = await api.post("/auth/register", {
           cin,
-          password, // généralement vide, mot de passe généré à l'approbation
+          password,
           firstName,
           lastName,
           email,
-          telephone,
+          phoneNumber: telephone,
           departement,
-          adresse: address,
+          address,
           role,
           companyName,
           preferredLanguage,
@@ -99,13 +103,18 @@ export const useAuthStore = create<AuthState>()(
         return res.data;
       },
 
-      // Rejeter / supprimer un utilisateur (admin)
-      rejectUser: async (userId: string) => {
-        const res = await api.delete(`/users/${userId}`);
+      // Rejeter un utilisateur (admin)
+      rejectUser: async (userId: string, reason?: string) => {
+        const res = await api.post(`/auth/reject-user/${userId}`, {
+          reason,
+        });
         return res.data;
       },
 
-      logout: () => {
+      logout: async () => {
+        const sessionId = localStorage.getItem("session_id") || undefined;
+        await trackLogout(sessionId);
+        localStorage.removeItem("session_id");
         // Clear authorization header
         delete api.defaults.headers.common["Authorization"];
         set({ user: null, isAuthenticated: false });

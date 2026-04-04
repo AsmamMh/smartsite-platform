@@ -83,9 +83,8 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
           .min(5, "lastName must be at least 5 characters.")
           .max(32, "lastName must be at most 32 characters."),
         email: z.string().email("Invalid email address"),
-
-        telephone: z.string(),
-    companyName: z.string().optional(),
+        phoneNumber: z.string(),
+        companyName: z.string().optional(),
         departement: z.string().optional(),
         address: z.string().optional(),
         role: z.string().optional(),
@@ -147,34 +146,20 @@ const UserForms = ({ type }: { type: "add" | "edit" }) => {
     }
   };
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    // try {
-    //   const res = await createUser(data.firstName, data.lastName, data.email, data.telephone, data.password, data.address);
-    //   if (res.status === 201) {
-    //     toast.success("User created successfully");
-    //   }
-    // } catch (error: any) {
-    //   toast.error("Failed to create user. Please try again.");
-    // }
-    console.log(
-      data.address,
-      data.email,
-      data.firstName,
-      data.lastName,
-      data.telephone,
-      data,
-    );
     try {
       if (type === "add") {
-        const response = await createUser(data);
+        const response = await createUser(
+          data as Parameters<typeof createUser>[0],
+        );
         if (response.status === 201) {
           toast.success("User created successfully");
           form.reset();
           onClose();
           onUserChange();
         }
-      }else{
-        const response =await updateUser(id as string,data);
-        if(response.status === 200 || response.status === 204){
+      } else {
+        const response = await updateUser(id as string, data);
+        if (response.status === 200 || response.status === 204) {
           toast.success("User updated successfully");
           form.reset();
           onClose();

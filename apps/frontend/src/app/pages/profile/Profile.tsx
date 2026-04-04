@@ -5,7 +5,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import * as z from "zod";
 import {
-  User as UserIcon,
   Mail,
   Phone,
   Calendar,
@@ -27,8 +26,6 @@ import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-
 import { useAuthStore } from "../../store/authStore";
 import toast from "react-hot-toast";
 import axios from "axios";
@@ -72,10 +69,10 @@ const passwordSchema = z
 type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
+const API_ME = "http://localhost:3000/users/me";
+
 export default function Profile() {
   const authUser = useAuthStore((state) => state.user);
-  //const getCurrentUser = useAuthStore((state) => state.getCurrentUser);
-  const updateProfile = useAuthStore((state) => state.updateProfile);
 
   const [user, setUser] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -105,22 +102,30 @@ export default function Profile() {
     },
   });
 
-  // Load user data
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
   const loadUserData = async () => {
+    if (!authUser?.access_token) {
+      setIsLoadingData(false);
+      return;
+    }
     setIsLoadingData(true);
     try {
-      console.log("Fetching current user data...");
-      const userData = (await getCurrentUser(authUser)).data;
-      console.log("User data fetched:", userData);
-      if (userData) {
+      const res = await getCurrentUser(authUser);
+      if (res.status === 200 && res.data && typeof res.data === "object") {
+        const userData = res.data as Record<string, unknown>;
         setUser(userData);
-        console.log("Current user data:", userData);
+        profileForm.reset({
+          firstName: String(userData.firstName ?? ""),
+          lastName: String(userData.lastName ?? ""),
+          email: String(userData.email ?? ""),
+          telephone: String(
+            userData.telephone ?? userData.phoneNumber ?? "",
+          ),
+          address: String(userData.address ?? ""),
+          departement: String(userData.departement ?? ""),
+          companyName: String(userData.companyName ?? ""),
+        });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error loading user:", error);
       toast.error("Erreur lors du chargement du profil");
     } finally {
@@ -128,23 +133,25 @@ export default function Profile() {
     }
   };
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
-  };
+  useEffect(() => {
+    void loadUserData();
+  }, [authUser?.access_token]);
+
+  const getInitials = (firstName: string, lastName: string) =>
+    `${firstName?.charAt(0) || ""}${lastName?.charAt(0) || ""}`.toUpperCase();
 
   const handleSaveProfile = async (data: ProfileFormData) => {
     setIsLoading(true);
     try {
-      if (updateProfile) {
-        const result = await updateProfile(data);
-        if (result && !result.error) {
-          toast.success("Profil mis à jour avec succès!");
-          setUser({ ...user, ...data });
-          setIsEditing(false);
-        } else {
-          toast.error(result.error || "Erreur lors de la mise à jour");
-        }
-      }
+      await axios.put(API_ME, data, {
+        headers: {
+          Authorization: `Bearer ${authUser?.access_token}`,
+        },
+      });
+      toast.success("Profil mis à jour avec succès!");
+      setUser((u: any) => ({ ...u, ...data }));
+      setIsEditing(false);
+      await loadUserData();
     } catch (error: any) {
       console.error("Error updating profile:", error);
       toast.error(
@@ -159,8 +166,8 @@ export default function Profile() {
   const handleChangePassword = async (data: PasswordFormData) => {
     setIsLoading(true);
     try {
-      const res = await axios.put(
-        "https://smartsite-platform-auth.vercel.app/users/me/password",
+      await axios.put(
+        `${API_ME}/password`,
         {
           currentPassword: data.currentPassword,
           newPassword: data.newPassword,
@@ -189,7 +196,7 @@ export default function Profile() {
   if (isLoadingData) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600" />
       </div>
     );
   }
@@ -213,7 +220,6 @@ export default function Profile() {
         </p>
       </div>
 
-      {/* Profile Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Informations Personnelles</CardTitle>
@@ -257,7 +263,10 @@ export default function Profile() {
           <div className="flex items-start gap-6">
             <Avatar className="h-24 w-24">
               <AvatarFallback className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white text-2xl">
-                {getInitials(user.firstName, user.lastName)}
+                {getInitials(
+                  String(user.firstName ?? ""),
+                  String(user.lastName ?? ""),
+                )}
               </AvatarFallback>
             </Avatar>
 
@@ -329,23 +338,24 @@ export default function Profile() {
                   </div>
                 </div>
 
-                {user.certifications && user.certifications.length > 0 && (
-                  <div className="pt-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Award className="h-5 w-5 text-indigo-600" />
-                      <p className="text-sm font-medium text-gray-700">
-                        Certifications
-                      </p>
+                {Array.isArray(user.certifications) &&
+                  user.certifications.length > 0 && (
+                    <div className="pt-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Award className="h-5 w-5 text-indigo-600" />
+                        <p className="text-sm font-medium text-gray-700">
+                          Certifications
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {user.certifications.map((cert: string, idx: number) => (
+                          <Badge key={idx} variant="secondary">
+                            {cert}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {user.certifications.map((cert: string, idx: number) => (
-                        <Badge key={idx} variant="secondary">
-                          {cert}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  )}
               </div>
             ) : (
               <form className="flex-1 space-y-4">
@@ -474,7 +484,6 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      {/* Password Change Card */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Sécurité</CardTitle>
@@ -575,14 +584,13 @@ export default function Profile() {
             </form>
           ) : (
             <p className="text-gray-600">
-              Cliquez sur "Changer le mot de passe" pour mettre à jour votre mot
-              de passe.
+              Cliquez sur « Changer le mot de passe » pour mettre à jour votre
+              mot de passe.
             </p>
           )}
         </CardContent>
       </Card>
 
-      {/* Account Status */}
       <Card>
         <CardHeader>
           <CardTitle>Statut du Compte</CardTitle>
