@@ -126,52 +126,59 @@ export class EmailService {
     };
   }
 
-  private wrapLayout(innerHtml: string, accent: 'lime' | 'cyan' | 'danger'): string {
+  private wrapLayout(
+    innerHtml: string,
+    accent: 'lime' | 'cyan' | 'danger',
+  ): string {
     const accentColor =
-      accent === 'danger' ? BRAND.danger : accent === 'cyan' ? BRAND.cyan : BRAND.lime;
+      accent === 'danger'
+        ? BRAND.danger
+        : accent === 'cyan'
+          ? BRAND.cyan
+          : BRAND.lime;
     const { html: logoHtml } = this.getLogoImgTag();
 
     return `<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartSite</title>
-</head>
-<body style="margin:0;padding:0;background-color:${BRAND.bgPage};font-family:'Segoe UI',Roboto,Arial,sans-serif;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:${BRAND.bgPage};padding:32px 16px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="100%" style="max-width:600px;background-color:${BRAND.card};border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(12,25,41,0.08);">
-          <tr>
-            <td style="height:4px;background:linear-gradient(90deg,${BRAND.cyan},${BRAND.lime},${BRAND.navyMid});"></td>
-          </tr>
-          <tr>
-            <td style="padding:28px 32px 8px;text-align:center;">
-              ${logoHtml}
-              <div style="font-size:11px;letter-spacing:0.18em;color:${BRAND.navyMid};font-weight:600;margin-bottom:20px;">INTELLIGENT CONSTRUCTION PLATFORM</div>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:0 32px 28px;color:${BRAND.text};font-size:15px;line-height:1.55;">
-              <div style="border-left:3px solid ${accentColor};padding-left:14px;margin-bottom:20px;">
-                ${innerHtml}
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:20px 32px;background:${BRAND.navy};color:#94a3b8;font-size:12px;line-height:1.5;text-align:center;">
-              <p style="margin:0 0 8px;color:#e2e8f0;font-weight:600;">SmartSite</p>
-              <p style="margin:0;">Plateforme intelligente pour le suivi de chantiers et la gestion de projets.</p>
-              <p style="margin:12px 0 0;font-size:11px;color:#64748b;">Cet email a été envoyé automatiquement, merci de ne pas répondre directement si vous n’êtes pas sûr du destinataire.</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+  <html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSite</title>
+  </head>
+  <body style="margin:0;padding:0;background-color:${BRAND.bgPage};font-family:'Segoe UI',Roboto,Arial,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:${BRAND.bgPage};padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" style="max-width:600px;background-color:${BRAND.card};border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(12,25,41,0.08);">
+            <tr>
+              <td style="height:4px;background:linear-gradient(90deg,${BRAND.cyan},${BRAND.lime},${BRAND.navyMid});"></td>
+            </tr>
+            <tr>
+              <td style="padding:28px 32px 8px;text-align:center;">
+                ${logoHtml}
+                <div style="font-size:11px;letter-spacing:0.18em;color:${BRAND.navyMid};font-weight:600;margin-bottom:20px;">INTELLIGENT CONSTRUCTION PLATFORM</div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 32px 28px;color:${BRAND.text};font-size:15px;line-height:1.55;">
+                <div style="border-left:3px solid ${accentColor};padding-left:14px;margin-bottom:20px;">
+                  ${innerHtml}
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 32px;background:${BRAND.navy};color:#94a3b8;font-size:12px;line-height:1.5;text-align:center;">
+                <p style="margin:0 0 8px;color:#e2e8f0;font-weight:600;">SmartSite</p>
+                <p style="margin:0;">Plateforme intelligente pour le suivi de chantiers et la gestion de projets.</p>
+                <p style="margin:12px 0 0;font-size:11px;color:#64748b;">Cet email a été envoyé automatiquement, merci de ne pas répondre directement si vous n’êtes pas sûr du destinataire.</p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+  </html>`;
   }
 
   async sendApprovalEmail(
