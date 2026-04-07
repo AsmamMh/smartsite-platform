@@ -12,6 +12,8 @@ import { StaticsModule } from './statics/statics.module';
 import { AuditLogsModule } from './audit-logs/audit-logs.module';
 import { TeamsModule } from './teams/teams.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
+import { CatalogModule } from './catalog/catalog.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { ChatbotModule } from './chatbot/chatbot.module';
     TeamsModule,
     ChatbotModule,
     AuditLogsModule,
+    SuppliersModule,
+    CatalogModule,
     MongooseModule.forRoot(
       process.env.MONGODB_URI || 'mongodb://localhost:27017/smartsite',
     ),

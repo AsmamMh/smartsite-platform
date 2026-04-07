@@ -13,7 +13,6 @@ import Projects from "./pages/projects/Projects";
 import Planning from "./pages/planning/MyTask";
 import Team from "./pages/team/Team";
 import Clients from "./pages/clients/Clients";
-import Suppliers from "./pages/suppliers/Suppliers";
 import Materials from "./pages/materials/Materials";
 import Finance from "./pages/finance/Finance";
 import QHSE from "./pages/qhse/QHSE";
@@ -30,6 +29,17 @@ import Home2 from "./pages/Home/Home2";
 import Pricing from "./pages/pricing/Pricing";
 import ClientsNew from "./pages/clients/ClientsNew";
 import UserGuide from "./pages/guide/UserGuide";
+
+import SupplierList from "./pages/suppliers/SupplierList";
+import AddSupplier from "./pages/suppliers/AddSupplier";
+import EditSupplier from "./pages/suppliers/EditSupplier";
+import SupplierDetails from "./pages/suppliers/SupplierDetails";
+
+import Catalog from "./pages/catalog/Catalog";
+import CatalogList from "./pages/catalog/CatalogList";
+import AddCatalogItem from "./pages/catalog/AddCatalogItem";
+import EditCatalogItem from "./pages/catalog/EditCatalogItem";
+import CatalogDetails from "./pages/catalog/CatalogDetails";
 
 import PLaningProjects from "./pages/planning/PLaningProjects";
 import ProjectMilestone from "./pages/planning/ProjectMilestone";
@@ -138,7 +148,35 @@ export const router = createBrowserRouter([
       },
       {
         path: "suppliers",
-        element: <Suppliers />,
+        element: <SupplierList />,
+      },
+      {
+        path: "suppliers/add",
+        element: <AddSupplier />,
+      },
+      {
+        path: "suppliers/edit/:id",
+        element: <EditSupplier />,
+      },
+      {
+        path: "suppliers/:id",
+        element: <SupplierDetails />,
+      },
+      {
+        path: "catalog",
+        element: <Catalog />,
+      },
+      {
+        path: "catalog/add",
+        element: <AddCatalogItem />,
+      },
+      {
+        path: "catalog/edit/:id",
+        element: <EditCatalogItem />,
+      },
+      {
+        path: "catalog/:id",
+        element: <CatalogDetails />,
       },
       {
         path: "materials",
