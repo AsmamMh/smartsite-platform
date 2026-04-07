@@ -29,7 +29,13 @@ export interface SupplierMaterial {
   deliveryDays?: number;
   availability: string;
   qualityScore?: number;
+  deliveryScore?: number;
+  communicationScore?: number;
+  priceScore?: number;
+  reliabilityScore?: number;
+  overallScore?: number;
   isPreferred: boolean;
+  recommended: boolean;
   notes?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -69,6 +75,16 @@ export const getMaterialsBySupplier = async (supplierId: string): Promise<{ stat
 export const getSuppliersByCatalogItem = async (catalogItemId: string): Promise<{ status: number; data: SupplierMaterial[] }> => {
   try {
     const res = await axios.get(`${API_URL}/catalog-item/${catalogItemId}`, { headers: getAuthHeaders() });
+    return { status: res.status, data: res.data };
+  } catch (error: unknown) {
+    const err = error as { response?: { status?: number; data?: unknown } };
+    return { status: err?.response?.status ?? 500, data: [] };
+  }
+};
+
+export const getComparisonByCatalogItem = async (catalogItemId: string): Promise<{ status: number; data: SupplierMaterial[] }> => {
+  try {
+    const res = await axios.get(`${API_URL}/comparison/${catalogItemId}`, { headers: getAuthHeaders() });
     return { status: res.status, data: res.data };
   } catch (error: unknown) {
     const err = error as { response?: { status?: number; data?: unknown } };

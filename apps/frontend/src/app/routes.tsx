@@ -34,6 +34,8 @@ import SupplierList from "./pages/suppliers/SupplierList";
 import AddSupplier from "./pages/suppliers/AddSupplier";
 import EditSupplier from "./pages/suppliers/EditSupplier";
 import SupplierDetails from "./pages/suppliers/SupplierDetails";
+import SupplierEvaluation from "./pages/suppliers/SupplierEvaluation";
+import SupplierComparison from "./pages/suppliers/SupplierComparison";
 
 import Catalog from "./pages/catalog/Catalog";
 import CatalogList from "./pages/catalog/CatalogList";
@@ -45,6 +47,10 @@ import CheckoutSimulator from "./pages/CheckoutSimulator";
 import SupplierMaterials from "./pages/supplier-materials/SupplierMaterials";
 import AddSupplierMaterialMapping from "./pages/supplier-materials/AddSupplierMaterialMapping";
 import SupplierMaterialDetails from "./pages/supplier-materials/SupplierMaterialDetails";
+import MaterialSupplierList from "./pages/supplier-materials/MaterialSupplierList";
+import SupplierMaterialList from "./pages/supplier-materials/SupplierMaterialList";
+import MaterialSupplierListPage from "./pages/supplier-materials/MaterialSupplierListPage";
+import SupplierMaterialListPage from "./pages/supplier-materials/SupplierMaterialListPage";
 import PLaningProjects from "./pages/planning/PLaningProjects";
 import ProjectMilestone from "./pages/planning/ProjectMilestone";
 import MilestoneTasks from "./pages/planning/MilestoneTasks";
@@ -158,6 +164,14 @@ export const router = createBrowserRouter([
         element: <SupplierDetails />,
       },
       {
+        path: "suppliers-evaluation",
+        element: <SupplierEvaluation />,
+      },
+      {
+        path: "suppliers-comparison",
+        element: <SupplierComparison />,
+      },
+      {
         path: "catalog",
         element: <Catalog />,
       },
@@ -188,6 +202,22 @@ export const router = createBrowserRouter([
       {
         path: "supplier-materials/:id",
         element: <SupplierMaterialDetails />,
+      },
+      {
+        path: "catalog/:id/suppliers",
+        element: <MaterialSupplierList />,
+      },
+      {
+        path: "suppliers/:id/materials",
+        element: <SupplierMaterialList />,
+      },
+      {
+        path: "material-suppliers",
+        element: <MaterialSupplierListPage />,
+      },
+      {
+        path: "supplier-materials-list",
+        element: <SupplierMaterialListPage />,
       },
       {
         path: "clients",

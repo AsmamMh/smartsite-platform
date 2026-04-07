@@ -27,8 +27,26 @@ export class SupplierMaterial extends Document {
   @Prop({ min: 0, max: 10 })
   qualityScore: number;
 
+  @Prop({ min: 0, max: 10 })
+  deliveryScore: number;
+
+  @Prop({ min: 0, max: 10 })
+  communicationScore: number;
+
+  @Prop({ min: 0, max: 10 })
+  priceScore: number;
+
+  @Prop({ min: 0, max: 10 })
+  reliabilityScore: number;
+
+  @Prop({ min: 0, max: 10 })
+  overallScore: number;
+
   @Prop({ default: false })
   isPreferred: boolean;
+
+  @Prop({ default: false })
+  recommended: boolean;
 
   @Prop({ type: String })
   notes: string;

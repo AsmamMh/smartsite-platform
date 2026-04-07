@@ -32,9 +32,43 @@ export class CreateSupplierMaterialDto {
   @IsOptional()
   qualityScore?: number;
 
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  deliveryScore?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  communicationScore?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  priceScore?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  reliabilityScore?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  overallScore?: number;
+
   @IsBoolean()
   @IsOptional()
   isPreferred?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  recommended?: boolean;
 
   @IsString()
   @IsOptional()
@@ -68,9 +102,43 @@ export class UpdateSupplierMaterialDto {
   @IsOptional()
   qualityScore?: number;
 
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  deliveryScore?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  communicationScore?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  priceScore?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  reliabilityScore?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(10)
+  @IsOptional()
+  overallScore?: number;
+
   @IsBoolean()
   @IsOptional()
   isPreferred?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  recommended?: boolean;
 
   @IsString()
   @IsOptional()

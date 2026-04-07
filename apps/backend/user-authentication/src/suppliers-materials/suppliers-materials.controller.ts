@@ -26,6 +26,11 @@ export class SuppliersMaterialsController {
     return this.service.findByCatalogItem(catalogItemId);
   }
 
+  @Get('comparison/:catalogItemId')
+  getComparisonForCatalogItem(@Param('catalogItemId') catalogItemId: string) {
+    return this.service.getComparisonForCatalogItem(catalogItemId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.service.findOne(id);
