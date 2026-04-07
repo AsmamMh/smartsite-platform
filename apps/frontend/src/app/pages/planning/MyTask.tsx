@@ -551,7 +551,7 @@ export function MyKanbanBoard() {
             onDeleteColumn={handleDeleteColumn}
             onMoveCardToColumn={handleMoveCardToColumn}
             onUpdateCardTitle={handleUpdateCardTitle}
-            onUpdateColumnTitle={handleUpdateColumnTitle}
+            //onUpdateColumnTitle={handleUpdateColumnTitle}
           />
         ) : (
           <KanbanBoardColumnSkeleton key={column._id} />
@@ -608,7 +608,7 @@ function MyKanbanBoardColumn({
   onDeleteColumn: (columnId: string) => void;
   onMoveCardToColumn: (columnId: string, index: number, card: Task) => void;
   onUpdateCardTitle: (cardId: string, cardTitle: string) => void;
-  onUpdateColumnTitle: (columnId: string, columnTitle: string) => void;
+  onUpdateColumnTitle?: (columnId: string, columnTitle: string) => void;
 }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const listReference = useRef<HTMLUListElement>(null);
@@ -633,7 +633,7 @@ function MyKanbanBoardColumn({
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const columnTitle = formData.get("columnTitle") as string;
-    onUpdateColumnTitle(column._id, columnTitle);
+   // onUpdateColumnTitle(column._id, columnTitle);
     closeDropdownMenu();
   }
 
@@ -937,7 +937,7 @@ function MyKanbanBoardCard({
       <KanbanBoardCardDescription
         className="cursor-pointer hover:underline  w-fit"
         onClick={() => {
-          setMilestoneid(milestoneId);
+          setMilestoneid(milestoneId as string);
           setTaskId(card._id);
           console.log("card id===================", card._id);
           (setType("edit"), onOpen());
@@ -1012,7 +1012,7 @@ function MyNewKanbanBoardCard({
   scrollList,
 }: {
   column: Column;
-  onAddCard: (columnId: string, cardContent: string) => void;
+  onAddCard?: (columnId?: string, cardContent?: string) => void;
   scrollList: () => void;
 }) {
   const [cardContent, setCardContent] = useState("");
@@ -1045,7 +1045,7 @@ function MyNewKanbanBoardCard({
     event.preventDefault();
 
     flushSync(() => {
-      onAddCard(column._id, cardContent.trim());
+      onAddCard?.(column._id, cardContent.trim());
       setCardContent("");
     });
 

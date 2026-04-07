@@ -581,7 +581,7 @@ export function MyKanbanBoard() {
             onDeleteColumn={handleDeleteColumn}
             onMoveCardToColumn={handleMoveCardToColumn}
             onUpdateCardTitle={handleUpdateCardTitle}
-            onUpdateColumnTitle={handleUpdateColumnTitle}
+           // onUpdateColumnTitle={handleUpdateColumnTitle}
           />
         ) : (
           <KanbanBoardColumnSkeleton key={column._id} />
@@ -598,7 +598,7 @@ export function MyKanbanBoard() {
       <div className="w-64 flex-shrink-0 rounded-lg border-2   flex justify-center items-center border-dashed bg-sidebar py-2 h-2/3 max-h-full">
         <Button
           onClick={() => {
-            setMilestoneid(milestoneId);
+            setMilestoneid(milestoneId as string);
             setType("add");
             onOpen();
           }}
@@ -638,7 +638,7 @@ function MyKanbanBoardColumn({
   onDeleteColumn: (columnId: string) => void;
   onMoveCardToColumn: (columnId: string, index: number, card: Task) => void;
   onUpdateCardTitle: (cardId: string, cardTitle: string) => void;
-  onUpdateColumnTitle: (columnId: string, columnTitle: string) => void;
+  onUpdateColumnTitle?: (columnId: string, columnTitle: string) => void;
 }) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const listReference = useRef<HTMLUListElement>(null);
@@ -663,7 +663,7 @@ function MyKanbanBoardColumn({
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const columnTitle = formData.get("columnTitle") as string;
-    onUpdateColumnTitle(column._id, columnTitle);
+   // onUpdateColumnTitle(column._id, columnTitle);
     closeDropdownMenu();
   }
 
@@ -966,7 +966,7 @@ function MyKanbanBoardCard({
         <KanbanBoardCardDescription
           className="line-clamp-2 w-fit cursor-pointer text-sm font-semibold leading-5 text-slate-800 transition group-hover:text-sky-700"
           onClick={() => {
-            setMilestoneid(milestoneId);
+            setMilestoneid(milestoneId as string);
             setTaskId(card._id);
             setDetailsTaskId(card._id);
             setDetailsTask(card);
