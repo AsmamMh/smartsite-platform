@@ -16,7 +16,6 @@ export class TaskService {
     @InjectModel(TaskStage.name) private taskSTageModel: Model<TaskStage>,
   ) {}
 
-  
   async create(
     createTaskDto: CreateTaskDto,
     milestoneId: string,
@@ -102,12 +101,65 @@ export class TaskService {
     return tasks;
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     try {
       const response = await this.taskModel.findById(id).exec();
       return response;
     } catch (error) {
       throw new Error(`Error fetching task: ${error.message}`);
+    }
+  }
+
+  /**
+   * Récupère toutes les tâches d'un projet pour le Gantt
+   * Retourne les tâches avec leurs dates, progression et statut
+   */
+  async getTasksForGantt(projectId: string) {
+    try {
+      const tasks = await this.taskModel
+        .find({ projectId })
+        .populate('status')
+        .populate('milestoneId')
+        .lean()
+        .exec();
+
+      // Transformer les données pour le Gantt
+      return tasks.map((task) => ({
+        id: task._id,
+        text: task.title,
+        start: task.startDate || new Date(),
+        end: task.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Par défaut 7 jours
+        progress: task.progress || 0,
+        parent: task.parent || 0, // 0 = pas de parent (tâche principale)
+        open: true,
+        type: task.type === 'summary' ? 'summary' : 'task',
+        priority: task.priority,
+        assignedUsers: task.assignedUsers,
+        description: task.description,
+        milestoneId: task.milestoneId,
+        status: task.status,
+      }));
+    } catch (error) {
+      throw new Error(`Error fetching tasks for Gantt: ${error.message}`);
+    }
+  }
+
+  /**
+   * Met à jour les dates d'une tâche (pour drag & drop dans le Gantt)
+   */
+  async updateTaskDates(taskId: string, startDate: Date, endDate: Date) {
+    try {
+      const response = await this.taskModel
+        .findByIdAndUpdate(taskId, { startDate, endDate }, { new: true })
+        .exec();
+
+      if (!response) {
+        throw new Error(`Task with id ${taskId} not found`);
+      }
+
+      return response;
+    } catch (error) {
+      throw new Error(`Error updating task dates: ${error.message}`);
     }
   }
   async updateNew(taskId: string, taskStageId: string) {
@@ -136,7 +188,7 @@ export class TaskService {
     console.log(res);
     return res;
   }
-  async update(id: number, updateTaskDto: UpdateTaskDto) {
+  async update(id: string, updateTaskDto: UpdateTaskDto) {
     try {
       const response = await this.taskModel
         .findByIdAndUpdate(id, updateTaskDto, { new: true })
@@ -145,12 +197,12 @@ export class TaskService {
         throw new Error(`Task with id ${id} not found`);
       }
       return response;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error updating task: ${error.message}`);
     }
   }
 
-  async remove(id: number) {
+  async remove(id: string) {
     try {
       //const taskSTage= await this.taskSTageModel.findByIdAndUpdate()
       const response = await this.taskModel.findByIdAndDelete(id).exec();
@@ -167,7 +219,7 @@ export class TaskService {
         throw new Error(`Task with id ${id} not found`);
       }
       return response;
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Error removing task: ${error.message}`);
     }
   }
