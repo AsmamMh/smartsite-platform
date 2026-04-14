@@ -46,7 +46,7 @@ export default function UserManagement() {
   const navigate = useNavigate();
   // Contournement : si le role est null, utiliser un role par défaut
   const userRole = user?.role || { name: "super_admin" as const };
-  const canManageRoles = user && canEdit(userRole.name, "users");
+  
   const { setOnUserChange } = useAddUserModal();
   const { setOnPermissionChange } = useAddPermissionModal();
   const { setOnRoleChange } = useRoleModal();
@@ -232,41 +232,7 @@ export default function UserManagement() {
   // if (!access["users"]?.access) {
   //   return <Forbidden />;
   // }
-  if (!canManageRoles) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Role Management
-            </h1>
-            <p className="text-gray-500 mt-1">
-              This page is restricted to system administrators
-            </p>
-          </div>
-        </div>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <Shield className="h-12 w-12 mx-auto mb-4 text-red-500" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                Access Denied
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Only Super Administrators can access role management.
-              </p>
-              <Button
-                onClick={() => navigate("/dashboard")}
-                className="bg-gradient-to-r from-blue-600 to-green-600"
-              >
-                Return to Dashboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  
 
   return (
     <div className="space-y-6">

@@ -10,7 +10,7 @@ export default function NotFound() {
         <body class="h-full">
         ```
       */}
-      <div className="bg-white min-h-full flex flex-col lg:relative">
+      <div className="bg-white h-screen flex flex-col lg:relative">
         <div className="flex-grow flex flex-col">
           <main className="flex-grow flex flex-col bg-white">
             <div className="flex-grow mx-auto max-w-7xl w-full flex flex-col px-4 sm:px-6 lg:px-8">
