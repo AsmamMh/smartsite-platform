@@ -69,7 +69,7 @@ const passwordSchema = z
 type ProfileFormData = z.infer<typeof profileSchema>;
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
-const API_ME = "https://smartsite-platform-auth.vercel.app/users/me";
+const API_ME = "http://localhost:3000/users/me";
 
 export default function Profile() {
   const authUser = useAuthStore((state) => state.user);
@@ -117,9 +117,7 @@ export default function Profile() {
           firstName: String(userData.firstName ?? ""),
           lastName: String(userData.lastName ?? ""),
           email: String(userData.email ?? ""),
-          telephone: String(
-            userData.telephone ?? userData.phoneNumber ?? "",
-          ),
+          telephone: String(userData.telephone ?? userData.phoneNumber ?? ""),
           address: String(userData.address ?? ""),
           departement: String(userData.departement ?? ""),
           companyName: String(userData.companyName ?? ""),
@@ -348,11 +346,13 @@ export default function Profile() {
                         </p>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {user.certifications.map((cert: string, idx: number) => (
-                          <Badge key={idx} variant="secondary">
-                            {cert}
-                          </Badge>
-                        ))}
+                        {user.certifications.map(
+                          (cert: string, idx: number) => (
+                            <Badge key={idx} variant="secondary">
+                              {cert}
+                            </Badge>
+                          ),
+                        )}
                       </div>
                     </div>
                   )}
@@ -414,9 +414,7 @@ export default function Profile() {
                       control={profileForm.control}
                       render={({ field, fieldState }) => (
                         <Field data-invalid={fieldState.invalid}>
-                          <FieldLabel htmlFor="telephone">
-                            Téléphone
-                          </FieldLabel>
+                          <FieldLabel htmlFor="telephone">Téléphone</FieldLabel>
                           <Input {...field} id="telephone" />
                           {fieldState.invalid && (
                             <FieldError errors={[fieldState.error]} />

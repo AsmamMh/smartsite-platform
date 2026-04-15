@@ -15,40 +15,32 @@ import { useAuthStore } from "../../store/authStore";
 import { canEdit } from "../../utils/permissions";
 import { data, useNavigate } from "react-router";
 import { toast } from "react-hot-toast";
-
 import { Permission, Role, User } from "@/app/types";
-
-import {
-  getAllRoles,
-  createRole,
-  updateRole,
-  deleteRole,
-} from "@/app/action/role.action";
+import { getAllRoles, deleteRole } from "@/app/action/role.action";
 
 import { RolesDataTable } from "./_components/roles-data-table";
 import { UserDataTable } from "./_components/user-data-table";
 import { banUser, deleteUser, getAllUsers } from "@/app/action/user.action";
 import {
-  accessPermissionByurl,
   deletePermission,
   getAllPermissions,
 } from "@/app/action/permission.action";
 import { PermissionsDataTable } from "./_components/permissions-data-table";
 import { getAllStatics } from "@/app/action/statiscs.action";
-import useAddUserModal from "@/app/hooks/use-user-Modal";
 import useAddPermissionModal from "@/app/hooks/use-permission-Modal";
 import useRoleModal from "@/app/hooks/use-role-Modal";
-import useRolePermissionsModal from "@/app/hooks/use-role-permissions-modal";
 import { useQuery } from "@tanstack/react-query";
 import Forbidden from "../Error/Forbidden";
 import { usePermissionStore } from "@/app/hooks/permission.store";
+import useAddUserModal from "@/app/hooks/use-user-Modal";
+import useRolePermissionsModal from "@/app/hooks/use-role-permissions-modal";
 
 export default function UserManagement() {
   const user = useAuthStore((state) => state.user);
   const navigate = useNavigate();
   // Contournement : si le role est null, utiliser un role par défaut
   const userRole = user?.role || { name: "super_admin" as const };
-  const canManageRoles = user && canEdit(userRole.name, "users");
+
   const { setOnUserChange } = useAddUserModal();
   const { setOnPermissionChange } = useAddPermissionModal();
   const { setOnRoleChange } = useRoleModal();
@@ -87,7 +79,7 @@ export default function UserManagement() {
   const loadStatics = async () => {
     try {
       const response = await getAllStatics();
-      if (response.status === 200) {
+      if (response?.status === 200) {
         setStatics(response.data);
       }
     } catch (error) {
@@ -108,11 +100,11 @@ export default function UserManagement() {
   const handleDeleteUser = async (userId: string) => {
     try {
       const response = await deleteUser(userId);
-      if (response.status === 200) {
+      if (response?.status === 200) {
         toast.success("User deleted successfully");
         //loadUsers();
       } else {
-        toast.error(response.data || "Failed to delete user");
+        toast.error(response?.data || "Failed to delete user");
       }
     } catch (error) {
       console.error("Failed to delete user:", error);
@@ -136,11 +128,11 @@ export default function UserManagement() {
   const handleDeletePermission = async (permissionId: string) => {
     try {
       const response = await deletePermission(permissionId);
-      if (response.status === 200) {
+      if (response?.status === 200) {
         toast.success("Permission deleted successfully");
         // loadPermissions();
       } else {
-        toast.error(response.data || "Failed to delete permission");
+        toast.error(response?.data || "Failed to delete permission");
       }
     } catch (error) {
       console.error("Failed to delete permission:", error);
@@ -173,13 +165,13 @@ export default function UserManagement() {
   const handleBanUser = async (userId: string, isActif: boolean) => {
     try {
       const response = await banUser(userId, isActif);
-      if (response.status === 200) {
+      if (response?.status === 200) {
         toast.success(
           isActif ? "User unbanned successfully" : "User banned successfully",
         );
         // loadUsers();
       } else {
-        toast.error(response.data || "Failed to update user status");
+        toast.error(response?.data || "Failed to update user status");
       }
     } catch (error) {
       console.error("Failed to update user status:", error);
@@ -196,11 +188,11 @@ export default function UserManagement() {
   const handleDeleteRole = async (roleId: string) => {
     try {
       const response = await deleteRole(roleId);
-      if (response.status === 200) {
+      if (response?.status === 200) {
         toast.success("Role deleted successfully");
         // loadRoles();
       } else {
-        toast.error(response.data || "Failed to delete role");
+        toast.error(response?.data || "Failed to delete role");
       }
     } catch (error) {
       console.error("Failed to delete role:", error);
@@ -229,50 +221,17 @@ export default function UserManagement() {
   // }
 
   const access = usePermissionStore((s) => s.permissions);
-  console.log("Access permissions for /dashboard/users:", access["users"]);
-  if (!access["users"]?.access) {
-    return <Forbidden />;
-  }
-  if (!canManageRoles) {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Role Management
-            </h1>
-            <p className="text-gray-500 mt-1">
-              This page is restricted to system administrators
-            </p>
-          </div>
-        </div>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <Shield className="h-12 w-12 mx-auto mb-4 text-red-500" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Access Denied
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Only Super Administrators can access role management.
-              </p>
-              <Button
-                onClick={() => navigate("/dashboard")}
-                className="bg-gradient-to-r from-blue-600 to-green-600"
-              >
-                Return to Dashboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // console.log("Access permissions for /dashboard/users:", access["users"]);
+  // if (!access["users"]?.access) {
+  //   return <Forbidden />;
+  // }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white dark:text-white">
+          User Management
+        </h1>
         <p className="text-gray-500 mt-1">
           Manage user roles, permissions, and access control settings to ensure
           secure
@@ -288,8 +247,8 @@ export default function UserManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold text-gray-900">
-              {statics.totalUsers}
+            <p className="text-4xl font-bold text-gray-900 dark:text-white dark:text-white">
+              {statics.totalUsers || 0}
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Users assigned to roles
@@ -304,8 +263,8 @@ export default function UserManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold text-gray-900">
-              {statics.totalRoles}
+            <p className="text-4xl font-bold text-gray-900 dark:text-white dark:text-white">
+              {statics.totalRoles || 0}
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Active roles in the system
@@ -321,8 +280,8 @@ export default function UserManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-4xl font-bold text-gray-900">
-              {statics.totalPermissions}
+            <p className="text-4xl font-bold text-gray-900 dark:text-white dark:text-white">
+              {statics.totalPermissions || 0}
             </p>
             <p className="text-sm text-gray-500 mt-2">
               Total permissions available
@@ -363,7 +322,7 @@ export default function UserManagement() {
               ) : (
                 <UserDataTable
                   onBan={handleBanUser}
-                  users={users}
+                  users={users as User[]}
                   onDelete={handleDeleteUser}
                 />
               )}
