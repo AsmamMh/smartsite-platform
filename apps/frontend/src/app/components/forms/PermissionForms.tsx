@@ -101,6 +101,56 @@ const PERMISSION_CATEGORIES = [
 const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
   const [isCustomCategory, setIsCustomCategory] = React.useState(false);
 
+  const toModuleLabel = (rawValue?: string) => {
+    const normalized = String(rawValue || "")
+      .trim()
+      .replace(/^\/+/, "")
+      .replace(/[\-_]+/g, " ")
+      .replace(/\s+/g, " ");
+
+    if (!normalized) {
+      return "General";
+    }
+
+    return normalized
+      .split(" ")
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  const deriveModuleFromHref = (href?: string) => {
+    const cleanedHref = (href || "").trim().replace(/^\/+/, "");
+    if (!cleanedHref) return "General";
+    return toModuleLabel(cleanedHref.split("/")[0]);
+  };
+
+  const moduleSuggestions = React.useMemo(() => {
+    const baseSuggestions = [
+      "General",
+      "Admin",
+      "Core",
+      "Communication",
+      "Planning",
+      "Team",
+      "Sites",
+      "Clients",
+      "Procurement",
+      "Materials",
+      "Finance",
+      "Qhse",
+      "Insights",
+      "Optimization",
+      "Misc",
+    ];
+
+    const derivedFromCategories = PERMISSION_CATEGORIES.map((category) =>
+      deriveModuleFromHref(category.href),
+    );
+
+    return Array.from(new Set([...baseSuggestions, ...derivedFromCategories])).sort();
+  }, []);
+
   let formSchema;
   if (type === "edit") {
     formSchema = z.object({
@@ -109,6 +159,7 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
         .min(3, "Name must be at least 3 characters.")
         .max(50, "Name must be at most 50 characters.")
         .optional(),
+      module: z.string().optional(),
       href: z.string(),
       description: z
         .string()
@@ -126,6 +177,7 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
         .min(3, "Name must be at least 3 characters.")
         .max(50, "Name must be at most 50 characters."),
       category: z.string().optional(),
+      module: z.string().optional(),
       description: z
         .string()
         .max(200, "Description must be at most 200 characters.")
@@ -143,6 +195,7 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
     defaultValues: {
       name: "",
       category: "",
+      module: "General",
       description: "",
       href: "",
       access: false,
@@ -173,6 +226,7 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
         form.reset({
           name: res.data.name || "",
           category: matchedCategory ? res.data.name : "Custom",
+          module: res.data.module || deriveModuleFromHref(res.data.href),
           description: res.data.description || "",
           href: res.data.href || "",
           access: res.data.access || false,
@@ -195,6 +249,7 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
       setIsCustomCategory(false);
       form.setValue("name", selectedCategory.name);
       form.setValue("href", selectedCategory.href);
+      form.setValue("module", deriveModuleFromHref(selectedCategory.href));
     }
   };
 
@@ -208,6 +263,7 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
 
         const payload = {
           name: data.name,
+          module: data.module || deriveModuleFromHref(data.href),
           description: data.description,
           access: data.access,
           href: data.href,
@@ -323,6 +379,34 @@ const PermissionForms = ({ type }: { type: "add" | "edit" }) => {
                   autoComplete="off"
                   disabled={type === "add" && !isCustomCategory}
                 />
+                {fieldState.invalid && (
+                  <FieldError errors={[fieldState.error]} />
+                )}
+              </Field>
+            )}
+          />
+
+          <Controller
+            name="module"
+            control={form.control}
+            render={({ field, fieldState }) => (
+              <Field data-invalid={fieldState.invalid}>
+                <FieldLabel htmlFor="form-permission-module">Module *</FieldLabel>
+                <Input
+                  {...field}
+                  id="form-permission-module"
+                  aria-invalid={fieldState.invalid}
+                  placeholder="e.g., admin, projects, finance"
+                  list={type === "add" ? "module-suggestions" : undefined}
+                  autoComplete="off"
+                />
+                {type === "add" && (
+                  <datalist className="bg-white" id="module-suggestions">
+                    {moduleSuggestions.map((moduleName) => (
+                      <option className="bg-white" key={moduleName} value={moduleName} />
+                    ))}
+                  </datalist>
+                )}
                 {fieldState.invalid && (
                   <FieldError errors={[fieldState.error]} />
                 )}

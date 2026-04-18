@@ -29,6 +29,7 @@ export const getPermissionById = async (id: string) => {
 
 export const createPermission = async (permissionData: {
   name: string;
+  module?: string;
   description?: string;
   access?: boolean;
   href?: string;
@@ -54,6 +55,7 @@ export const updatePermission = async (
   id: string,
   permissionData: {
     name?: string;
+    module?: string;
     description?: string;
     access?: boolean;
     create?: boolean;

@@ -57,7 +57,7 @@ import ProjectMilestone from "./pages/planning/ProjectMilestone";
 import MyTask from "./pages/planning/MyTask";
 import MilestoneTaskss from "./pages/planning/MilestoneTaskss";
 import NotFound from "./pages/Error/NotFound";
-import { PermissionLoader } from "./components/shared/PermissionLoader";
+import Forbidden from "./pages/Error/Forbidden";
 import MyAffectedSite from "./pages/planning/MyAffectedSite";
 import MySItes from "./pages/planning/Mysites";
 import MyMilestones from "./pages/planning/MyMilstone";
@@ -68,9 +68,11 @@ import ChatPage from "./pages/videoCall/ChatPage";
 import GroupChatPage from "./pages/videoCall/GroupChatPage";
 import ResourceOptimizationDashboard from "@/features/resource-optimization/pages/ResourceOptimizationDashboard";
 import AccountBanned from "./pages/AccountBanned";
+import { useAuthStore } from "./store/authStore";
+import RoutePermissionGuard from "./components/shared/RoutePermissionGuard";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const isAuthenticated = true;
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
@@ -107,10 +109,20 @@ export const router = createBrowserRouter([
     path: "/change-password-first-login",
     element: <ChangePasswordFirstLogin />,
   },
+  {
+    path: "/forbidden",
+    element: <Forbidden />,
+  },
 
   {
     path: "/",
-    element: <DashboardLayout />,
+    element: (
+      <ProtectedRoute>
+        <RoutePermissionGuard>
+          <DashboardLayout />
+        </RoutePermissionGuard>
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "dashboard",

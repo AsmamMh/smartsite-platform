@@ -3,11 +3,9 @@ import { useState, useEffect } from "react";
 
 import {
   Link,
-  Navigate,
   Outlet,
   useNavigate,
   useLocation,
-  redirect,
 } from "react-router";
 
 import {
@@ -35,20 +33,18 @@ import { getMynavigationAccess } from "../action/permission.action";
 import { Permission } from "../types";
 import { getUnreadNotificationCount } from "../action/notification.action";
 import ChatbotWidget from "../components/Chatbot";
-import { SidebarMenu } from "../components/SidebarMenu";
-import type { RoleType } from "../types";
 import { cn } from "@/lib/utils";
 import { getCurrentUser } from "../action/auth.action";
-
-import AccountBanned from "../pages/AccountBanned";
 
 import { ThemeButton } from "../components/ThemeButton";
 import { LanguageSelector } from "../components/LanguageSelector";
 import { NavbarAccessibilityButton } from "../components/NavbarAccessibilityButton";
 import { useTranslation } from "../hooks/useTranslation";
 import SiteInfoPanel from "../components/SiteInfoPanel";
-import { Avatar } from "radix-ui";
-import { AvatarFallback } from "@radix-ui/react-avatar";
+import {
+  groupPermissionsByModule,
+  type PermissionModuleGroup,
+} from "@/app/utils/permissionModules";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -167,16 +163,7 @@ export default function DashboardLayout() {
     queryFn: () => getUnreadNotificationCount(),
   });
 
-  // Contournement : si le role est null, utiliser un role par défaut
-  const roleName = (
-    typeof user.role === "object" && user.role?.name
-      ? user.role.name
-      : "super_admin"
-  ) as RoleType;
-
-  // Navigation statique en fonction du rôle
-  // const navigationItems = getNavigationForRole(userRole.name);
-  // const navigationItems = getNavigationForRole(roleName);
+  const groupedNavigationItems = groupPermissionsByModule(navigationItems ?? []);
   const unreadNotifications = 0; // Placeholder - will be implemented with real notifications
 
   // if(navigItemsError || UnreadError){
@@ -232,7 +219,7 @@ export default function DashboardLayout() {
               className="group flex items-center gap-2 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
             >
               <div className="relative bg-card p-2 rounded-lg border border-border transition-all duration-300 shadow-sm group-hover:shadow-md group-hover:border-blue-300/70 group-hover:-translate-y-0.5">
-                <span className="pointer-events-none absolute inset-0 rounded-lg bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-green-500/0 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100 group-hover:from-blue-500/20 group-hover:to-green-500/20" />
+                <span className="pointer-events-none absolute inset-0 rounded-lg bg-linear-to-r from-blue-500/0 via-blue-500/0 to-green-500/0 opacity-0 blur-sm transition-opacity duration-300 group-hover:opacity-100 group-hover:from-blue-500/20 group-hover:to-green-500/20" />
                 {logoAvailable ? (
                   <img
                     src="/logo.png"
@@ -244,7 +231,7 @@ export default function DashboardLayout() {
                   <Building2 className="h-12 w-12 text-blue-600 transition-transform duration-300 group-hover:scale-125 group-hover:rotate-2" />
                 )}
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent hidden sm:inline transition-all duration-300 group-hover:tracking-wide">
+              <span className="text-xl font-bold bg-linear-to-r from-blue-600 to-green-600 bg-clip-text text-transparent hidden sm:inline transition-all duration-300 group-hover:tracking-wide">
                 SmartSite
               </span>
             </Link>
@@ -358,7 +345,7 @@ export default function DashboardLayout() {
           id="primary-sidebar"
           aria-label="Sidebar navigation"
           className={cn(
-            "fixed lg:sticky top-0 left-0 z-30 h-screen w-[17rem] flex flex-col",
+            "fixed lg:sticky top-0 left-0 z-30 h-screen w-68 flex flex-col",
             "bg-sidebar text-sidebar-foreground border-r border-sidebar-border",
             "transition-transform duration-300 ease-out lg:translate-x-0",
             "pt-16 lg:pt-6 shadow-sm",
@@ -367,30 +354,39 @@ export default function DashboardLayout() {
         >
           <nav className="p-4 space-y-1 overflow-y-auto flex-1">
             {!isLoading &&
-              navigationItems &&
-              navigationItems.map((item: Permission) => {
-                const isActive = location.pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    onClick={() => setSidebarOpen(false)}
-                    className={`
-                        flex items-center gap-3 px-4 py-3 rounded-lg transition-all
-                        ${
-                          isActive
-                            ? "bg-gradient-to-r from-blue-600 to-green-600 text-white shadow-md"
-                            : "text-muted-foreground hover:bg-muted"
-                        }
-                      `}
-                  >
+              groupedNavigationItems.map((section: PermissionModuleGroup) => (
+                <div key={section.key} className="mb-5 last:mb-0">
+                  <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
+                    {t(`sidebar.modules.${section.key}`, section.label)}
+                  </p>
 
-                    <span className="font-medium">{item.name}</span>
+                  <div className="space-y-1">
+                    {section.items.map((item: Permission) => {
+                      const isActive =
+                        location.pathname === item.href ||
+                        location.pathname.startsWith(`${item.href}/`);
 
-                    <span className="font-medium">{getSidebarLabel(item)}</span>
-                  </Link>
-                );
-              })}
+                      return (
+                        <Link
+                          key={item.href}
+                          to={item.href}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`
+                          flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all
+                          ${
+                            isActive
+                              ? "bg-linear-to-r from-blue-600 to-green-600 text-white shadow-md"
+                              : "text-muted-foreground hover:bg-muted"
+                          }
+                        `}
+                        >
+                          <span className="font-medium truncate">{getSidebarLabel(item)}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
           </nav>
           <div className="p-3 mt-auto border-t border-sidebar-border bg-sidebar/95 backdrop-blur-sm">
             <Button
