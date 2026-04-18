@@ -54,6 +54,17 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [logoAvailable, setLogoAvailable] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set());
+
+  const toggleModuleExpanded = (moduleKey: string) => {
+    const newExpanded = new Set(expandedModules);
+    if (newExpanded.has(moduleKey)) {
+      newExpanded.delete(moduleKey);
+    } else {
+      newExpanded.add(moduleKey);
+    }
+    setExpandedModules(newExpanded);
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -352,42 +363,86 @@ export default function DashboardLayout() {
             sidebarOpen ? "translate-x-0" : "-translate-x-full",
           )}
         >
-          <nav className="p-4 space-y-1 overflow-y-auto flex-1">
+          <nav className="p-3 space-y-2 overflow-y-auto flex-1">
             {!isLoading &&
-              groupedNavigationItems.map((section: PermissionModuleGroup) => (
-                <div key={section.key} className="mb-5 last:mb-0">
-                  <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/80">
-                    {t(`sidebar.modules.${section.key}`, section.label)}
-                  </p>
+              groupedNavigationItems.map((section: PermissionModuleGroup) => {
+                const isExpanded = expandedModules.has(section.key);
+                return (
+                  <div key={section.key} className="group">
+                    <button
+                      onClick={() => toggleModuleExpanded(section.key)}
+                      className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-md transition-all duration-200 ease-out text-left group-hover:bg-accent/30  focus:outline-none "
+                      aria-expanded={isExpanded}
+                      aria-controls={`module-${section.key}`}
+                    >
+                      <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70 group-hover:text-muted-foreground transition-colors duration-200">
+                        {t(`sidebar.modules.${section.key}`, section.label)}
+                      </p>
+                      <ChevronDown
+                        aria-hidden="true"
+                        className={`h-4 w-4 text-muted-foreground/50 transition-all duration-300 ease-out shrink-0 ${
+                          isExpanded ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
 
-                  <div className="space-y-1">
-                    {section.items.map((item: Permission) => {
-                      const isActive =
-                        location.pathname === item.href ||
-                        location.pathname.startsWith(`${item.href}/`);
+                    {isExpanded && (
+                      <div
+                        id={`module-${section.key}`}
+                        className="mt-1.5 space-y-1 pl-2 overflow-hidden animate-in fade-in duration-200"
+                      >
+                        {section.items.map((item: Permission, idx: number) => {
+                          const isActive =
+                            location.pathname === item.href ||
+                            location.pathname.startsWith(`${item.href}/`);
 
-                      return (
-                        <Link
-                          key={item.href}
-                          to={item.href}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`
-                          flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all
-                          ${
-                            isActive
-                              ? "bg-linear-to-r from-blue-600 to-green-600 text-white shadow-md"
-                              : "text-muted-foreground hover:bg-muted"
-                          }
-                        `}
-                        >
-                          <span className="font-medium truncate">{getSidebarLabel(item)}</span>
-                        </Link>
-                      );
-                    })}
+                          return (
+                            <Link
+                              key={item.href}
+                              to={item.href}
+                              onClick={() => setSidebarOpen(false)}
+                              style={{
+                                animation: isExpanded
+                                  ? `fadeInSlide 300ms ease-out ${idx * 30}ms forwards`
+                                  : "none",
+                                opacity: isExpanded ? 1 : 0,
+                                transform: isExpanded ? "translateY(0)" : "translateY(-8px)",
+                              }}
+                              className={`
+                              flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200
+                              ${
+                                isActive
+                                  ? "bg-linear-to-r from-blue-500/90 to-green-500/90 text-white shadow-sm hover:shadow-md"
+                                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60 active:bg-muted"
+                              }
+                            `}
+                            >
+                              <div className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                                isActive ? "bg-white/70" : "bg-muted-foreground/40 group-hover/link:bg-muted-foreground/60"
+                              }`} />
+                              <span className="font-medium text-sm truncate">{getSidebarLabel(item)}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
           </nav>
+
+          <style>{`
+            @keyframes fadeInSlide {
+              from {
+                opacity: 0;
+                transform: translateY(-8px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+          `}</style>
           <div className="p-3 mt-auto border-t border-sidebar-border bg-sidebar/95 backdrop-blur-sm">
             <Button
               variant="outline"
