@@ -1,31 +1,66 @@
 import { MapPin, Search, Filter, Navigation } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Badge } from '../../components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { mockSites } from '../../utils/mockData';
+import { getAllSitesWithTeams, type Site } from '../../action/site.action';
 import { toast } from 'sonner';
 
+interface MapSite {
+  id: string;
+  name: string;
+  address: string;
+  localisation?: string;
+  coordinates?: { lat: number; lng: number };
+  status: string;
+  budget?: number;
+  projectId?: string;
+}
+
 export default function Map() {
-  const [selectedSite, setSelectedSite] = useState<typeof mockSites[0] | null>(null);
+  const [sites, setSites] = useState<MapSite[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedSite, setSelectedSite] = useState<MapSite | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
 
-  const filteredSites = mockSites.filter(site => {
-    const matchesSearch = site.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      site.address.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    loadSites();
+  }, []);
+
+  const loadSites = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllSitesWithTeams();
+      const sitesWithProjects = (data as MapSite[]).filter((site: MapSite) => {
+        const pid = site.projectId;
+        const hasProject = pid && pid !== null && pid !== '' && pid !== undefined && pid !== 'null';
+        return hasProject;
+      });
+      setSites(sitesWithProjects);
+    } catch (error) {
+      console.error('Error loading sites:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredSites = sites.filter((site: MapSite) => {
+    const matchesSearch = (site.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (site.address || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (site.localisation || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = selectedStatus === 'all' || site.status === selectedStatus;
     return matchesSearch && matchesStatus;
   });
 
-  const handleSelectSite = (site: typeof mockSites[0]) => {
+  const handleSelectSite = (site: MapSite) => {
     setSelectedSite(site);
     toast.info(`Selected: ${site.name}`);
   };
 
-  const handleNavigate = (site: typeof mockSites[0]) => {
+  const handleNavigate = (site: MapSite) => {
     toast.success(`Navigating to ${site.name}...`);
   };
 

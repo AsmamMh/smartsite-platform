@@ -9,6 +9,7 @@ import Dashboard from "./pages/dashboards/Dashboard";
 import ProjectManagerDashboard from "./pages/dashboard/ProjectManagerDashboard";
 import SuperAdminProjectsDashboard from "./pages/dashboard/SuperAdminProjectsDashboard";
 import Sites from "./pages/sites/Sites";
+import SitesTable from "./pages/sites/SitesTable";
 import Projects from "./pages/projects/Projects";
 import Planning from "./pages/planning/MyTask";
 import Team from "./pages/team/Team";
@@ -174,6 +175,10 @@ export const router = createBrowserRouter([
       },
       {
         path: "sites",
+        element: <SitesTable />,
+      },
+      {
+        path: "sites-detail",
         element: <Sites />,
       },
       {
@@ -196,6 +201,10 @@ export const router = createBrowserRouter([
       {
         path: "projects",
         element: <Projects />,
+      },
+      {
+        path: "projects/:projectId/sites",
+        element: <Sites />,
       },
       {
         path: "planning",

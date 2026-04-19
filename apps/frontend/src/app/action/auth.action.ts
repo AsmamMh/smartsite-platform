@@ -33,7 +33,8 @@ export const LoginAction = async (cin: string, password: string) => {
 
 export const getCurrentUser = async (authUser: any) => {
   try {
-    const res = await axios.get("http://localhost:3000/users/me", {
+    const authApiUrl = import.meta.env.VITE_AUTH_API_URL || "http://localhost:3000";
+    const res = await axios.get(`${authApiUrl}/users/me`, {
       headers: {
         Authorization: `Bearer ${authUser?.access_token}`,
       },

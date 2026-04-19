@@ -61,53 +61,34 @@ export default function Login() {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      const res = await login(data.cin, data.password).then((userData: any) => {
-        console.log("Login successful!", userData);
-
-        // Redirection selon le rôle de l'utilisateur
-        const userRole = userData.user?.role?.name || userData.user?.role;
-        if (userRole === "project_manager") {
-          console.log("Redirection vers dashboard Project Manager");
-          navigate("/project-manager-dashboard");
-        } else if (userRole === "super_admin") {
-          console.log("Redirection vers dashboard Super Admin");
-          navigate("/super-admin-projects");
-        } else {
-          console.log("Redirection vers dashboard général");
-          navigate("/dashboard");
-        }
-        toast.success("Login successful!");
-
-        // Check if this is the first login
-      });
-
-      //  if (res.firstLogin) {
-      //     navigate("/change-password-first-login");
-      //   } else {
-      //     navigate("/dashboard");
-      //   }
-
       console.log("Login - Starting login with CIN:", data.cin);
       const userData = await login(data.cin, data.password);
       console.log("Login - Login successful!", userData);
 
       toast.success("Login successful!");
 
-      // Check if this is the first login - show welcome modal directly
       if (userData.firstLogin) {
         console.log("Login - First login, showing welcome modal");
         setShowWelcome(true);
-      } else {
-        // Not first login - navigate directly to dashboard
-        console.log("Login - Not first login, navigating to dashboard");
-        navigate("/dashboard");
+        return;
       }
 
+      const userRole = userData.role?.name || userData.role;
+      if (userRole === "project_manager") {
+        navigate("/project-manager-dashboard");
+      } else if (userRole === "super_admin") {
+        navigate("/super-admin-projects");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error: any) {
-      const message =
-        error?.message ||
-        error?.response?.data?.message ||
-        "Invalid credentials. Please try again.";
+      const isNetworkError =
+        error?.message === "Network Error" && !error?.response;
+      const message = isNetworkError
+        ? "Authentication service is unreachable. Start backend user-authentication on http://localhost:3000 (or set VITE_AUTH_API_URL)."
+        : error?.response?.data?.message ||
+          error?.message ||
+          "Invalid credentials. Please try again.";
       toast.error(message);
     } finally {
       setIsLoading(false);

@@ -11,6 +11,7 @@ import { Site } from './entities/site.entity';
 import { Team } from './entities/team.entity';
 import { CreateSiteDto, UpdateSiteDto } from './dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import axios from 'axios';
 
 export interface SiteFilters {
   nom?: string;
@@ -19,6 +20,7 @@ export interface SiteFilters {
   budgetMin?: number;
   budgetMax?: number;
   status?: string;
+  projectId?: string;
 }
 
 export interface PaginationOptions {
@@ -51,6 +53,8 @@ export class GestionSiteService {
    */
   async create(createSiteDto: CreateSiteDto, userId?: string): Promise<Site> {
     try {
+      this.logger.log(`Creating site: ${JSON.stringify(createSiteDto)}`);
+      
       // Check if site with same name exists
       const existingSite = await this.siteModel.findOne({
         nom: { $regex: new RegExp(`^${createSiteDto.nom}$`, "i") },
@@ -60,6 +64,43 @@ export class GestionSiteService {
         throw new BadRequestException(
           `Un site avec le nom "${createSiteDto.nom}" existe déjà`,
         );
+      }
+
+      // Validate budget against project budget if projectId is provided
+      if (createSiteDto.projectId) {
+        let project: any = null;
+        try {
+          const projectsUrl = process.env.GESTION_PROJECTS_URL || 'http://localhost:3007';
+          const projectResponse = await axios.get(`${projectsUrl}/projects/${createSiteDto.projectId}`, { timeout: 5000 });
+          project = projectResponse.data;
+        } catch (fetchError: any) {
+          this.logger.warn(`Could not fetch project for budget validation: ${fetchError.message}`);
+        }
+
+        if (project) {
+          if (!project.budget || project.budget <= 0) {
+            throw new BadRequestException(`Project has no budget defined. Please set project budget first.`);
+          }
+
+          // Check existing sites for this project
+          const existingSites = await this.siteModel.find({ projectId: createSiteDto.projectId });
+          const existingBudget = existingSites.reduce((sum: number, s: Site) => sum + (s.budget || 0), 0);
+          const newTotalBudget = existingBudget + (createSiteDto.budget || 0);
+          const projectBudget = project.budget || 0;
+
+          this.logger.log(`Budget check: existing=${existingBudget}, new=${createSiteDto.budget}, total=${newTotalBudget}, project=${projectBudget}`);
+
+          if (newTotalBudget > projectBudget) {
+            throw new BadRequestException(
+              `Total sites budget (${newTotalBudget} TND) exceeds project budget (${projectBudget} TND)`
+            );
+          }
+
+          // Set clientName from project if not provided
+          if (!createSiteDto.clientName && project.clientName) {
+            createSiteDto.clientName = project.clientName;
+          }
+        }
       }
 
       const siteData: any = {
@@ -76,7 +117,7 @@ export class GestionSiteService {
 
       this.logger.log(`Site créé: ${savedSite.nom} (${savedSite._id})`);
       return savedSite;
-    } catch (error) {
+    } catch (error:any) {
       if (error instanceof BadRequestException) {
         throw error;
       }
@@ -123,7 +164,13 @@ export class GestionSiteService {
             (query.budget as any).$lte = filters.budgetMax;
           }
         }
+        if (filters.projectId) {
+          console.log('Filtering by projectId:', filters.projectId);
+          query.projectId = filters.projectId;
+        }
       }
+
+      console.log('Final query:', JSON.stringify(query));
 
       // Default pagination
       const page = pagination?.page || 1;
@@ -150,7 +197,7 @@ export class GestionSiteService {
         limit,
         totalPages: Math.ceil(total / limit),
       };
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(
         `Erreur lors de la récupération des sites: ${error.message}`,
       );
@@ -170,7 +217,7 @@ export class GestionSiteService {
         throw new NotFoundException(`Site avec l'ID "${id}" non trouvé`);
       }
       return site;
-    } catch (error) {
+    } catch (error:any) {
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -192,7 +239,7 @@ export class GestionSiteService {
         .find({ nom: { $regex: nom, $options: "i" } })
         .limit(20)
         .exec();
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(
         `Erreur lors de la recherche de sites: ${error.message}`,
       );
@@ -210,7 +257,7 @@ export class GestionSiteService {
       return await this.siteModel
         .find({ localisation: { $regex: localisation, $options: "i" } })
         .exec();
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(
         `Erreur lors de la recherche par localisation: ${error.message}`,
       );
@@ -226,7 +273,7 @@ export class GestionSiteService {
   async findActiveSites(): Promise<Site[]> {
     try {
       return await this.siteModel.find({ isActif: true }).exec();
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(
         `Erreur lors de la récupération des sites actifs: ${error.message}`,
       );
@@ -286,7 +333,7 @@ export class GestionSiteService {
 
       this.logger.log(`Site mis à jour: ${updatedSite.nom} (${id})`);
       return updatedSite;
-    } catch (error) {
+    } catch (error:any) {
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException
@@ -317,7 +364,7 @@ export class GestionSiteService {
 
       this.logger.log(`Site soft-deleted: ${site.nom} (${id})`);
       return site;
-    } catch (error) {
+    } catch (error:any) {
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -344,7 +391,7 @@ export class GestionSiteService {
         .find({ teamIds: { $in: [new Types.ObjectId(teamId)] } })
         .exec();
       return sites;
-    } catch (error) {
+    } catch (error:any) {
       if (error instanceof BadRequestException) {
         throw error;
       }
@@ -394,7 +441,7 @@ export class GestionSiteService {
         message: `Site "${existingSite.nom}" supprimé définitivement`,
         deletedId: id,
       };
-    } catch (error) {
+    } catch (error:any) {
       if (
         error instanceof NotFoundException ||
         error instanceof InternalServerErrorException
@@ -425,7 +472,7 @@ export class GestionSiteService {
 
       this.logger.log(`Site restauré: ${site.nom} (${id})`);
       return site;
-    } catch (error) {
+    } catch (error:any) {
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -483,7 +530,7 @@ export class GestionSiteService {
           count: item.count,
         })),
       };
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(
         `Erreur lors de la récupération des statistiques: ${error.message}`,
       );
@@ -502,7 +549,7 @@ export class GestionSiteService {
         { $group: { _id: null, total: { $sum: "$budget" } } },
       ]);
       return result[0]?.total || 0;
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(
         `Erreur lors de la récupération du budget total: ${error.message}`,
       );
@@ -545,7 +592,7 @@ export class GestionSiteService {
         `Équipe MongoDB affectée au site: ${siteId}, équipe: ${teamId}`,
       );
       return updatedSite;
-    } catch (error) {
+    } catch (error:any) {
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException
@@ -588,7 +635,7 @@ export class GestionSiteService {
 
       this.logger.log(`Équipe retirée du site: ${siteId}, équipe: ${teamId}`);
       return updatedSite;
-    } catch (error) {
+    } catch (error:any) {
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException
@@ -627,7 +674,7 @@ export class GestionSiteService {
             id: team._id,
           }))
         : [];
-    } catch (error) {
+    } catch (error:any) {
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -643,24 +690,24 @@ export class GestionSiteService {
   /**
    * Get all sites with their assigned teams
    */
-  async getAllSitesWithTeams(): Promise<Site[]> {
-    try {
-      return await this.siteModel
-        .find()
-        .populate({
-          path: "teamIds",
-          select: "name description teamCode",
-        })
-        .exec();
-    } catch (error) {
-      this.logger.error(
-        `Erreur lors de la récupération des sites avec équipes: ${error.message}`,
-      );
-      throw new InternalServerErrorException(
-        "Erreur lors de la récupération des sites avec équipes",
-      );
-    }
-  }
+  // async getAllSitesWithTeams(): Promise<Site[]> {
+  //   try {
+  //     return await this.siteModel
+  //       .find()
+  //       .populate({
+  //         path: "teamIds",
+  //         select: "name description teamCode",
+  //       })
+  //       .exec();
+  //   } catch (error:Error) {
+  //     this.logger.error(
+  //       `Erreur lors de la récupération des sites avec équipes: ${error.message}`,
+  //     );
+  //     throw new InternalServerErrorException(
+  //       "Erreur lors de la récupération des sites avec équipes",
+  //     );
+  //   }
+  // }
 
   // ============ TEAM ASSIGNMENT METHODS ============
 
@@ -691,7 +738,7 @@ export class GestionSiteService {
 
       this.logger.log(`Équipe MongoDB affectée au site: ${siteId}, équipe: ${teamId}`);
       return updatedSite;
-    } catch (error) {
+    } catch (error:any) {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
@@ -725,7 +772,7 @@ export class GestionSiteService {
 
       this.logger.log(`Équipe retirée du site: ${siteId}, équipe: ${teamId}`);
       return updatedSite;
-    } catch (error) {
+    } catch (error:any) {
       if (error instanceof NotFoundException || error instanceof BadRequestException) {
         throw error;
       }
@@ -756,7 +803,7 @@ export class GestionSiteService {
         _id: team._id,
         id: team._id
       })) : [];
-    } catch (error) {
+    } catch (error:any) {
       if (error instanceof NotFoundException) {
         throw error;
       }
@@ -768,15 +815,16 @@ export class GestionSiteService {
   /**
    * Get all sites with their assigned teams
    */
-  async getAllSitesWithTeamss(): Promise<Site[]> {
+  async getAllSitesWithTeams(projectId?: string): Promise<Site[]> {
     try {
-      return await this.siteModel.find()
+      const query = projectId ? { projectId } : {};
+      return await this.siteModel.find(query)
         .populate({
           path: 'teamIds',
           select: 'name description teamCode'
         })
         .exec();
-    } catch (error) {
+    } catch (error:any) {
       this.logger.error(`Erreur lors de la récupération des sites avec équipes: ${error.message}`);
       throw new InternalServerErrorException('Erreur lors de la récupération des sites avec équipes');
     }
