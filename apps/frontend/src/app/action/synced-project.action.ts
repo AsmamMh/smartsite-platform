@@ -2,9 +2,14 @@ import axios from "axios";
 import { GESTION_SITE_API_URL } from "../../lib/gestion-site-api-url";
 import { PLANNING_API_URL } from "../../lib/planning-api-url";
 import { AUTH_API_URL } from "../../lib/auth-api-url";
+import { GESTION_PROJECTS_API_URL } from "../../lib/gestion-projects-api-url";
 
 const projectsApi = axios.create({
   baseURL: PLANNING_API_URL,
+});
+
+export const gestionProjectsApi = axios.create({
+  baseURL: GESTION_PROJECTS_API_URL,
 });
 
 const sitesApi = axios.create({
@@ -28,7 +33,7 @@ function getAuthToken(): string | null {
   }
 }
 
-[projectsApi, sitesApi, usersApi].forEach((api) => {
+[projectsApi, sitesApi, usersApi, gestionProjectsApi].forEach((api) => {
   api.interceptors.request.use((config) => {
     const token = getAuthToken();
     if (token) {
@@ -144,6 +149,34 @@ export const getUrgentTasks = async (): Promise<Task[]> => {
     return Array.isArray(data) ? data : [];
   } catch (error) {
     console.error("Error fetching urgent tasks:", error);
+    return [];
+  }
+};
+
+export interface ProjectWithSites {
+  id: string;
+  name: string;
+  description?: string;
+  location?: string;
+  status: string;
+  priority: string;
+  budget: number;
+  actualCost?: number;
+  startDate?: string;
+  endDate?: string;
+  progress: number;
+  clientName?: string;
+  sites: Site[];
+  totalSitesBudget: number;
+}
+
+export const getProjectsWithSites = async (): Promise<ProjectWithSites[]> => {
+  try {
+    const response = await gestionProjectsApi.get("/projects/with-sites");
+    const data = response.data;
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Error fetching projects with sites:", error);
     return [];
   }
 };

@@ -11,6 +11,7 @@ import { Site } from './entities/site.entity';
 import { Team } from './entities/team.entity';
 import { CreateSiteDto, UpdateSiteDto } from './dto';
 import { HttpException, HttpStatus } from '@nestjs/common';
+import axios from 'axios';
 
 export interface SiteFilters {
   nom?: string;
@@ -52,6 +53,8 @@ export class GestionSiteService {
    */
   async create(createSiteDto: CreateSiteDto, userId?: string): Promise<Site> {
     try {
+      this.logger.log(`Creating site: ${JSON.stringify(createSiteDto)}`);
+      
       // Check if site with same name exists
       const existingSite = await this.siteModel.findOne({
         nom: { $regex: new RegExp(`^${createSiteDto.nom}$`, 'i') },
@@ -61,6 +64,43 @@ export class GestionSiteService {
         throw new BadRequestException(
           `Un site avec le nom "${createSiteDto.nom}" existe déjà`,
         );
+      }
+
+      // Validate budget against project budget if projectId is provided
+      if (createSiteDto.projectId) {
+        let project: any = null;
+        try {
+          const projectsUrl = process.env.GESTION_PROJECTS_URL || 'http://localhost:3007';
+          const projectResponse = await axios.get(`${projectsUrl}/projects/${createSiteDto.projectId}`, { timeout: 5000 });
+          project = projectResponse.data;
+        } catch (fetchError: any) {
+          this.logger.warn(`Could not fetch project for budget validation: ${fetchError.message}`);
+        }
+
+        if (project) {
+          if (!project.budget || project.budget <= 0) {
+            throw new BadRequestException(`Project has no budget defined. Please set project budget first.`);
+          }
+
+          // Check existing sites for this project
+          const existingSites = await this.siteModel.find({ projectId: createSiteDto.projectId });
+          const existingBudget = existingSites.reduce((sum: number, s: Site) => sum + (s.budget || 0), 0);
+          const newTotalBudget = existingBudget + (createSiteDto.budget || 0);
+          const projectBudget = project.budget || 0;
+
+          this.logger.log(`Budget check: existing=${existingBudget}, new=${createSiteDto.budget}, total=${newTotalBudget}, project=${projectBudget}`);
+
+          if (newTotalBudget > projectBudget) {
+            throw new BadRequestException(
+              `Total sites budget (${newTotalBudget} TND) exceeds project budget (${projectBudget} TND)`
+            );
+          }
+
+          // Set clientName from project if not provided
+          if (!createSiteDto.clientName && project.clientName) {
+            createSiteDto.clientName = project.clientName;
+          }
+        }
       }
 
       const siteData: any = {

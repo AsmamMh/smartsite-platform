@@ -35,6 +35,7 @@ const mapBackendSiteToFrontend = (backendSite: any): Site => {
     workStartDate: backendSite.workStartDate || new Date().toISOString(),
     workEndDate: backendSite.workEndDate,
     projectId: backendSite.projectId || null,
+    clientName: backendSite.clientName || '',
     budget: backendSite.budget || 0,
     progress: backendSite.progress || 0,
     createdAt: backendSite.createdAt || new Date().toISOString(),
@@ -56,6 +57,7 @@ const mapFrontendSiteToBackend = (site: Partial<Site>): any => {
     workStartDate: site.workStartDate,
     workEndDate: site.workEndDate,
     projectId: site.projectId,
+    clientName: site.clientName,
     coordinates: site.coordinates,
     isActif: true, // Required field for backend - must be boolean
   };
@@ -134,6 +136,7 @@ export const createSite = async (site: Partial<Site>): Promise<Site> => {
     console.error('Error creating site - Full error:', error);
     console.error('Error response data:', error.response?.data);
     console.error('Error status:', error.response?.status);
+    console.error('Error message:', error.response?.data?.message);
     throw error;
   }
 };

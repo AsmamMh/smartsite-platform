@@ -201,6 +201,7 @@ export interface Site {
   workStartDate: string;
   workEndDate?: string;
   projectId: string | null;
+  clientName?: string;
   budget: number;
   progress: number;
   createdAt: string;

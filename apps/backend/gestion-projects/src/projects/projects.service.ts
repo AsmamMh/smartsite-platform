@@ -5,9 +5,12 @@ import { Project, ProjectDocument, ProjectStatus, ProjectPriority } from "./enti
 import { CreateProjectDto, UpdateProjectDto, ProjectFilterDto } from "./dto/project.dto";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import axios from "axios";
 
 @Injectable()
 export class ProjectsService {
+  private readonly gestionSitesUrl = process.env.GESTION_SITES_URL || "http://localhost:3001/api";
+
   constructor(
     @InjectModel(Project.name)
     private readonly projectModel: Model<ProjectDocument>,
@@ -92,6 +95,71 @@ export class ProjectsService {
       throw new NotFoundException("Project not found");
     }
     return project;
+  }
+
+  async findAllWithSites(): Promise<any[]> {
+    const projects = await this.projectModel
+      .find()
+      .sort({ createdAt: -1 })
+      .populate("manager", "firstName lastName email")
+      .populate("client", "name")
+      .exec();
+
+    const projectIds = projects.map((p) => p._id);
+    const sitesByProject: Record<string, any[]> = {};
+
+    if (projectIds.length > 0) {
+      try {
+        const sitesResponse = await axios.get(`${this.gestionSitesUrl}/gestion-sites?limit=100`, {
+          timeout: 5000,
+        });
+        const responseData = sitesResponse.data;
+        const sites = responseData?.data || responseData || [];
+        
+        sites.forEach((site: any) => {
+          if (!site.projectId) return;
+          const pid = String(site.projectId);
+          if (!sitesByProject[pid]) {
+            sitesByProject[pid] = [];
+          }
+          sitesByProject[pid].push({
+            id: site._id || site.id,
+            name: site.nom || site.name,
+            address: site.adresse || site.address,
+            localisation: site.localisation || site.localisation,
+            budget: site.budget || 0,
+            status: site.status || "planning",
+            progress: site.progress || 0,
+            teams: site.teams || [],
+            teamIds: site.teamIds || [],
+          });
+        });
+      } catch (e) {
+        console.error("Could not fetch sites from API:", e);
+      }
+    }
+
+    return projects.map((project) => ({
+      id: project._id,
+      name: project.name,
+      description: project.description,
+      location: project.location,
+      status: project.status,
+      priority: project.priority,
+      budget: project.budget || 0,
+      actualCost: project.actualCost,
+      startDate: project.startDate,
+      endDate: project.endDate,
+      progress: project.progress || 0,
+      manager: project.manager,
+      client: project.client,
+      clientName: project.clientName,
+      sites: sitesByProject[String(project._id)] || [],
+      totalSitesBudget: (sitesByProject[String(project._id)] || []).reduce(
+        (sum, s) => sum + (s.budget || 0),
+        0
+      ),
+    }));
   }
 
   async create(dto: CreateProjectDto): Promise<Project> {

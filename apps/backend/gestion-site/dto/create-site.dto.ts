@@ -67,6 +67,11 @@ export class CreateSiteDto {
   @Prop({ type: String })
   projectId?: string;
 
+  @IsString()
+  @IsOptional()
+  @Prop({ type: String })
+  clientName?: string;
+
   @IsObject()
   @IsOptional()
   @Prop({ type: Object })
@@ -127,6 +132,10 @@ export class UpdateSiteDto {
   @IsString()
   @IsOptional()
   projectId?: string;
+
+  @IsString()
+  @IsOptional()
+  clientName?: string;
 
   @IsObject()
   @IsOptional()

@@ -22,6 +22,11 @@ export class ProjectsController {
     return this.projectsService.findAll(filter);
   }
 
+  @Get("with-sites")
+  async findAllWithSites() {
+    return this.projectsService.findAllWithSites();
+  }
+
   @Get("export-pdf")
   async exportPdf(
     @Query() filter: ProjectFilterDto,

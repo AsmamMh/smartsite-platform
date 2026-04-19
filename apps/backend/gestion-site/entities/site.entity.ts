@@ -40,6 +40,9 @@ export class Site extends Document {
   @Prop({ type: String })
   projectId: string;
 
+  @Prop({ type: String })
+  clientName?: string;
+
   @Prop({ type: Object })
   coordinates: { lat: number; lng: number };
 

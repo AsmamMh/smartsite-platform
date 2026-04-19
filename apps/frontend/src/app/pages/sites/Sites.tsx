@@ -157,7 +157,7 @@ export default function Sites() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   
   // Form state
-  const [newSite, setNewSite] = useState({ name: '', address: '', area: '', budget: '' });
+  const [newSite, setNewSite] = useState({ name: '', address: '', area: '', budget: '', clientName: '' });
   const [selectedStatusEdit, setSelectedStatusEdit] = useState('all');
   const [addressSearchLoading, setAddressSearchLoading] = useState(false);
   const [nearbyFournisseurs, setNearbyFournisseurs] = useState<Array<{_id: string; nom: string; adresse: string; telephone: string; categories: string[]}>>([]);
@@ -689,6 +689,7 @@ export default function Sites() {
           progress: 0,
           workStartDate: new Date().toISOString(),
           projectId: currentProjectId || undefined,
+          clientName: newSite.clientName || undefined,
           coordinates: mapPosition || { lat: 0, lng: 0 },
         };
         
@@ -709,14 +710,22 @@ export default function Sites() {
         }
         resetAddForm();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating site:', error);
-      toast.error('Error creating site');
+      const errorData = error?.response?.data;
+      const backendMessage = errorData?.message || error?.message || '';
+      console.log('Backend error:', backendMessage);
+      
+      if (backendMessage.includes('exceeds')) {
+        toast.error(backendMessage);
+      } else {
+        toast.error(backendMessage || 'Error creating site');
+      }
     }
   };
 
   const resetAddForm = () => {
-    setNewSite({ name: '', address: '', area: '', budget: '' });
+    setNewSite({ name: '', address: '', area: '', budget: '', clientName: '' });
     setMapPosition(null);
     setErrors({});
     setSelectedTeam('');
@@ -1113,6 +1122,18 @@ export default function Sites() {
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="clientName" className="text-sm font-medium">
+                      Client Name <span className="text-gray-500">(Optional)</span>
+                    </Label>
+                    <Input
+                      id="clientName"
+                      placeholder="e.g., ABC Corporation"
+                      value={newSite.clientName}
+                      onChange={(e) => setNewSite({ ...newSite, clientName: e.target.value })}
+                    />
                   </div>
 
                   <div className="space-y-2">
