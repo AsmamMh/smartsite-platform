@@ -215,7 +215,7 @@ export default function Projects() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Projects</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Projects</h1>
           <p className="text-gray-500 mt-1">Manage all construction projects</p>
         </div>
         {canManageProjects ? (
@@ -341,7 +341,7 @@ export default function Projects() {
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Progress</span>
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-sm font-semibold text-gray-900 dark:text-white">
                         {project.progress}%
                       </span>
                     </div>
@@ -375,7 +375,7 @@ export default function Projects() {
                               <p className="text-sm text-gray-600">
                                 Project Name
                               </p>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 dark:text-white">
                                 {selectedProject.name}
                               </p>
                             </div>
@@ -383,7 +383,7 @@ export default function Projects() {
                               <p className="text-sm text-gray-600">
                                 Description
                               </p>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 dark:text-white">
                                 {selectedProject.description}
                               </p>
                             </div>
@@ -391,20 +391,20 @@ export default function Projects() {
                               <p className="text-sm text-gray-600">
                                 Project Manager
                               </p>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 dark:text-white">
                                 {selectedProject.projectManagerName}
                               </p>
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Budget</p>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 dark:text-white">
                                 $
                                 {(selectedProject.budget || 0).toLocaleString()}
                               </p>
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Priority</p>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 dark:text-white">
                                 {selectedProject.priority}
                               </p>
                             </div>
@@ -437,7 +437,7 @@ export default function Projects() {
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Deadline</p>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 dark:text-white">
                                 {new Date(
                                   selectedProject.deadline,
                                 ).toLocaleDateString()}
@@ -445,13 +445,13 @@ export default function Projects() {
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Team Size</p>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 dark:text-white">
                                 {selectedProject.teamSize || 0} members
                               </p>
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Sites</p>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-gray-900 dark:text-white">
                                 {selectedProject.siteCount || 0} sites
                               </p>
                             </div>
